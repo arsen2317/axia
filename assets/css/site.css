@@ -1,0 +1,946 @@
+/* аксиа — стили сайта. Базовый размер 16px, всё в rem.
+   Раскладка: container queries по контейнеру .axia —
+   десктоп > 64rem, планшет ≤ 64rem, мобильный ≤ 40rem.
+   Фон: на вертикальных экранах (portrait) — вертикальный паттерн. */
+
+@font-face {
+  font-family: "Soyuz Grotesk";
+  src: url("../fonts/SoyuzGrotesk-Bold.woff") format("woff"), url("../fonts/SoyuzGrotesk-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #2c4595;
+  --line: #3f569f;
+  --ink: #e8e6e0;
+  --ink-soft: rgba(232, 230, 224, 0.72);
+  --glass: rgba(255, 255, 255, 0.1);
+  --glass-blur: 2rem;
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --dark: #2b2b2b;
+  --font-display: "Soyuz Grotesk", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, sans-serif;
+  /* модульная сетка: поля страницы, колонки, межколонник */
+  --gutter: 2.5rem;
+  --cols: 4;
+  --col-gap: 0.5rem;
+  --bar-h: 3.375rem;
+}
+
+html { font-size: 16px; }
+html, body { margin: 0; height: 100%; background: var(--bg); }
+
+.axia {
+  container: axia / inline-size;
+  overflow-x: clip; /* «αξία» шире экрана — без горизонтального скролла */
+  width: 100%;
+  min-height: 100%;
+  background: transparent;   /* цвет фона даёт body; так фон «Команды» может лечь под кольцо «Направлений» */
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+}
+.axia *, .axia *::before, .axia *::after { box-sizing: border-box; }
+.axia a { color: inherit; text-decoration: none; }
+/* без «висячих» слов в последней строке (плюс неразрывный пробел между двумя последними словами в тексте) */
+.axia p, .axia h1, .axia h2 { text-wrap: pretty; }
+
+/* ---------- ЗАГЛУШКА НИЗА ЭКРАНА ----------
+   одна на весь сайт, закреплена у нижнего края окна и не скроллится:
+   приглушает фоновую сетку (слой z 1 — над фонами z 0, под контентом z 2), поэтому на стыках секций нет швов */
+.screen-fade {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1;
+  height: 26vh; height: 26dvh;
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+    rgba(44, 69, 149, 0) 0%,
+    rgba(44, 69, 149, 0.18) 23%,
+    rgba(44, 69, 149, 0.5) 54%,
+    rgba(44, 69, 149, 0.68) 81%,
+    rgba(44, 69, 149, 0.7) 100%);
+}
+
+/* ---------- СЕТКА ----------
+   .grid — 4 колонки по умолчанию; .grid--3 — 3 колонки для отдельных секций. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--col-gap);
+  padding-inline: var(--gutter);
+}
+.grid--3 { --cols: 3; }
+
+/* ---------- HERO ---------- */
+.hero {
+  position: relative;
+  height: 100vh;
+  height: 100dvh; /* на мобильных учитывает панель браузера */
+  /* без overflow и z-index: «αξία» выходит за низ hero и лежит поверх фона «Направлений», но под их текстом */
+  /* паттерн — бесшовная плитка по вертикали; продолжается в следующей секции (запасной вариант без WebGL) */
+  background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
+  background-position-y: var(--pat-phase, 0px);
+}
+.hero__word {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 0;
+  width: 98.4%;
+  height: auto;
+  /* svg выше видимой части: утапливаем низ букв за край экрана */
+  transform: translate(-50%, 38.2%);
+  pointer-events: none;
+  user-select: none;
+}
+@media (orientation: portrait) {
+  .hero { background-image: url("../img/pattern-portrait.svg"); }
+  /* буквы чуть подняты: низ обрезается меньше, чем на десктопе; по бокам чуть шире экрана */
+  .hero__word { width: 104.6%; transform: translate(-50%, 28%); }
+}
+
+/* ---------- ФОН: паттерн рисуется в WebGL (мерцание по сетке + отклик на курсор) ----------
+   канвас лежит внутри hero и уезжает вместе с ним; .axia--gl ставит скрипт, когда WebGL запустился */
+.axia--gl .hero { background-image: none; }
+.bg-gl {
+  position: absolute; inset: 0; z-index: 0;
+  display: block; width: 100%; height: 100%;
+  pointer-events: none;
+}
+/* греческая надпись — бледнее */
+.hero__word { opacity: 0.55; }
+
+/* ---------- HEADER ---------- */
+/* хедер закреплён поверх всех секций */
+.header {
+  position: fixed;
+  z-index: 10;
+  inset: 1.5rem var(--gutter) auto;
+  display: grid;
+  grid-template-columns: 1fr 24rem 1fr;
+  align-items: center;
+  column-gap: 1.5rem;
+}
+.logo {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.875rem;
+  line-height: 1;
+  flex: none;
+}
+.logo__mark { width: 1.125rem; height: 1.25rem; flex: none; }
+.logo__word { letter-spacing: 0; text-box: trim-both ex alphabetic; }
+.logo--nav { display: none; }
+
+.cta {
+  justify-self: end;
+  font-size: 1rem;
+  transition: opacity 0.2s;
+}
+/* hover: подчёркивание прорисовывается слева направо */
+.cta { position: relative; }
+.cta::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -0.2rem;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.35s cubic-bezier(.65, 0, .35, 1);
+}
+@media (hover: hover) {
+  .cta:hover::after, .cta:focus-visible::after { transform: scaleX(1); }
+}
+/* нажатие: надпись темнеет */
+.cta:active { color: #b9b7b1; }
+
+/* ---------- NAV (раскрывается при наведении) ---------- */
+.nav-slot { position: relative; height: var(--bar-h); }
+.nav {
+  position: absolute;
+  inset: 0 0 auto 0;
+  overflow: hidden;
+  border: 1px solid var(--glass-edge);
+  border-radius: 0.5rem;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+}
+/* очень мелкое и лёгкое зерно для фактуры стекла */
+.nav::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: url("../img/pattern-tile.svg") 0 0 / 7.5rem repeat;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.nav__bar, .nav__body { position: relative; }
+.nav__bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: calc(var(--bar-h) - 2px);
+  padding: 0 1.5rem;
+}
+.nav__toggle {
+  all: unset;
+  box-sizing: border-box;
+  flex: 1;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+.nav__toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 0.25rem; border-radius: 0.25rem; }
+/* бургер того же цвета, что «Разделы»; ярче, когда на меню наведён курсор или оно открыто */
+.nav__icon { width: 1.25rem; height: 1.25rem; flex: none; color: var(--ink-soft); transition: color 0.2s ease; }
+@media (hover: hover) { .nav:hover .nav__icon { color: var(--ink); } }
+.nav.is-open .nav__icon, .nav:has(:focus-visible) .nav__icon { color: var(--ink); }
+
+/* планшет и мобильный: простой бургер из двух полосок, по тапу превращается в крестик */
+.nav__icon--touch { display: none; }
+.nav__icon--touch rect {
+  transform-box: view-box;
+  transform-origin: 10px 10px;
+  transition: transform 0.35s cubic-bezier(.65, 0, .35, 1);
+}
+.nav.is-open .nav__icon--touch rect:nth-of-type(1) { transform: rotate(45deg) translateY(3.5px); }
+.nav.is-open .nav__icon--touch rect:nth-of-type(2) { transform: rotate(-45deg) translateY(-3.5px); }
+
+
+
+.nav__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s ease;
+}
+.nav__inner { min-height: 0; overflow: hidden; }
+.nav__content {
+  padding: 0.75rem 1.5rem 1.5rem;
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  transition: opacity 0.25s ease, transform 0.35s ease;
+}
+.nav__list { list-style: none; margin: 0; padding: 0; }
+.nav__link {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.25rem;
+  line-height: 1.2;
+  letter-spacing: 0;
+  transition: opacity 0.2s ease, transform 0.25s ease;
+}
+.nav__list:hover .nav__link { opacity: 0.55; }
+.nav__list .nav__link:hover,
+.nav__list .nav__link:focus-visible { opacity: 1; transform: translateX(0.375rem); outline: none; }
+
+.nav__contacts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  margin-top: 2.25rem;
+  font-size: 1rem;
+}
+/* контакты: то же подчёркивание слева направо, что у «обсудить задачу» */
+.nav__contacts a { position: relative; align-self: flex-start; }
+.nav__contacts a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -0.2rem;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.35s cubic-bezier(.65, 0, .35, 1);
+}
+@media (hover: hover) {
+  .nav__contacts a:hover::after { transform: scaleX(1); }
+}
+.nav__contacts a:focus-visible::after { transform: scaleX(1); }
+
+/* открыто: наведение (устройства с курсором), клавиатура, тап */
+@media (hover: hover) {
+  .nav:hover .nav__body { grid-template-rows: 1fr; }
+  .nav:hover .nav__content { opacity: 1; transform: none; }
+}
+.nav:has(:focus-visible) .nav__body, .nav.is-open .nav__body { grid-template-rows: 1fr; }
+.nav:has(:focus-visible) .nav__content, .nav.is-open .nav__content { opacity: 1; transform: none; }
+/* после клика по пункту меню оно сворачивается, даже если курсор ещё над ним (до ухода курсора) */
+.nav.is-suppressed .nav__body { grid-template-rows: 0fr; }
+.nav.is-suppressed .nav__content { opacity: 0; transform: translateY(-0.5rem); }
+
+/* ---------- HERO CONTENT ---------- */
+.intro {
+  position: relative;
+  z-index: 2;
+  align-items: center;
+  padding-top: 8.5rem;
+}
+.intro__title {
+  grid-column: 2 / span 1;
+  justify-self: start;
+  margin: 0;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 700;
+  /* высота букв «аксиа» = высоте трёхстрочного подзаголовка справа:
+     3 строки × 1.3rem = 3.9rem; высота строчных Soyuz Grotesk ≈ 0.65 кегля → кегль ≈ 6rem */
+  font-size: 6rem;
+  line-height: 0.9;
+  letter-spacing: 0;
+  text-box: trim-both ex alphabetic;   /* блок заголовка = высота строчных букв, ровно по высоте текста */
+}
+.intro__text {
+  grid-column: 3 / span 2;
+  justify-self: start;
+  max-width: 16.75rem;                 /* подзаголовок всегда в три строки */
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+/* ---------- ПЛАНШЕТ ≤ 64rem ----------
+   лого переезжает в плашку меню, «Разделы» скрыты,
+   «обсудить задачу» закреплена внизу экрана. */
+@container axia (max-width: 64rem) {
+  .nav__icon--desk { display: none; }
+  .nav__icon--touch { display: block; color: var(--ink); }
+  /* без ховера: меню открывается только по тапу */
+  .nav:hover:not(.is-open):not(:has(:focus-visible)) .nav__body { grid-template-rows: 0fr; }
+  .nav:hover:not(.is-open):not(:has(:focus-visible)) .nav__content { opacity: 0; transform: translateY(-0.5rem); }
+  .header > .logo { display: none; }
+  .logo--nav { display: inline-flex; }
+  .nav-slot { grid-column: 2; }
+  .nav__toggle { justify-content: flex-end; }
+  .nav__label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+
+  .cta {
+    position: fixed;
+    z-index: 30;
+    left: 50%;
+    bottom: 1.5rem;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--bar-h);
+    padding: 0 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.5rem;
+    background: var(--dark);
+    color: var(--ink);
+    white-space: nowrap;
+    transition: background-color 0.2s;
+  }
+  @media (hover: hover) { .cta:hover { opacity: 1; background: #333333; } }
+  /* нажатие: кнопка темнеет, а не светлеет */
+  .cta:active { color: var(--ink); background: #1c1c1c; }
+  .cta::after { display: none; }
+
+  .intro {
+    justify-items: center;
+    row-gap: 1.5rem;
+    padding-top: max(9rem, 30dvh);
+    text-align: center;
+  }
+  .intro__title, .intro__text { grid-column: 1 / -1; justify-self: center; }
+  .intro__text { max-width: 21.5rem; }
+}
+
+/* ---------- МОБИЛЬНЫЙ ≤ 40rem ---------- */
+@container axia (max-width: 40rem) {
+  .axia { --gutter: 1rem; }
+  .header { inset: 1rem var(--gutter) auto; grid-template-columns: minmax(0, 1fr); }
+  .nav-slot { grid-column: 1; }
+  .nav__bar { padding: 0 1.25rem; }
+  .logo { font-size: 1.625rem; }
+  .nav__content { padding: 0.5rem 1.25rem 1.25rem; }
+  .nav__link { font-size: 2rem; }
+  .nav__contacts { flex-direction: column; margin-top: 1.5rem; }
+  .cta { bottom: 1rem; }
+  /* заголовок и подзаголовок — по центру экрана по вертикали */
+  .intro { position: absolute; inset: 0; align-content: center; row-gap: 1.25rem; padding-top: 0; }
+  .intro__title { font-size: 4.5rem; }
+  .intro__text { max-width: 20rem; }
+}
+
+/* ---------- НАПРАВЛЕНИЯ ----------
+   секция длиной 3 экрана, внутри закреплённый экран 100vh;
+   круг — индикатор прогресса скролла, ромбы едут по кругу (скрипт задаёт --fill, --a, --o) */
+.dirs { position: relative; height: 300vh; }
+/* геометрия круга — общая для «Направлений» и «хвоста» круга в «Подходе» */
+.axia {
+  --ring: min(89vw, 166vh);
+  --ring-top: 58.6vh; --ring-top: 58.6dvh;
+}
+/* два закреплённых слоя: фон (z 0) и контент (z 2); между ними ложится «αξία» из hero (z 1) */
+.dirs__bg {
+  position: sticky; top: 0; z-index: 0;
+  height: 100vh; height: 100dvh;
+  /* статичный паттерн без анимации, продолжает сетку hero без шва:
+     та же плитка, сдвинутая на высоту hero (100dvh) */
+  background: var(--bg) url("../img/pattern.svg") center calc(-1 * 100vh) / 100% auto repeat-y;
+  background-position-y: calc(-1 * 100dvh);
+  /* --pat-phase: сдвиг сетки (задаёт скрипт на вертикальных экранах), тот же, что у hero — шва нет */
+  background-position-y: calc(var(--pat-phase, 0px) - 100dvh);
+}
+.dirs__sticky {
+  position: sticky; top: 0; z-index: 2;
+  margin-top: -100vh; margin-top: -100dvh;
+  height: 100vh; height: 100dvh;
+  overflow: hidden;
+}
+@media (orientation: portrait) {
+  .dirs__bg { background-image: url("../img/pattern-portrait.svg"); }
+  .axia { --ring: 150vw; --ring-top: 57vh; --ring-top: 57dvh; }
+}
+
+.dirs__ring {
+  position: absolute;
+  z-index: 2;
+  left: 50%; top: var(--ring-top);
+  width: var(--ring); height: var(--ring);
+  margin-left: calc(var(--ring) / -2);
+  border: 1.5px solid rgba(232, 230, 224, 0.22);
+  border-radius: 50%;
+}
+.dirs__fill {
+  position: absolute; inset: -1.5px;
+  border: 1.5px solid rgba(232, 230, 224, 0.62);
+  border-radius: 50%;
+  -webkit-mask-image: conic-gradient(from 270deg, #000 0deg var(--fill, 90deg), transparent var(--fill, 90deg));
+  mask-image: conic-gradient(from 270deg, #000 0deg var(--fill, 90deg), transparent var(--fill, 90deg));
+}
+.dirs__dot {
+  position: absolute; left: 50%; top: 50%;
+  width: 0.9375rem; height: 0.9375rem;
+  margin: -0.46875rem 0 0 -0.46875rem;
+  z-index: 1; /* поверх линии прогресса */
+  background: var(--dot, #e8e6e0); /* сплошной цвет: активный #E8E6E0, неактивные #8A98BE */
+  transform: rotate(var(--a, 0deg)) translateY(calc(var(--ring) / -2 + 0.75px)) rotate(45deg) scale(var(--s, 1));
+}
+
+/* «хвост» круга: нижняя часть кольца «Направлений» продолжается в «Подходе».
+   Лежит внутри закреплённого фона «Подхода» (поэтому закрепляется вместе с ним), начинается у его верхнего края —
+   ровно там, где кончается закреплённый экран «Направлений». Цвет: от яркой линии прогресса плавно к цвету сетки */
+.dirs__tail {
+  position: absolute; left: 0; right: 0; top: calc(-1 * var(--appr-gap, 0px)); z-index: 1;
+  height: calc(var(--ring-top) + var(--ring) - 100vh + 4px);
+  height: calc(var(--ring-top) + var(--ring) - 100dvh + 4px);
+  overflow: hidden;
+  pointer-events: none;
+}
+.dirs__tail::before, .dirs__tail::after {
+  content: "";
+  position: absolute; left: 50%;
+  top: calc(var(--ring-top) - 100vh);
+  top: calc(var(--ring-top) - 100dvh);
+  width: var(--ring); height: var(--ring);
+  margin-left: calc(var(--ring) / -2);
+  border-radius: 50%;
+  border: 1.5px solid #3f569f;           /* цвет линий сетки */
+}
+.dirs__tail::after {
+  border-color: rgba(232, 230, 224, 0.62); /* цвет заполненной линии прогресса */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100vh - var(--ring-top)), transparent calc(100vh - var(--ring-top) + 38vh));
+  mask-image: linear-gradient(to bottom, #000 calc(100dvh - var(--ring-top)), transparent calc(100dvh - var(--ring-top) + 38dvh));
+}
+
+.dirs__slide { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.dirs__title {
+  position: absolute;
+  left: var(--gutter); right: var(--gutter);
+  bottom: calc(100% - var(--ring-top) + 2.75rem);
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 4.5rem;
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+.dirs__text {
+  position: absolute;
+  left: 50%; top: calc(var(--ring-top) + 6.5rem);
+  width: min(27rem, calc(100% - 2 * var(--gutter)));
+  margin: 0;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+.dirs__title, .dirs__text { opacity: 0; transition: opacity 0.28s ease; }
+.dirs__slide.is-active .dirs__title, .dirs__slide.is-active .dirs__text { opacity: 1; }
+
+@container axia (max-width: 64rem) {
+  .dirs__title { font-size: 4rem; }
+}
+@container axia (max-width: 40rem) {
+  .dirs__title { font-size: 2.5rem; bottom: calc(100% - var(--ring-top) + 2rem); } /* «ответственный» помещается в ширину телефона */
+  .dirs__text { top: calc(var(--ring-top) + 4.5rem); font-size: 1rem; line-height: 1.5; }
+}
+
+/* ---------- ПОДХОД ----------
+   Секция длиной 2 экрана, внутри закреплённая сцена 100vh.
+   Слева: заголовок и описание; по скроллу первое описание плавно сменяется вторым, затем страница едет дальше.
+   Справа: тёмная панель с canvas — слова по концентрическим кругам (рисует скрипт). */
+.appr { position: relative; height: 200vh; }
+/* два закреплённых слоя, как в «Направлениях»: фон с сеткой (z 0) и контент (z 2) — между ними ложится заглушка низа экрана */
+.appr__bg {
+  position: sticky; top: 0; z-index: 0;
+  height: 100vh; height: 100dvh;
+  background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
+  /* сетка продолжает фон «Направлений» без шва (их закреплённый фон показывает участок на 1 экран ниже hero) */
+  background-position-y: calc(var(--pat-phase, 0px) - 200vh - var(--appr-gap, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 200dvh - var(--appr-gap, 0px));
+}
+/* зазор перед «Подходом»: секция начинается ровно на горизонтальной линии сетки (высоту задаёт скрипт) */
+.appr-gap {
+  height: var(--appr-gap, 0px);
+  background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
+  background-position-y: calc(var(--pat-phase, 0px) - 200vh);
+  background-position-y: calc(var(--pat-phase, 0px) - 200dvh);
+}
+@media (orientation: portrait) { .appr-gap { background-image: url("../img/pattern-portrait.svg"); } }
+.appr__stage {
+  position: sticky; top: 0; z-index: 2;
+  margin-top: -100vh; margin-top: -100dvh;
+  height: 100vh; height: 100dvh;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--col-gap);
+  overflow: hidden;
+}
+@media (orientation: portrait) { .appr__bg { background-image: url("../img/pattern-portrait.svg"); } }
+
+.appr__text {
+  grid-column: 1 / span 2;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  gap: 1.5rem;
+  padding: 8rem 2rem 3.5rem var(--gutter);
+}
+.appr__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 5.5rem;
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+/* оба описания в одной ячейке: высота блока = большему из них, смена — только прозрачностью */
+.appr__copy { display: grid; max-width: 32rem; }
+.appr__desc {
+  grid-area: 1 / 1;
+  margin: 0;
+  font-size: 1.125rem; line-height: 1.6;
+  opacity: 0; transition: opacity 0.35s ease;
+}
+.appr__desc.is-active { opacity: 1; }
+
+.appr__panel {
+  grid-column: 3 / -1;
+  margin-left: calc(-1 * var(--col-gap) / 2);   /* панель от центральной линии сетки до правого края */
+  position: relative;
+  overflow: hidden;
+  background: #0a0f22;
+  cursor: pointer;
+  touch-action: pan-y;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+}
+.appr__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+@container axia (max-width: 64rem) {
+  .appr__stage { grid-template-rows: auto minmax(0, 1fr); }
+  .appr__text { grid-column: 1 / -1; padding: 6.5rem var(--gutter) 2.5rem; }
+  .appr__title { font-size: 4.5rem; }
+  .appr__panel { grid-column: 1 / -1; margin-left: 0; }
+}
+@container axia (max-width: 40rem) {
+  .appr__text { padding: 6rem var(--gutter) 1.75rem; gap: 1rem; }
+  .appr__title { font-size: 3.5rem; }
+  .appr__desc { font-size: 1rem; line-height: 1.55; }
+}
+
+/* ---------- КОМАНДА ----------
+   Фото лежат на фоновой сетке: центр каждого круга — на пересечении вертикальной и горизонтальной линий.
+   Десктоп: три фото в ряд на трёх вертикальных линиях сетки. Вертикальные экраны: столбиком по центральной линии.
+   Горизонтальную линию (--team-line, шаг --team-step) находит скрипт по фазе сетки. */
+.team {
+  --team-d: 20vw;                                   /* диаметр фото: ≈ 0.85 радиуса окружностей сетки */
+  position: relative;
+  height: max(100vh, calc(var(--team-line, 30rem) + var(--team-d) / 2 + 9rem));
+}
+/* фон с сеткой — отдельным слоем ниже всего (z −1): нижняя часть кольца «Направлений» проходит поверх него целиком */
+.team::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
+  background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px));
+}
+.team__title {
+  position: absolute; left: var(--gutter); right: var(--gutter); z-index: 2;
+  top: calc(var(--team-line, 30rem) - var(--team-d) / 2 - 9rem);
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 4.5rem;
+  line-height: 0.95;
+}
+.team__list { list-style: none; margin: 0; padding: 0; }
+.team__item {
+  position: absolute; z-index: 2;
+  top: calc(var(--team-line, 30rem) - var(--team-d) / 2);
+  width: calc(var(--team-d) + 6rem);
+  margin-left: calc((var(--team-d) + 6rem) / -2);
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+}
+.team__item:nth-child(1) { left: 26.42%; }      /* вертикальные линии сетки: 317 / 600.5 / 883 из 1200 */
+.team__item:nth-child(2) { left: 50.04%; }
+.team__item:nth-child(3) { left: 73.58%; }
+.team__photo {
+  width: var(--team-d); height: var(--team-d);
+  border-radius: 50%;
+  background: #d9d9d9;                              /* место под фотографию */
+  object-fit: cover;
+}
+.team__name { margin: 2rem 0 0; font-size: 1.25rem; font-weight: 600; line-height: 1.3; }
+.team__role { margin: 0.375rem 0 0; font-size: 1.125rem; line-height: 1.3; color: var(--ink); opacity: 0.9; }
+
+@media (orientation: portrait) {
+  .team::before { background-image: url("../img/pattern-portrait.svg"); }
+  .team {
+    --team-d: 26vw;   /* меньше фото — подпись заметно ближе к своему фото, чем к следующему */
+    height: calc(var(--team-line, 30rem) + 2 * var(--team-step, 20rem) + var(--team-d) / 2 + 8rem);
+  }
+  /* столбиком по центральной линии, каждое фото — на следующей горизонтальной линии */
+  .team__item { left: 50% !important; }
+  .team__item:nth-child(2) { top: calc(var(--team-line, 30rem) + var(--team-step, 20rem) - var(--team-d) / 2); }
+  .team__item:nth-child(3) { top: calc(var(--team-line, 30rem) + 2 * var(--team-step, 20rem) - var(--team-d) / 2); }
+  .team__name { margin-top: 1.25rem; }
+}
+@container axia (max-width: 64rem) { .team__title { font-size: 4rem; } }
+@container axia (max-width: 40rem) {
+  .team { --team-d: 40vw; }
+  .team__title { font-size: 3rem; top: calc(var(--team-line, 30rem) - var(--team-d) / 2 - 6.5rem); }
+  .team__name { margin-top: 1rem; font-size: 1.125rem; }
+  .team__role { font-size: 1rem; }
+}
+
+/* ---------- ОБСУДИТЬ ЗАДАЧУ ----------
+   Десктоп: левая колонка закреплена на высоту экрана, справа — запись на звонок (календарь → слоты → форма).
+   Планшет и мобильный: всё в одну колонку. Фон — продолжение сетки «Команды» (--team-h задаёт скрипт). */
+.meet {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--col-gap);
+  padding-inline: var(--gutter);
+  min-height: 100vh; min-height: 100dvh;
+}
+/* фон закреплён на высоту экрана (sticky): сетка стоит на месте, прокручивается только календарь.
+   Пока блок не дошёл до верха экрана, фон едет вместе с ним и продолжает сетку «Команды» без шва. */
+.meet::before {
+  content: ""; display: block; position: sticky; top: 0; z-index: -1;
+  grid-column: 1 / -1; grid-row: 1; align-self: start;
+  height: 100vh; height: 100dvh;
+  margin-inline: calc(-1 * var(--gutter));
+  background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
+  background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px) - var(--team-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px) - var(--team-h, 0px));
+}
+@media (orientation: portrait) { .meet::before { background-image: url("../img/pattern-portrait.svg"); } }
+
+.meet__side {
+  grid-column: 1 / 3; grid-row: 1;
+  position: sticky; top: 0; z-index: 2;
+  align-self: start;
+  height: 100vh; height: 100dvh;
+  display: flex; flex-direction: column; justify-content: center; gap: 3rem;
+  padding: 7rem 2rem 3rem 0;
+}
+.meet__title {
+  margin: 0;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: min(3.5rem, 4.4cqi); line-height: 0.95;
+}
+.meet__lead { margin: 1.75rem 0 0; font-size: 1.125rem; line-height: 1.4; color: var(--ink-soft); }
+.meet__points { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: 0.875rem; }
+.meet__points li { display: flex; align-items: center; gap: 0.875rem; font-size: 1.125rem; line-height: 1.35; }
+.meet__check {
+  flex: none; width: 1.5rem; height: 1.5rem; border-radius: 0.375rem;
+  display: grid; place-items: center;
+  background: var(--ink); color: var(--bg);
+}
+.meet__check svg { width: 0.875rem; height: 0.875rem; }
+
+.meet__person { display: flex; flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+.meet__contact { display: flex; align-items: center; gap: 1rem; }
+.meet__avatar {
+  flex: none; width: 3.5rem; height: 3.5rem; border-radius: 50%;
+  display: grid; place-items: center; overflow: hidden;
+  background: rgba(232, 230, 224, 0.16); border: 1px solid rgba(232, 230, 224, 0.2);
+  font-size: 1.125rem; font-weight: 600; letter-spacing: 0.02em;
+}
+.meet__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.meet__avatar--sm { width: 2rem; height: 2rem; font-size: 0.6875rem; }
+.meet__name { margin: 0; font-size: 1.125rem; font-weight: 600; }
+.meet__status { margin: 0.25rem 0 0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; color: var(--ink-soft); }
+.meet__dot {
+  width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #3ddc84;
+  box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.6);
+  animation: meet-pulse 2.4s ease-out infinite;
+}
+@keyframes meet-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.55); }
+  70%, 100% { box-shadow: 0 0 0 0.5rem rgba(61, 220, 132, 0); }
+}
+
+.meet__main {
+  grid-column: 3 / -1; grid-row: 1;
+  position: relative; z-index: 2;
+  /* низ панели — на уровне низа кнопки «Просто напишите мне» (--meet-pb считает скрипт) */
+  padding: 7rem 0 var(--meet-pb, 3rem);
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.slots { scroll-margin-bottom: 1.5rem; }
+/* в этом блоке кнопка «обсудить задачу» в шапке не нужна — и не наезжает на календарь */
+.header .cta { transition: opacity 0.3s; }
+.axia.is-contact .header .cta { opacity: 0; pointer-events: none; }
+
+/* кнопки */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  height: 3.375rem; padding: 0 1.5rem;
+  border-radius: 0.5rem; border: 1px solid transparent;
+  font: 500 1rem/1 var(--font-body); color: var(--ink);
+  cursor: pointer; white-space: nowrap;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+.btn--dark { background: var(--dark); border-color: rgba(255, 255, 255, 0.08); }
+.btn--light { background: var(--ink); color: var(--bg); }
+.btn--ghost { background: transparent; border-color: rgba(232, 230, 224, 0.35); }
+@media (hover: hover) {
+  .btn--dark:hover { background: #333333; }
+  .btn--light:hover { background: #ffffff; }
+  .btn--ghost:hover { background: rgba(232, 230, 224, 0.08); border-color: rgba(232, 230, 224, 0.6); }
+}
+.btn--dark:active { background: #1c1c1c; }
+.btn--light:active { background: #cfcdc6; }
+.btn:focus-visible, .cal button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* панель записи */
+.cal {
+  scroll-margin-top: 6rem;
+  background: rgba(12, 20, 52, 0.6);
+  -webkit-backdrop-filter: blur(1.25rem); backdrop-filter: blur(1.25rem);
+  border: 1px solid rgba(232, 230, 224, 0.12);
+  border-radius: 0.75rem;
+  padding: 1.75rem;
+}
+:where(.cal, .modal) button { font-family: inherit; color: inherit; }
+.cal__head {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.5rem;
+  padding-bottom: 1.25rem; border-bottom: 1px solid rgba(232, 230, 224, 0.12);
+}
+.cal__title { margin: 0; font-size: 1.5rem; font-weight: 600; line-height: 1.2; }
+.cal__meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; font-size: 0.9375rem; color: var(--ink-soft); }
+.cal__meta span { display: inline-flex; align-items: center; gap: 0.4375rem; }
+.cal__meta svg { width: 1rem; height: 1rem; flex: none; }
+
+.cal__month { display: flex; align-items: center; justify-content: space-between; margin: 1.5rem 0 1rem; }
+.cal__month-name { margin: 0; font-size: 1.125rem; font-weight: 600; }
+.cal__arrows { display: flex; gap: 0.375rem; }
+.cal__arrow {
+  width: 2.25rem; height: 2.25rem; padding: 0;
+  display: grid; place-items: center;
+  border: 1px solid rgba(232, 230, 224, 0.25); border-radius: 0.5rem; background: transparent;
+  cursor: pointer; transition: background-color 0.2s, opacity 0.2s;
+}
+.cal__arrow svg { width: 1rem; height: 1rem; }
+.cal__arrow:disabled { opacity: 0.3; cursor: default; }
+@media (hover: hover) { .cal__arrow:not(:disabled):hover { background: rgba(232, 230, 224, 0.1); } }
+
+.cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.375rem; }
+.cal__wd { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; color: rgba(232, 230, 224, 0.55); padding-bottom: 0.25rem; }
+.cal__day {
+  position: relative;
+  aspect-ratio: 1 / 0.86;
+  padding: 0; border: 0; border-radius: 0.5rem; background: transparent;
+  font-size: 1rem; font-variant-numeric: tabular-nums;
+  color: rgba(232, 230, 224, 0.32);
+  cursor: default;
+  transition: background-color 0.2s, color 0.2s;
+}
+.cal__day.is-empty { visibility: hidden; }
+.cal__day.is-free { background: rgba(232, 230, 224, 0.12); color: var(--ink); font-weight: 500; cursor: pointer; }
+@media (hover: hover) { .cal__day.is-free:hover { background: rgba(232, 230, 224, 0.22); } }
+.cal__day.is-selected, .cal__day.is-selected:hover { background: var(--ink); color: var(--bg); font-weight: 600; }
+.cal__day.is-today::after {
+  content: ""; position: absolute; left: 50%; bottom: 14%;
+  width: 0.25rem; height: 0.25rem; margin-left: -0.125rem; border-radius: 50%; background: currentColor;
+}
+
+.slots { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(232, 230, 224, 0.12); }
+.slots__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.slots__date { margin: 0; font-size: 1.125rem; font-weight: 600; }
+.slots__fmt { display: inline-flex; padding: 0.1875rem; border-radius: 0.5rem; background: rgba(232, 230, 224, 0.1); }
+.slots__fmt button {
+  height: 1.875rem; padding: 0 0.75rem; border: 0; border-radius: 0.375rem; background: transparent;
+  font-size: 0.8125rem; font-weight: 500; cursor: pointer; color: var(--ink-soft);
+  transition: background-color 0.2s, color 0.2s;
+}
+.slots__fmt button.is-on { background: var(--ink); color: var(--bg); }
+.slots__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.25rem, 1fr)); gap: 0.5rem; }
+.slot {
+  height: 2.75rem; padding: 0;
+  border: 1px solid rgba(232, 230, 224, 0.3); border-radius: 0.5rem; background: transparent;
+  font-size: 1rem; font-weight: 500; font-variant-numeric: tabular-nums;
+  cursor: pointer; transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+@media (hover: hover) { .slot:hover { background: var(--ink); border-color: var(--ink); color: var(--bg); } }
+.slot:active { background: #cfcdc6; color: var(--bg); }
+.slots__empty { margin: 0; color: var(--ink-soft); }
+
+/* форма */
+.book { display: grid; gap: 1.125rem; }
+.book__summary {
+  display: flex; align-items: center; gap: 0.875rem;
+  margin: 1.5rem 0 1.25rem;
+}
+.book__back {
+  flex: none; width: 2.25rem; height: 2.25rem; padding: 0;
+  display: grid; place-items: center;
+  border: 1px solid rgba(232, 230, 224, 0.25); border-radius: 0.5rem; background: transparent; cursor: pointer;
+}
+.book__back svg { width: 1rem; height: 1rem; }
+.book__when { margin: 0; font-size: 1.125rem; font-weight: 600; }
+.field { display: grid; gap: 0.5rem; }
+.field__label { font-size: 0.875rem; color: var(--ink-soft); }
+.field__input {
+  width: 100%; height: 3rem; padding: 0 1rem;
+  border: 1px solid rgba(232, 230, 224, 0.22); border-radius: 0.5rem;
+  background: rgba(232, 230, 224, 0.06);
+  font: 400 1rem/1.4 var(--font-body); color: var(--ink);
+  color-scheme: dark;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.field__input::placeholder { color: rgba(232, 230, 224, 0.42); }
+.field__input:focus { outline: none; border-color: var(--ink); background: rgba(232, 230, 224, 0.1); }
+textarea.field__input { height: auto; min-height: 6.5rem; padding: 0.875rem 1rem; resize: vertical; }
+.phone { display: flex; gap: 0.5rem; }
+.phone__cc {
+  flex: none; width: 7rem; padding-right: 2rem; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23e8e6e0' stroke-width='1.5'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem;
+}
+.phone__cc option { background: #1a2758; color: var(--ink); }
+.book__guests {
+  justify-self: start; padding: 0; border: 0; background: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font: 500 1rem/1.3 var(--font-body); color: var(--ink);
+}
+.book__guests svg { width: 1rem; height: 1rem; }
+@media (hover: hover) { .book__guests:hover { text-decoration: underline; text-underline-offset: 0.25rem; } }
+.book__consent { margin: 0; font-size: 0.8125rem; line-height: 1.45; color: rgba(232, 230, 224, 0.6); }
+.book__actions { display: flex; justify-content: flex-end; gap: 0.625rem; margin-top: 0.25rem; }
+
+.book-done { display: grid; justify-items: start; gap: 1rem; padding-top: 1.75rem; }
+.book-done__icon {
+  width: 3rem; height: 3rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--ink); color: var(--bg);
+}
+.book-done__icon svg { width: 1.25rem; height: 1.25rem; }
+.book-done__title { margin: 0.25rem 0 0; font-family: var(--font-display); font-weight: 700; font-size: 2.25rem; line-height: 1; }
+.book-done__text { margin: 0; font-size: 1rem; line-height: 1.5; color: var(--ink-soft); }
+.book-done__text b { color: var(--ink); font-weight: 600; }
+
+/* модальное окно «Просто напишите мне» */
+.modal {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: rgba(8, 13, 32, 0.6);
+  -webkit-backdrop-filter: blur(0.5rem); backdrop-filter: blur(0.5rem);
+  animation: modal-fade 0.25s ease-out;
+}
+.modal__box {
+  position: relative;
+  width: 100%; max-width: 32rem;
+  padding: 2.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(232, 230, 224, 0.14);
+  background: #22377a;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.35);
+  animation: modal-rise 0.3s cubic-bezier(.2, .8, .2, 1);
+}
+.modal__close {
+  position: absolute; top: 1rem; right: 1rem;
+  width: 2.5rem; height: 2.5rem; padding: 0;
+  display: grid; place-items: center;
+  border: 0; border-radius: 0.5rem; background: transparent; color: var(--ink); cursor: pointer;
+}
+.modal__close svg { width: 1.25rem; height: 1.25rem; }
+@media (hover: hover) { .modal__close:hover { background: rgba(232, 230, 224, 0.1); } }
+.modal__title { margin: 0; padding-right: 2.5rem; font-family: var(--font-display); font-weight: 700; font-size: 2.5rem; line-height: 0.95; }
+.modal__lead { margin: 0.875rem 0 1.5rem; color: var(--ink-soft); line-height: 1.45; }
+.modal .book__actions .btn { width: 100%; }
+@keyframes modal-fade { from { opacity: 0; } }
+@keyframes modal-rise { from { opacity: 0; transform: translateY(1rem); } }
+
+/* планшет: одна колонка; нижняя фиксированная кнопка «обсудить задачу» прячется, когда мы уже в этом блоке */
+@container axia (max-width: 64rem) {
+  .meet { display: block; min-height: 0; }
+  .meet::before { margin-bottom: -100vh; margin-bottom: -100dvh; }
+  .meet__side { position: relative; height: auto; padding: 8rem 0 2.5rem; gap: 2.5rem; }
+  .meet__title { font-size: 3.5rem; }
+  .meet__main { padding: 0 0 4rem; display: block; }
+  .header .cta { transition: background-color 0.2s, opacity 0.3s, transform 0.3s; }
+  .axia.is-contact .header .cta { opacity: 0; pointer-events: none; transform: translate(-50%, 1rem); }
+}
+@container axia (max-width: 40rem) {
+  .meet__side { padding-top: 6.5rem; gap: 2rem; }
+  .meet__title { font-size: 2.5rem; }
+  .meet__lead { margin-top: 1.25rem; font-size: 1rem; }
+  .meet__points li { font-size: 1rem; }
+  .meet__person { width: 100%; }
+  .meet__write { width: 100%; }
+  .meet__main { padding-bottom: 2.5rem; }
+  .cal { padding: 1.25rem 1rem; }
+  .cal__grid { gap: 0.25rem; }
+  .cal__title { font-size: 1.25rem; }
+  .slots__list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .book__actions .btn { flex: 1; padding: 0 1rem; }
+  .modal { padding: 0.75rem; align-items: end; }
+  .modal__box { padding: 1.75rem 1.25rem 1.25rem; }
+  .modal__title { font-size: 2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .axia * { transition: none !important; }
+  .meet__dot, .modal, .modal__box { animation: none; }
+}

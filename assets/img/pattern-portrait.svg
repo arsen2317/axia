@@ -1,0 +1,16 @@
+<svg width="768" height="690" viewBox="0 0 768 690" fill="none" xmlns="http://www.w3.org/2000/svg">
+<line x1="39" y1="0" x2="39" y2="690" stroke="#3F569F" vector-effect="non-scaling-stroke"></line>
+<line x1="384" y1="0" x2="384" y2="690" stroke="#3F569F" vector-effect="non-scaling-stroke"></line>
+<line x1="729" y1="0" x2="729" y2="690" stroke="#3F569F" vector-effect="non-scaling-stroke"></line>
+<line x1="0" y1="235" x2="768" y2="235" stroke="#3F569F" vector-effect="non-scaling-stroke"></line>
+<line x1="0" y1="580" x2="768" y2="580" stroke="#3F569F" vector-effect="non-scaling-stroke"></line>
+<circle cx="-306" cy="-455" r="345" stroke="#3F569F" vector-effect="non-scaling-stroke"></circle>
+<circle cx="384" cy="-455" r="345" stroke="#3F569F" vector-effect="non-scaling-stroke"></circle>
+<circle cx="1074" cy="-455" r="345" stroke="#3F569F" vector-effect="non-scaling-stroke"></circle>
+<circle cx="-306" cy="235" r="345" stroke="#3F569F" vector-effect="non-scaling-stroke"></circle>
+<circle cx="384" cy="235" r="345" stroke="#3F569F" vector-effect="non-scaling-stroke"></circle>
+<circle cx="1074" cy="235" r="345" stroke="#3F569F" vector-effect="non-scaling-stroke"></circle>
+<circle cx="-306" cy="925" r="345" stroke="#3F569F" vector-effect="non-scaling-stroke"></circle>
+<circle cx="384" cy="925" r="345" stroke="#3F569F" vector-effect="non-scaling-stroke"></circle>
+<circle cx="1074" cy="925" r="345" stroke="#3F569F" vector-effect="non-scaling-stroke"></circle>
+</svg>
