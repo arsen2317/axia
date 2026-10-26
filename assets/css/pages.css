@@ -1,0 +1,93 @@
+/* Внутренние страницы: новости, статьи, документы, служебные сообщения. Цвета и шрифты — как на главной */
+@font-face {
+  font-family: "Soyuz Grotesk"; font-weight: 700; font-style: normal; font-display: swap;
+  src: url("../fonts/SoyuzGrotesk-Bold.woff") format("woff"), url("../fonts/SoyuzGrotesk-Bold.otf") format("opentype");
+}
+:root {
+  --bg: #2c4595; --bg-deep: #1e2f63; --ink: #e8e6e0; --muted: rgba(232, 230, 224, 0.72); --line: #3f569f;
+  --card: #34509f; --font-display: "Soyuz Grotesk", "Golos Text", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+body.pg { margin: 0; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font: 400 1rem/1.5 "Golos Text", system-ui, sans-serif; }
+.pg a { color: inherit; }
+.pg a:focus-visible, .pg button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+
+/* шапка */
+.pg-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; padding: 24px 40px; }
+.pg-logo { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.75rem; line-height: 1; text-decoration: none; }
+.pg-logo__mark { width: 1.125rem; height: 1.25rem; }
+.pg-nav { flex: 1 1 auto; }
+.pg-nav ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 28px; margin: 0; padding: 0; list-style: none; }
+.pg-nav a { display: inline-block; padding: 10px 0; text-decoration: none; color: var(--muted); }
+.pg-nav a:hover, .pg-nav a[aria-current="page"] { color: var(--ink); }
+.pg-cta, .pg-btn {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 20px;
+  border-radius: 8px; background: #1c1c1c; color: var(--ink); text-decoration: none; font: inherit; font-size: 0.9375rem; border: 0; cursor: pointer;
+}
+.pg-cta:hover, .pg-btn:hover { background: #333; }
+.pg-btn--ghost { background: transparent; border: 1px solid rgba(232, 230, 224, 0.4); }
+.pg-btn--ghost:hover { background: rgba(232, 230, 224, 0.08); }
+
+.pg-main { flex: 1 0 auto; width: 100%; max-width: 80rem; margin: 0 auto; padding: 48px 40px 96px; }
+.pg-title { margin: 0 0 48px; font-family: var(--font-display); font-weight: 700; font-size: clamp(3rem, 8vw, 4.5rem); line-height: 0.95; }
+.pg-empty { color: var(--muted); font-size: 1.125rem; }
+
+/* список новостей */
+.news-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 24px; }
+.news-item__link { display: flex; flex-direction: column; height: 100%; text-decoration: none; background: var(--card); border-radius: 12px; overflow: hidden; transition: background-color 0.2s; }
+.news-item__link:hover { background: #3a58aa; }
+.news-item__cover { display: block; aspect-ratio: 16 / 10; min-height: 0; overflow: hidden; background: var(--bg-deep); }
+.news-item__cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.news-item__body { display: flex; flex-direction: column; gap: 8px; padding: 20px; }
+.news-item__date { color: var(--muted); font-size: 0.875rem; }
+.news-item__title { font-weight: 700; font-size: 1.25rem; line-height: 1.25; }
+.news-item__desc { color: var(--muted); font-size: 0.9375rem; line-height: 1.4; }
+
+/* статья и документы */
+.art, .doc { max-width: 46rem; margin: 0 auto; }
+.art__back { display: inline-block; margin-bottom: 32px; color: var(--muted); text-decoration: none; padding: 8px 0; }
+.art__back:hover { color: var(--ink); }
+.art__title, .doc h1 { margin: 0 0 16px; font-family: var(--font-display); font-weight: 700; font-size: clamp(2.25rem, 6vw, 3.5rem); line-height: 1; }
+.art__meta { margin: 0 0 24px; color: var(--muted); font-size: 0.9375rem; }
+.art__lead { margin: 0 0 32px; font-size: 1.25rem; line-height: 1.45; }
+.art__cover { display: block; width: 100%; border-radius: 12px; margin: 0 0 40px; }
+.art__body, .doc { font-size: 1.0625rem; line-height: 1.6; }
+.art__body p, .doc p { margin: 0 0 1em; }
+.art__body h2, .doc h2 { margin: 2em 0 0.6em; font-size: 1.5rem; line-height: 1.25; }
+.doc h3 { margin: 1.6em 0 0.5em; font-size: 1.125rem; }
+.art__body a, .doc a { text-decoration-color: rgba(232, 230, 224, 0.5); text-underline-offset: 0.15em; }
+.art__body a:hover, .doc a:hover { text-decoration-color: currentColor; }
+.art__body blockquote { margin: 1.6em 0; padding: 4px 0 4px 24px; border-left: 2px solid var(--ink); font-size: 1.25rem; font-style: italic; }
+.art__body blockquote p { margin: 0; }
+.art__body figure { margin: 2em 0; }
+.art__body figure img { display: block; width: 100%; height: auto; border-radius: 10px; }
+.art__body figcaption { margin-top: 10px; color: var(--muted); font-size: 0.875rem; }
+.doc ul, .doc ol { margin: 0 0 1em; padding-left: 1.4em; }
+.doc li { margin-bottom: 0.35em; }
+.doc__date { color: var(--muted); margin-bottom: 40px; }
+.doc table { width: 100%; border-collapse: collapse; margin: 0 0 1em; font-size: 0.9375rem; }
+.doc td, .doc th { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+.doc .doc__scroll { overflow-x: auto; }
+.doc mark { background: #ffe27a; color: #1e2f63; padding: 0 3px; border-radius: 3px; }
+
+/* служебное сообщение (отмена встречи и т. п.) */
+.pg-msg { flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 16px; max-width: 36rem; margin: 0 auto; padding: 48px 24px; }
+.pg-msg .pg-logo { margin-bottom: 24px; }
+.pg-msg__title { margin: 0; font-family: var(--font-display); font-size: 2.5rem; line-height: 1; }
+.pg-msg__text { margin: 0 0 8px; color: var(--muted); font-size: 1.125rem; }
+.pg-msg form { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* подвал */
+.pg-foot { display: flex; flex-wrap: wrap; gap: 8px 48px; justify-content: space-between; padding: 32px 40px; background: var(--bg-deep); color: var(--muted); font-size: 0.875rem; }
+.pg-foot ul { display: flex; flex-wrap: wrap; gap: 4px 24px; margin: 0; padding: 0; list-style: none; }
+
+@media (max-width: 640px) {
+  .pg-head { padding: 16px; }
+  .pg-nav { order: 3; flex-basis: 100%; }
+  .pg-nav ul { justify-content: flex-start; gap: 0 20px; }
+  .pg-cta { margin-left: auto; }
+  .pg-main { padding: 24px 16px 64px; }
+  .pg-title { margin-bottom: 32px; }
+  .pg-foot { padding: 24px 16px; }
+}

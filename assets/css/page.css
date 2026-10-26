@@ -1153,3 +1153,10 @@ html { -webkit-tap-highlight-color: transparent; }
 }
 .axia .tm__mail, .axia .foot a[href^="mailto:"], .axia input, .axia textarea, .axia select { -webkit-user-select: text; user-select: text; }
 .axia label { -webkit-tap-highlight-color: transparent; }
+/* ФОРМЫ: поле-ловушка для ботов (люди его не видят), ошибка отправки, форма вместо календаря */
+.axia .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+.axia .form__error { margin: 0; padding: 0.625rem 0.75rem; border-radius: 0.5rem; background: rgba(255, 138, 128, 0.14); color: #ffd2cc; font-size: 0.875rem; line-height: 1.4; }
+.axia .btn:disabled { opacity: 0.6; cursor: progress; }
+.axia .cal__note { margin: 0.5rem 0 0; color: var(--ink-soft); font-size: 0.9375rem; line-height: 1.4; }
+.axia .cal--form .book { margin-top: 1.5rem; }
+.axia .cal--form .cal__head { flex-direction: column; align-items: flex-start; }

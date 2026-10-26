@@ -4,25 +4,20 @@ class Page extends DCLogic {
   constructor(props) {
     super(props);
     this.state = { open: false, glReady: false, navLabel: 'О нас', dir: 0, apprStep: 0, tm: 0, tmPage: 0, tmPageN: 2, light: false, top: true, solOpen: -1 };
-    /* ОБСУДИТЬ ЗАДАЧУ: свободные даты — будни с завтрашнего дня на ~10 недель вперёд (часть дней «занята»),
-       слоты 13:00–18:00 каждые 30 минут. Пока без сервера: данные-примеры, формы ничего не отправляют. */
+    /* ОБСУДИТЬ ЗАДАЧУ: свободные слоты приходят с сервера (/api/slots.php — рабочие часы минус занятость
+       Яндекс Календаря). Если сервера нет (превью на Vercel, открытие файла) — показываем данные-примеры,
+       а формы ничего не отправляют (this.demo) */
     const t0 = new Date(); this.today = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate());
     this.avail = new Set();
-    let firstFree = null;
-    for (let i = 1; i <= 70; i++) {
-      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i);
-      const wd = d.getDay();
-      if (wd === 0 || wd === 6) continue;
-      const key = this.dayKey(d);
-      if (this.hash(key) % 5 === 0) continue;
-      this.avail.add(key);
-      if (!firstFree) firstFree = d;
-    }
-    const f0 = firstFree || this.today;
+    this.slotMap = {};
+    this.demo = false;
+    this.captchaKey = '';
+    this.openedAt = Date.now();
     Object.assign(this.state, {
-      calY: f0.getFullYear(), calM: f0.getMonth(), selKey: firstFree ? this.dayKey(firstFree) : null,
-      slot: null, step: 'cal', h24: true, guests: false, bookedEmail: '',
-      modal: false, modalDone: false, msgEmail: ''
+      calY: this.today.getFullYear(), calM: this.today.getMonth(), selKey: null,
+      slot: null, slotIso: '', step: 'cal', h24: true, guests: false, bookedEmail: '',
+      modal: false, modalDone: false, msgEmail: '',
+      bookingOn: true, busy: false, bookError: '', msgError: '', inlineError: '', inlineDone: false, inlineEmail: ''
     });
     this.calEl = null;
     this.setCal = (el) => { this.calEl = el; };
@@ -182,6 +177,7 @@ class Page extends DCLogic {
     { const d = (this.root && this.root.ownerDocument) || document; if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => this.updateTmPages(true)); }
     this.updateWho();
     this.updateAppr();
+    this.loadBooking();
   }
   componentWillUnmount() {
     if (this.pagingStop) this.pagingStop();
@@ -1293,10 +1289,97 @@ void main(){
   dayKey(d) { return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
   hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   keyDate(key) { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d); }
-  slotsFor(key) {
+  slotsFor(key) { return this.slotMap[key] || []; }
+  /* ---- данные для записи: сервер или примеры ---- */
+  /* время слотов показываем в часовом поясе компании (по умолчанию Москва) — как в письмах и календаре */
+  setSlots(isoList, timeZone) {
+    const map = {};
+    let fmt = null;
+    try { if (timeZone) fmt = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }); } catch (e) { fmt = null; }
+    isoList.forEach((iso) => {
+      const d = new Date(iso); if (isNaN(d)) return;
+      let key = this.dayKey(d), mins = d.getHours() * 60 + d.getMinutes();
+      if (fmt) {
+        const pt = {}; fmt.formatToParts(d).forEach((x) => { pt[x.type] = +x.value; });
+        key = pt.year + '-' + pt.month + '-' + pt.day; mins = (pt.hour % 24) * 60 + pt.minute;
+      }
+      (map[key] = map[key] || []).push({ mins, iso });
+    });
+    Object.keys(map).forEach((k) => map[k].sort((a, b) => a.mins - b.mins));
+    this.slotMap = map;
+    this.avail = new Set(Object.keys(map).sort((a, b) => this.keyDate(a) - this.keyDate(b)));
+    /* выбранный день остаётся, если в нём ещё есть время; иначе — первый свободный */
+    let sel = this.state.selKey && map[this.state.selKey] ? this.state.selKey : null;
+    if (!sel) for (const k of this.avail) { sel = k; break; }
+    const d = sel ? this.keyDate(sel) : this.today;
+    this.setState({ selKey: sel, calY: d.getFullYear(), calM: d.getMonth() });
+  }
+  demoSlots() {
     const out = [];
-    for (let m = 13 * 60; m <= 18 * 60; m += 30) if (this.hash(key + '@' + m) % 4 !== 0) out.push(m);
+    for (let i = 1; i <= 60; i++) {
+      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i);
+      const wd = d.getDay(), key = this.dayKey(d);
+      if (wd === 0 || wd === 6 || this.hash(key) % 5 === 0) continue;
+      for (let m = 13 * 60; m <= 18 * 60; m += 30) if (this.hash(key + '@' + m) % 4 !== 0) out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).toISOString());
+    }
     return out;
+  }
+  api(path, body) {
+    const opts = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {};
+    return fetch(path, opts).then((r) => r.json().catch(() => ({ ok: false, error: 'Сервер недоступен', status: r.status })))
+      .catch(() => ({ ok: false, error: 'Нет связи с сервером. Проверьте интернет или напишите нам на hello@axiagroup.ru', offline: true }));
+  }
+  loadBooking() {
+    return this.api('/api/settings.php').then((st) => {
+      if (!st || !st.ok) { this.demo = true; this.setSlots(this.demoSlots()); return; }
+      this.captchaKey = st.captchaSiteKey || '';
+      this.durationMin = st.durationMin || 30;
+      this.setState({ bookingOn: !!st.bookingEnabled });
+      if (st.bookingEnabled) return this.loadSlots();
+    });
+  }
+  loadSlots() {
+    return this.api('/api/slots.php').then((d) => {
+      if (d && d.ok && d.enabled === false) { this.setState({ bookingOn: false }); return; }
+      if (d && d.ok) { this.tzLabel = d.timezone === 'Europe/Moscow' ? ' МСК' : ''; this.setSlots(d.slots || [], d.timezone); }
+    });
+  }
+  /* невидимая капча Яндекс SmartCaptcha: проверка запускается только при отправке формы */
+  captcha() {
+    if (!this.captchaKey) return Promise.resolve('');
+    const load = this.captchaLoad || (this.captchaLoad = new Promise((res, rej) => {
+      window.__axiaCaptchaReady = res;
+      const s = document.createElement('script');
+      s.src = 'https://smartcaptcha.yandexcloud.net/captcha.js?render=onload&onload=__axiaCaptchaReady';
+      s.defer = true; s.onerror = () => { this.captchaLoad = null; rej(new Error('Не загрузилась проверка «я не робот». Обновите страницу.')); };
+      document.head.appendChild(s);
+    }));
+    return load.then(() => new Promise((resolve, reject) => {
+      const sc = window.smartCaptcha;
+      if (this.captchaId == null) {
+        const box = document.createElement('div'); box.className = 'captcha-box'; document.body.appendChild(box);
+        this.captchaId = sc.render(box, { sitekey: this.captchaKey, invisible: true, hl: 'ru', shieldPosition: 'bottom-left' });
+      }
+      const id = this.captchaId;
+      const offs = [];
+      const done = () => offs.forEach((f) => f && f());
+      offs.push(sc.subscribe(id, 'success', (token) => { done(); resolve(token); }));
+      offs.push(sc.subscribe(id, 'challenge-hidden', () => { done(); reject(new Error('Проверка «я не робот» не завершена')); }));
+      offs.push(sc.subscribe(id, 'network-error', () => { done(); reject(new Error('Проверка «я не робот» недоступна. Попробуйте ещё раз.')); }));
+      sc.reset(id);
+      sc.execute(id);
+    }));
+  }
+  /* общая отправка формы: капча → POST → результат. kind: 'book' | 'msg' | 'inline' */
+  sendForm(e, path, extra, errKey) {
+    const f = this.formData(e);
+    if (this.state.busy) return Promise.resolve(null);
+    const reset = {}; reset[errKey] = ''; reset.busy = true;
+    this.setState(reset);
+    const fail = (msg) => { const u = { busy: false }; u[errKey] = msg; this.setState(u); return null; };
+    return this.captcha().then((token) => this.api(path, Object.assign({}, f, extra, { captcha: token, elapsed: Date.now() - (this.formAt || this.openedAt) })))
+      .then((d) => { if (!d) return null; if (!d.ok) { fail(d.error || 'Не удалось отправить'); return d; } this.setState({ busy: false }); return Object.assign(d, { form: f }); },
+        (err) => fail(err.message));
   }
   fmtTime(m) {
     const h = Math.floor(m / 60), mm = String(m % 60).padStart(2, '0');
@@ -1353,7 +1436,7 @@ void main(){
     if (e && e.preventDefault) e.preventDefault();
     const form = e && (e.currentTarget && e.currentTarget.tagName === 'FORM' ? e.currentTarget : e.target);
     const out = {};
-    if (form && form.elements) Array.prototype.forEach.call(form.elements, (el) => { if (el.name) out[el.name] = el.value; });
+    if (form && form.elements) Array.prototype.forEach.call(form.elements, (el) => { if (el.name) out[el.name] = el.type === 'checkbox' ? el.checked : el.value; });
     return out;
   }
 
@@ -1636,11 +1719,11 @@ void main(){
       });
     }
     const idx = y * 12 + m, t = this.today.getFullYear() * 12 + this.today.getMonth();
-    const slots = st.selKey ? this.slotsFor(st.selKey).map((mins) => ({
-      label: this.fmtTime(mins),
-      pick: () => { this.setState({ slot: mins, step: 'form', guests: false }); this.revealCal(); }
+    const slots = st.selKey ? this.slotsFor(st.selKey).map((s) => ({
+      label: this.fmtTime(s.mins),
+      pick: () => { this.formAt = Date.now(); this.setState({ slot: s.mins, slotIso: s.iso, step: 'form', guests: false, bookError: '' }); this.revealCal(); }
     })) : [];
-    const when = st.selKey && st.slot != null ? this.dayLabel(st.selKey) + ', ' + this.fmtTime(st.slot) + '–' + this.fmtTime(st.slot + 30) : '';
+    const when = st.selKey && st.slot != null ? this.dayLabel(st.selKey) + ', ' + this.fmtTime(st.slot) + '–' + this.fmtTime(st.slot + (this.durationMin || 30)) + (this.tzLabel || '') : '';
     return {
       setCal: this.setCal,
       setPerson: this.setPerson,
@@ -1651,7 +1734,7 @@ void main(){
       nextMonth: () => { if (idx < t + 2) this.goMonth(1); },
       days,
       hasSel: !!st.selKey, noSel: !st.selKey,
-      selLabel: st.selKey ? this.dayLabel(st.selKey) : '',
+      selLabel: st.selKey ? this.dayLabel(st.selKey) + (this.tzLabel ? ' · время' + this.tzLabel : '') : '',
       slots,
       f12: st.h24 ? '' : 'is-on', f24: st.h24 ? 'is-on' : '',
       set12: () => this.setState({ h24: false }), set24: () => this.setState({ h24: true }),
@@ -1659,15 +1742,41 @@ void main(){
       guestsOpen: !!st.guests, guestsClosed: !st.guests,
       openGuests: () => this.setState({ guests: true }),
       backToCal: () => { this.setState({ step: 'cal', slot: null }); this.revealCal(); },
-      submitBook: (e) => { const f = this.formData(e); this.setState({ step: 'done', bookedEmail: f.email || 'вашу почту' }); this.revealCal(); },
+      submitBook: (e) => {
+        if (this.demo) { const f = this.formData(e); this.setState({ step: 'done', bookedEmail: f.email || 'вашу почту' }); this.revealCal(); return; }
+        this.sendForm(e, '/api/book.php', { start: st.slotIso }, 'bookError').then((d) => {
+          if (!d) return;
+          if (d.ok) { this.setState({ step: 'done', bookedEmail: d.form.email }); this.revealCal(); this.loadSlots(); }
+          else if (d.taken) this.loadSlots();
+          else if (d.disabled) this.loadBooking();
+        });
+      },
       bookedEmail: st.bookedEmail,
       resetBook: () => { this.setState({ step: 'cal', slot: null }); this.revealCal(); },
+      busy: !!st.busy,
+      bookBtn: st.busy ? 'Отправка…' : 'Подтвердить',
+      msgBtn: st.busy ? 'Отправка…' : 'Отправить',
+      bookErrOn: !!st.bookError, bookError: st.bookError,
+      msgErrOn: !!st.msgError, msgError: st.msgError,
+      inlineErrOn: !!st.inlineError, inlineError: st.inlineError,
+      /* запись выключена в админке: вместо календаря — форма обратной связи */
+      bookingOn: !!st.bookingOn, bookingOff: !st.bookingOn,
+      meetLead: st.bookingOn ? 'Выберите удобное время. На\u00a0звонке мы\u00a0обсудим:' : 'Напишите нам, и\u00a0мы договоримся о\u00a0звонке. Обсудим:',
+      inlineForm: !st.inlineDone, inlineDone: !!st.inlineDone, inlineEmail: st.inlineEmail,
+      submitInline: (e) => {
+        if (this.demo) { const f = this.formData(e); this.setState({ inlineDone: true, inlineEmail: f.email || 'вашу почту' }); return; }
+        this.sendForm(e, '/api/contact.php', {}, 'inlineError').then((d) => { if (d && d.ok) { this.setState({ inlineDone: true, inlineEmail: d.form.email }); this.revealCal(); } });
+      },
+      resetInline: () => { this.formAt = Date.now(); this.setState({ inlineDone: false, inlineError: '' }); },
       /* модальное окно */
       modalOpen: !!st.modal, modalForm: !st.modalDone, modalDone: !!st.modalDone, msgEmail: st.msgEmail,
-      openModal: () => this.setState({ modal: true, modalDone: false }),
+      openModal: () => { this.formAt = Date.now(); this.setState({ modal: true, modalDone: false, msgError: '' }); },
       closeModal: () => this.setState({ modal: false }),
       modalBackdrop: (e) => { if (e.target === e.currentTarget) this.setState({ modal: false }); },
-      submitMsg: (e) => { const f = this.formData(e); this.setState({ modalDone: true, msgEmail: f.email || 'вашу почту' }); }
+      submitMsg: (e) => {
+        if (this.demo) { const f = this.formData(e); this.setState({ modalDone: true, msgEmail: f.email || 'вашу почту' }); return; }
+        this.sendForm(e, '/api/contact.php', {}, 'msgError').then((d) => { if (d && d.ok) this.setState({ modalDone: true, msgEmail: d.form.email }); });
+      }
     };
   }
 

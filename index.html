@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>аксиа — консалтинг</title>
 <meta name="description" content="аксиа — команда консультантов в сфере стратегического управления и корпоративных коммуникаций">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap">
+<link rel="stylesheet" href="assets/css/fonts.css">
 <link rel="preload" href="assets/fonts/SoyuzGrotesk-Bold.woff" as="font" type="font/woff" crossorigin="anonymous">
 <link rel="stylesheet" href="assets/css/site.css">
 <link rel="stylesheet" href="assets/css/page.css">
@@ -41,7 +39,7 @@
 <li><a href="#directions">направления</a></li>
 <li><a href="#solutions">решения</a></li>
 <li><a href="#team">команда</a></li>
-<li><a href="#news">новости</a></li>
+<li><a href="/news">новости</a></li>
 </ul>
 <button class="nav__toggle" type="button" aria-label="Разделы" aria-expanded="{{expanded}}" aria-controls="nav-body" onClick="{{toggle}}">
 <span class="nav__label">{{navLabel}}</span>
@@ -57,7 +55,7 @@
 <li><a class="nav__link" href="#directions">направления</a></li>
 <li><a class="nav__link" href="#solutions">решения</a></li>
 <li><a class="nav__link" href="#team">команда</a></li>
-<li><a class="nav__link" href="#news">новости</a></li>
+<li><a class="nav__link" href="/news">новости</a></li>
 </ul>
 </div>
 </div>
@@ -366,7 +364,7 @@
 <div class="meet__side">
 <div class="meet__intro">
 <h2 class="meet__title" id="meet-title">давайте обсудим вашу&nbsp;задачу</h2>
-<p class="meet__lead">Выберите удобное время. На&nbsp;звонке мы&nbsp;обсудим:</p>
+<p class="meet__lead">{{meetLead}}</p>
 <ul class="meet__points">
 <li><span class="meet__check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"></path></svg></span>В&nbsp;чём суть вашей задачи</li>
 <li><span class="meet__check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"></path></svg></span>Чем мы&nbsp;можем быть полезны</li>
@@ -374,11 +372,14 @@
 </ul>
 </div>
 <div class="meet__person" ref="{{setPerson}}">
+<sc-if value="{{bookingOn}}">
 <button class="btn btn--dark meet__write" type="button" onClick="{{openModal}}">напишите нам</button>
+</sc-if>
 </div>
 </div>
 
 <div class="meet__main">
+<sc-if value="{{bookingOn}}">
 <div class="cal" ref="{{setCal}}">
 <div class="cal__head">
 <p class="cal__title">короткая встреча</p>
@@ -452,10 +453,12 @@
 <sc-if value="{{guestsClosed}}" hint-placeholder-val="{{ true }}">
 <button class="book__guests" type="button" onClick="{{openGuests}}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>Добавить гостей</button>
 </sc-if>
-<label class="consent"><input class="consent__box" type="checkbox" name="consent" required=""><span>Нажимая кнопку «Подтвердить», я&nbsp;выражаю согласие на&nbsp;обработку моих персональных данных в&nbsp;соответствии с&nbsp;условиями <a href="#privacy">Политики обработки персональных&nbsp;данных</a></span></label>
+<label class="consent"><input class="consent__box" type="checkbox" name="consent" required=""><span>Я&nbsp;даю <a href="/consent" target="_blank" rel="noopener">согласие на&nbsp;обработку персональных данных</a> и&nbsp;ознакомлен(а) с&nbsp;<a href="/privacy" target="_blank" rel="noopener">политикой конфиденциальности</a></span></label>
+<input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+<sc-if value="{{bookErrOn}}"><p class="form__error" role="alert">{{bookError}}</p></sc-if>
 <div class="book__actions">
 <button class="btn btn--ghost" type="button" onClick="{{backToCal}}">Назад</button>
-<button class="btn btn--light" type="submit">Подтвердить</button>
+<button class="btn btn--light" type="submit" disabled="{{busy}}">{{bookBtn}}</button>
 </div>
 </form>
 </sc-if>
@@ -469,6 +472,49 @@
 </div>
 </sc-if>
 </div>
+</sc-if>
+<sc-if value="{{bookingOff}}">
+<div class="cal cal--form" ref="{{setCal}}">
+<sc-if value="{{inlineForm}}" hint-placeholder-val="{{ true }}">
+<div class="cal__head">
+<p class="cal__title">напишите нам</p>
+<p class="cal__note">Расскажите коротко о&nbsp;задаче&nbsp;— мы ответим в&nbsp;течение рабочего&nbsp;дня и&nbsp;предложим время для звонка.</p>
+</div>
+<form class="book" onSubmit="{{submitInline}}">
+<label class="field"><span class="field__label">Ваше имя *</span><input class="field__input" name="name" required="" autocomplete="name"></label>
+<label class="field"><span class="field__label">Адрес электронной почты *</span><input class="field__input" type="email" name="email" required="" autocomplete="email"></label>
+<div class="field"><span class="field__label">Номер телефона</span>
+<div class="phone">
+<select class="field__input phone__cc" name="cc" aria-label="Код страны">
+<option value="+7">🇷🇺 +7</option>
+<option value="+7 ">🇰🇿 +7</option>
+<option value="+375">🇧🇾 +375</option>
+<option value="+374">🇦🇲 +374</option>
+<option value="+998">🇺🇿 +998</option>
+<option value="+996">🇰🇬 +996</option>
+<option value="+995">🇬🇪 +995</option>
+<option value="+971">🇦🇪 +971</option>
+</select>
+<input class="field__input" type="tel" name="phone" autocomplete="tel-national" placeholder="(900) 000-00-00" aria-label="Номер телефона">
+</div>
+</div>
+<label class="field"><span class="field__label">Комментарий</span><textarea class="field__input" name="comment" rows="4" placeholder="Опишите задачу или&nbsp;вопрос"></textarea></label>
+<label class="consent"><input class="consent__box" type="checkbox" name="consent" required=""><span>Я&nbsp;даю <a href="/consent" target="_blank" rel="noopener">согласие на&nbsp;обработку персональных данных</a> и&nbsp;ознакомлен(а) с&nbsp;<a href="/privacy" target="_blank" rel="noopener">политикой конфиденциальности</a></span></label>
+<input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+<sc-if value="{{inlineErrOn}}"><p class="form__error" role="alert">{{inlineError}}</p></sc-if>
+<div class="book__actions"><button class="btn btn--light" type="submit" disabled="{{busy}}">{{msgBtn}}</button></div>
+</form>
+</sc-if>
+<sc-if value="{{inlineDone}}" hint-placeholder-val="{{ false }}">
+<div class="book-done" role="status">
+<span class="book-done__icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"></path></svg></span>
+<p class="book-done__title">сообщение отправлено</p>
+<p class="book-done__text">Спасибо! Мы ответим на&nbsp;{{inlineEmail}} в&nbsp;течение рабочего&nbsp;дня.</p>
+<button class="btn btn--ghost" type="button" onClick="{{resetInline}}">Написать ещё</button>
+</div>
+</sc-if>
+</div>
+</sc-if>
 </div>
 
 </section>
@@ -491,13 +537,13 @@
 <li><a href="#directions">направления</a></li>
 <li><a href="#solutions">решения</a></li>
 <li><a href="#team">команда</a></li>
-<li><a href="#news">новости</a></li>
+<li><a href="/news">новости</a></li>
 </ul>
 <ul class="foot__col foot__col--legal">
 <li>ООО «Аксиа Консалтинг»</li>
 <li>ОГРН 1267700204496</li>
 <li>ИНН 9731164515</li>
-<li><a href="#privacy">политика конфиденциальности</a></li>
+<li><a href="/privacy">политика конфиденциальности</a></li>
 <li>©&nbsp;2026 axiagroup.ru</li>
 </ul>
 </footer>
@@ -529,8 +575,10 @@
 </div>
 </div>
 <label class="field"><span class="field__label">Комментарий</span><textarea class="field__input" name="comment" rows="4" placeholder="Опишите задачу или&nbsp;вопрос"></textarea></label>
-<label class="consent"><input class="consent__box" type="checkbox" name="consent" required=""><span>Нажимая кнопку «Отправить», я&nbsp;выражаю согласие на&nbsp;обработку моих персональных данных в&nbsp;соответствии с&nbsp;условиями <a href="#privacy">Политики обработки персональных&nbsp;данных</a></span></label>
-<div class="book__actions"><button class="btn btn--light" type="submit">Отправить</button></div>
+<label class="consent"><input class="consent__box" type="checkbox" name="consent" required=""><span>Я&nbsp;даю <a href="/consent" target="_blank" rel="noopener">согласие на&nbsp;обработку персональных данных</a> и&nbsp;ознакомлен(а) с&nbsp;<a href="/privacy" target="_blank" rel="noopener">политикой конфиденциальности</a></span></label>
+<input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+<sc-if value="{{msgErrOn}}"><p class="form__error" role="alert">{{msgError}}</p></sc-if>
+<div class="book__actions"><button class="btn btn--light" type="submit" disabled="{{busy}}">{{msgBtn}}</button></div>
 </form>
 </sc-if>
 <sc-if value="{{modalDone}}" hint-placeholder-val="{{ false }}">

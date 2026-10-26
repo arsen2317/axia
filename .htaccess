@@ -1,0 +1,37 @@
+# аксиа — настройки для Apache (виртуальный хостинг REG.RU и т. п.)
+AddDefaultCharset UTF-8
+Options -Indexes -MultiViews
+DirectoryIndex index.html index.php
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# всё — по HTTPS (раскомментировать после выпуска SSL-сертификата)
+# RewriteCond %{HTTPS} off
+# RewriteCond %{HTTP:X-Forwarded-Proto} !https
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# служебные папки и файлы закрыты снаружи
+RewriteRule ^(config|lib|data|tools)(/|$) - [F,L]
+RewriteRule (^|/)\.(?!well-known/) - [F,L]
+RewriteRule ^(README\.md|vercel\.json|composer\.(json|lock))$ - [F,L]
+
+# красивые адреса
+RewriteRule ^news/?$ news.php [L]
+RewriteRule ^news/([a-z0-9-]+)/?$ article.php?slug=$1 [L,QSA]
+RewriteRule ^privacy/?$ privacy.html [L]
+RewriteRule ^consent/?$ consent.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresByType font/woff2 "access plus 1 year"
+ExpiresByType font/woff "access plus 1 year"
+ExpiresByType image/webp "access plus 1 month"
+</IfModule>

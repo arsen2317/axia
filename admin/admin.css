@@ -1,0 +1,81 @@
+/* Админка: простой светлый интерфейс */
+:root {
+  --ad-bg: #f2f1ec; --ad-card: #ffffff; --ad-ink: #1e2f63; --ad-muted: #5d6a92; --ad-line: #d9dbe6;
+  --ad-accent: #2c4595; --ad-danger: #b3261e; --ad-ok: #1f7a4a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ad-bg); color: var(--ad-ink); font: 16px/1.45 "Golos Text", system-ui, sans-serif; }
+a { color: var(--ad-accent); }
+code { background: #eceef5; border-radius: 4px; padding: 0 4px; font-size: 0.9em; }
+h2 { margin: 0 0 16px; font-size: 1.25rem; }
+h3 { margin: 28px 0 12px; font-size: 1rem; }
+
+.ad-logo { font-weight: 700; text-decoration: none; color: var(--ad-ink); }
+.ad-top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding: 16px 24px; background: var(--ad-card); border-bottom: 1px solid var(--ad-line); position: sticky; top: 0; z-index: 5; }
+.ad-top__nav { display: flex; gap: 20px; flex-wrap: wrap; }
+.ad-main { max-width: 860px; margin: 0 auto; padding: 24px 16px 120px; display: flex; flex-direction: column; gap: 20px; }
+.ad-card { background: var(--ad-card); border: 1px solid var(--ad-line); border-radius: 12px; padding: 24px; }
+.ad-card__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+.ad-card__head h2 { margin: 0; }
+.ad-hint { color: var(--ad-muted); font-size: 0.875rem; }
+
+.ad-login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.ad-login__form { width: min(100%, 380px); display: flex; flex-direction: column; gap: 16px; }
+
+.ad-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; font-size: 0.875rem; color: var(--ad-muted); flex: 1 1 200px; }
+.ad-field input, .ad-field textarea, .ad-block__text, .ad-block__caption {
+  font: inherit; font-size: 1rem; color: var(--ad-ink); width: 100%;
+  padding: 10px 12px; border: 1px solid var(--ad-line); border-radius: 8px; background: #fff;
+}
+.ad-field input:focus, .ad-field textarea:focus, .ad-block__text:focus, .ad-block__caption:focus { outline: 2px solid var(--ad-accent); outline-offset: -1px; border-color: transparent; }
+.ad-row { display: flex; flex-wrap: wrap; gap: 0 16px; }
+.ad-field .ad-cover, .ad-cover { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; color: var(--ad-ink); margin-bottom: 12px; }
+.ad-cover img { max-width: 100%; max-height: 280px; border-radius: 8px; border: 1px solid var(--ad-line); }
+.ad-cover__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.ad-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px;
+  font: inherit; font-size: 0.9375rem; color: var(--ad-ink); background: #fff; border: 1px solid var(--ad-line); border-radius: 8px;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+}
+.ad-btn:hover { border-color: var(--ad-accent); }
+.ad-btn:disabled { opacity: 0.45; cursor: default; }
+.ad-btn--primary { background: var(--ad-accent); border-color: var(--ad-accent); color: #fff; }
+.ad-btn--primary:hover { background: #22397f; }
+.ad-btn--danger { color: var(--ad-danger); }
+.ad-btn--danger:hover { border-color: var(--ad-danger); }
+.ad-btn--small { min-height: 36px; padding: 0 12px; font-size: 0.875rem; }
+
+.ad-note { margin: 0; padding: 10px 12px; border-radius: 8px; font-size: 0.9375rem; }
+.ad-note--err { background: #fbe9e7; color: var(--ad-danger); }
+.ad-note--warn { background: #fff4d6; color: #6b4e00; }
+
+.ad-switch { display: flex; align-items: center; gap: 12px; cursor: pointer; min-height: 44px; }
+.ad-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ad-switch__track { flex: none; width: 48px; height: 28px; border-radius: 14px; background: #c5c9d8; position: relative; transition: background 0.2s; }
+.ad-switch__track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+.ad-switch input:checked + .ad-switch__track { background: var(--ad-ok); }
+.ad-switch input:checked + .ad-switch__track::after { transform: translateX(20px); }
+.ad-switch input:focus-visible + .ad-switch__track { outline: 2px solid var(--ad-accent); outline-offset: 2px; }
+.ad-pill { display: inline-block; margin: 4px 4px 0 0; padding: 2px 10px; border-radius: 999px; background: #eceef5; font-size: 0.8125rem; }
+.ad-pill.is-on { background: #e3f3ea; color: var(--ad-ok); }
+
+.ad-list { list-style: none; margin: 0; padding: 0; }
+.ad-list__row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--ad-line); }
+.ad-list__main { display: flex; gap: 12px; align-items: center; min-width: 0; flex: 1 1 280px; }
+.ad-list__actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ad-thumb { flex: none; width: 72px; height: 48px; object-fit: cover; border-radius: 6px; background: #e4e6ef; }
+
+.ad-block { border: 1px solid var(--ad-line); border-radius: 10px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.ad-block__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; flex-wrap: wrap; }
+.ad-block__type { font-size: 0.8125rem; color: var(--ad-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.ad-block__tools { display: flex; gap: 6px; }
+.ad-block__text { resize: vertical; line-height: 1.5; }
+.ad-block--heading .ad-block__text { font-weight: 700; font-size: 1.125rem; }
+.ad-block--quote .ad-block__text { font-style: italic; }
+.ad-block__img { max-width: 100%; max-height: 360px; border-radius: 8px; }
+.ad-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.ad-savebar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; padding: 12px 16px; background: var(--ad-card); border-top: 1px solid var(--ad-line); }
+.ad-savebar .ad-note { margin-right: auto; }
+@media (max-width: 600px) { .ad-card { padding: 16px; } .ad-savebar .ad-btn { flex: 1 1 140px; } }
