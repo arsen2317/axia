@@ -1331,7 +1331,14 @@ void main(){
   }
   loadBooking() {
     return this.api('/api/settings.php').then((st) => {
-      if (!st || !st.ok) { this.demo = true; this.setSlots(this.demoSlots()); return; }
+      if (!st || !st.ok) {
+        this.demo = true;
+        /* демо на Vercel: переключатель записи из демо-админки (хранится в этом браузере) */
+        let on = true; try { on = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).bookingEnabled !== false; } catch (e) { on = true; }
+        this.setState({ bookingOn: on });
+        this.setSlots(this.demoSlots());
+        return;
+      }
       this.captchaKey = st.captchaSiteKey || '';
       this.durationMin = st.durationMin || 30;
       this.setState({ bookingOn: !!st.bookingEnabled });

@@ -1,0 +1,62 @@
+<!doctype html>
+<!-- ДЕМО для Vercel: см. demo/demo.js -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Редактор статьи — админка аксиа (демо)</title>
+<link rel="stylesheet" href="/assets/css/fonts.css">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body data-demo="edit">
+<header class="ad-top">
+<a class="ad-logo" href="/admin/">← все статьи</a>
+<nav class="ad-top__nav"><span class="ad-hint" id="save-state"></span></nav>
+</header>
+<main class="ad-main ad-editor" id="demo-root">
+<p class="ad-note ad-note--warn">Демо-режим: статья сохраняется только в этом браузере.</p>
+<script type="application/json" id="article-data">{}</script>
+
+<section class="ad-card">
+<label class="ad-field"><span>Заголовок *</span><input id="f-title" maxlength="200" required></label>
+<label class="ad-field"><span>Краткое описание (для списка новостей)</span><textarea id="f-description" rows="3" maxlength="600"></textarea></label>
+<div class="ad-row">
+<label class="ad-field"><span>Автор (необязательно)</span><input id="f-author" maxlength="120"></label>
+<label class="ad-field"><span>Дата публикации</span><input id="f-date" type="date"></label>
+<label class="ad-field"><span>Адрес: /news/…</span><input id="f-slug" maxlength="80" placeholder="заполнится из заголовка"></label>
+</div>
+<div class="ad-field"><span>Обложка</span>
+<div class="ad-cover" id="cover-box">
+<img id="cover-img" alt="" hidden>
+<div class="ad-cover__actions">
+<label class="ad-btn"><input type="file" accept="image/jpeg,image/png,image/webp" id="cover-file" hidden>Загрузить обложку</label>
+<button class="ad-btn ad-btn--danger" type="button" id="cover-remove" hidden>Убрать</button>
+</div>
+</div>
+<label class="ad-field"><span>Описание обложки для незрячих (alt)</span><input id="f-cover-alt" maxlength="200"></label>
+</div>
+</section>
+
+<section class="ad-card">
+<h2>Текст статьи</h2>
+<p class="ad-hint">В тексте: пустая строка — новый абзац, <code>**жирный**</code>, <code>*курсив*</code>, <code>[текст ссылки](https://адрес)</code>.</p>
+<div id="blocks"></div>
+<div class="ad-add">
+<span class="ad-hint">Добавить:</span>
+<button class="ad-btn ad-btn--small" type="button" data-add="text">Текст</button>
+<button class="ad-btn ad-btn--small" type="button" data-add="heading">Подзаголовок</button>
+<button class="ad-btn ad-btn--small" type="button" data-add="image">Картинка</button>
+<button class="ad-btn ad-btn--small" type="button" data-add="quote">Цитата</button>
+</div>
+</section>
+
+<div class="ad-savebar">
+<p class="ad-note ad-note--err" id="save-error" role="alert" hidden></p>
+<button class="ad-btn" type="button" id="btn-draft">Сохранить черновик</button>
+<button class="ad-btn ad-btn--primary" type="button" id="btn-publish">Опубликовать</button>
+</div>
+</main>
+<script src="/demo/demo.js"></script>
+</body>
+</html>

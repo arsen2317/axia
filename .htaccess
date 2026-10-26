@@ -12,7 +12,7 @@ RewriteEngine On
 # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # служебные папки и файлы закрыты снаружи
-RewriteRule ^(config|lib|data|tools)(/|$) - [F,L]
+RewriteRule ^(config|lib|data|tools|demo)(/|$) - [F,L]
 RewriteRule (^|/)\.(?!well-known/) - [F,L]
 RewriteRule ^(README\.md|vercel\.json|composer\.(json|lock))$ - [F,L]
 
