@@ -1143,3 +1143,13 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 @media (hover: hover) { .axia.is-light-sol .nav:hover .nav__icon { color: #2c4595; } }
 /* ОБСУДИТЬ ЗАДАЧУ, мобильный: фон не закрепляется — сетка листается вместе с блоком (как на планшете) */
 @container axia (max-width: 40rem) { .axia .meet::before { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: auto; margin: 0; } }
+/* ТАП НА ТАЧ-ЭКРАНАХ: без системной подсветки нажатия (синие/бирюзовые прямоугольники) и без выделения текста
+   при долгом нажатии на шапку, меню и кнопки. Фокус с клавиатуры (:focus-visible) остаётся */
+html { -webkit-tap-highlight-color: transparent; }
+.axia a, .axia button, .axia [role="button"], .axia .header, .axia .nav, .axia .cta {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none; user-select: none;
+}
+.axia .tm__mail, .axia .foot a[href^="mailto:"], .axia input, .axia textarea, .axia select { -webkit-user-select: text; user-select: text; }
+.axia label { -webkit-tap-highlight-color: transparent; }
