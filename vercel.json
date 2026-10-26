@@ -2,8 +2,11 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/news", "destination": "/demo/news" },
+    { "source": "/news/", "destination": "/demo/news" },
     { "source": "/news/:slug", "destination": "/demo/article" },
+    { "source": "/news/:slug/", "destination": "/demo/article" },
     { "source": "/admin", "destination": "/demo/admin" },
+    { "source": "/admin/", "destination": "/demo/admin" },
     { "source": "/admin/edit.php", "destination": "/demo/edit" }
   ]
 }
