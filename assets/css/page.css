@@ -905,6 +905,15 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .foot__word { top: auto; bottom: -22.7cqw; }
 }
 @media (prefers-reduced-motion: reduce) { .axia .dv__card .dv__art * { animation: none !important; } }
+/* РЕШЕНИЯ, десктоп: заголовок — по центру свободной зоны между низом шапки (4.875rem) и верхом номеров кругов
+   (номер стоит на верхней точке круга и выступает над ней на ≈0.081 диаметра) */
+@container axia (width > 64rem) {
+  .axia .sol__title {
+    bottom: auto; text-box: trim-both ex alphabetic;
+    top: calc((4.875rem + var(--sol-cy, 60vh) - var(--sol-d) / 2 - var(--sol-d) * 0.081) / 2);
+    transform: translateY(-50%);
+  }
+}
 /* РЕШЕНИЯ, десктоп: отступ снизу до «Команды» (--sol-pb считает скрипт); в нём сетка продолжается без шва */
 @container axia (width > 64rem) {
   .axia .sol {

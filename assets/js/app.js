@@ -336,6 +336,7 @@ void main(){
     const doc = sec.ownerDocument, root = sec.closest('.axia');
     const px = parseFloat(getComputedStyle(root || doc.documentElement).fontSize) || 16;
     const ttl = st.querySelector('.dv__title');
+    if (ttl && W <= 1024) ttl.style.top = '';   /* положение заголовка от десктопа (ниже) не переносим на планшет и мобильный */
     const tB = ttl ? ttl.offsetTop + ttl.offsetHeight : 0;
     const ctaEl = root ? root.querySelector('.header .cta') : null;
     let bot = H - 2.5 * px;
@@ -353,10 +354,15 @@ void main(){
         /* десктоп (макет): карточки во всю ширину между полями сетки, почти квадратные, с иллюстрацией сверху */
         const f = W / 1200, gut = ttl ? ttl.offsetLeft : 2.5 * px;
         gap = 16 * f; Lc = (W - 2 * gut - 2 * gap) / 3;
-        const top2 = tB + 2.75 * px;
+        /* карточки прижаты к низу секции (отступ — как поле сетки), заголовок — по центру свободной зоны
+           между низом шапки и верхом карточек */
+        const hdrB = 4.875 * px, tH = ttl ? ttl.offsetHeight : 0, minGap = 2.75 * px;
+        const bot2 = H - gut;
         /* высота: ~квадрат, но не меньше, чем нужно под самый длинный текст + иллюстрацию (≈ 0.55 ширины) */
-        Hc = Math.min(Math.max(Lc * 1.05, (this.dvTmax || 0) + Lc * 0.55 + 2.25 * px), bot - top2);
+        Hc = Math.min(Math.max(Lc * 1.05, (this.dvTmax || 0) + Lc * 0.55 + 2.25 * px), bot2 - (hdrB + tH + 2 * minGap));
         Hc = Math.max(Hc, 200);
+        const top2 = bot2 - Hc;
+        if (ttl) ttl.style.top = ((hdrB + top2) / 2 - tH / 2).toFixed(1) + 'px';
         g = { vert: false, cx: W / 2, cy: top2 + Hc / 2, Lc, gap, Uh: (3 * Lc + 2 * gap) / 2, Vh: Hc / 2, rc: 0.75 * px, rot: true };
       }
       if (!g) {
