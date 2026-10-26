@@ -1,6 +1,7 @@
 <?php
 /* Отправка писем через SMTP (Яндекс 360). Если SMTP не настроен — письмо сохраняется в data/outbox (тестовый режим). */
 declare(strict_types=1);
+defined('ROOT') || exit;
 
 require_once ROOT . '/lib/vendor/PHPMailer/Exception.php';
 require_once ROOT . '/lib/vendor/PHPMailer/PHPMailer.php';
@@ -38,7 +39,12 @@ function send_mail($to, string $subject, string $html, string $text, array $opts
         foreach ($opts['attachments'] ?? [] as [$name, $content, $mime]) $m->addStringAttachment($content, $name, PHPMailer::ENCODING_BASE64, $mime);
 
         if (!$smtp) {
-            /* тестовый режим: письмо не уходит, а складывается в data/outbox/*.eml */
+            /* SMTP не настроен. Локально (php -S) письмо складывается в data/outbox; на настоящем сервере —
+               не сохраняется нигде (в письмах персональные данные), отправка считается неудачной */
+            if (PHP_SAPI !== 'cli-server') {
+                log_error('mail: SMTP не настроен, письмо не отправлено');
+                return false;
+            }
             $m->preSend();
             ensure_dir(DATA . '/outbox');
             file_put_contents(DATA . '/outbox/' . date('Ymd-His') . '-' . bin2hex(random_bytes(3)) . '.eml', $m->getSentMIMEMessage());
@@ -46,7 +52,8 @@ function send_mail($to, string $subject, string $html, string $text, array $opts
         }
         return $m->send();
     } catch (Throwable $e) {
-        log_error('mail: ' . $e->getMessage() . ' / ' . $m->ErrorInfo);
+        /* без адресов и текста письма: в журнал не попадают персональные данные */
+        log_error('mail: ' . preg_replace('/\S+@\S+/', '[email]', $e->getMessage()));
         return false;
     }
 }

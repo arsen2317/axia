@@ -4,6 +4,7 @@
  * создание конференции в Яндекс Телемосте, событие в календаре, хранение броней (без персональных данных — только хэши).
  */
 declare(strict_types=1);
+defined('ROOT') || exit;
 
 function tz(): DateTimeZone
 {
@@ -65,20 +66,24 @@ function free_slots(bool $fresh = false): array
 
 function bookings(): array
 {
-    return read_json(DATA . '/bookings.json', []);
+    return read_json(DATA . '/bookings.php', []);
 }
 
 function save_bookings(array $b): void
 {
     /* старые (прошедшие больше 30 дней назад) записи удаляем */
     $cut = time() - 30 * 86400;
-    write_json(DATA . '/bookings.json', array_values(array_filter($b, fn($x) => ($x['end'] ?? 0) > $cut)));
+    write_json(DATA . '/bookings.php', array_values(array_filter($b, fn($x) => ($x['end'] ?? 0) > $cut)));
 }
 
 function bookings_busy(): array
 {
     $out = [];
-    foreach (bookings() as $b) if (in_array($b['status'] ?? '', ['active', 'pending'], true)) $out[] = [(int)$b['start'], (int)$b['end']];
+    /* «pending» — слот зарезервирован на время создания встречи; если запрос оборвался, резерв гаснет через 10 минут */
+    foreach (bookings() as $b) {
+        $st = $b['status'] ?? '';
+        if ($st === 'active' || ($st === 'pending' && ($b['created'] ?? 0) > time() - 600)) $out[] = [(int)$b['start'], (int)$b['end']];
+    }
     return $out;
 }
 
@@ -111,7 +116,7 @@ function caldav_request(string $method, string $url, ?string $body, array $heade
 function calendar_busy(DateTimeImmutable $from, DateTimeImmutable $to, bool $fresh = false): array
 {
     if (!caldav_enabled()) return [];
-    $cacheFile = DATA . '/cache/busy.json';
+    $cacheFile = DATA . '/cache/busy.php';
     $cache = read_json($cacheFile, []);
     if (!$fresh && isset($cache['at'], $cache['busy']) && $cache['at'] > time() - 60) return $cache['busy'];
 
@@ -125,7 +130,7 @@ function calendar_busy(DateTimeImmutable $from, DateTimeImmutable $to, bool $fre
         . '</C:comp-filter></C:comp-filter></C:filter></C:calendar-query>';
     [$code, $res, $err] = caldav_request('REPORT', (string)cfg('caldav.url'), $xml, ['Depth: 1', 'Content-Type: application/xml; charset=utf-8']);
     if ($code !== 207) {
-        log_error("caldav REPORT: HTTP $code $err " . substr($res, 0, 300));
+        log_error("caldav REPORT: HTTP $code $err");
         /* календарь недоступен: если есть старый кэш — используем его, иначе считаем занятым весь период, чтобы не было двойных броней */
         if (isset($cache['busy'])) return $cache['busy'];
         return [[$from->getTimestamp(), $to->getTimestamp()]];
@@ -142,7 +147,7 @@ function calendar_busy(DateTimeImmutable $from, DateTimeImmutable $to, bool $fre
 
 function calendar_cache_clear(): void
 {
-    @unlink(DATA . '/cache/busy.json');
+    @unlink(DATA . '/cache/busy.php');
 }
 
 /** Разбор iCalendar: занятые интервалы событий, включая простые повторения (DAILY / WEEKLY с BYDAY, INTERVAL, COUNT, UNTIL, EXDATE) */
@@ -302,7 +307,7 @@ function telemost_create(): ?array
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     $d = is_string($res) ? json_decode($res, true) : null;
-    if ($code >= 300 || !is_array($d) || empty($d['join_url'])) {
+    if ($code >= 300 || !is_array($d) || !is_string($d['join_url'] ?? null) || !preg_match('#^https://[a-z0-9.-]+\.yandex\.(ru|com)/#i', $d['join_url'])) {
         log_error("telemost create: HTTP $code " . substr((string)$res, 0, 300));
         return null;
     }

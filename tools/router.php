@@ -1,4 +1,5 @@
 <?php
+if (PHP_SAPI !== 'cli-server') { http_response_code(404); exit; }
 /* Локальный запуск без Apache: php -S localhost:8000 tools/router.php
    Повторяет правила из .htaccess (красивые адреса и закрытые папки). */
 $path = rawurldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');

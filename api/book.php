@@ -14,11 +14,11 @@ if (!settings()['booking_enabled']) fail('Запись на встречи се�
 $d = json_body();
 guard_form($d, 'book');
 
-$name = str_field($d, 'name', 120, true);
+$name = name_field($d);
 $email = str_field($d, 'email', 254, true);
 if (!valid_email($email)) fail('Проверьте адрес почты', 422, ['field' => 'email']);
 $phone = phone_clean(str_field($d, 'cc', 8), str_field($d, 'phone', 32));
-$info = str_field($d, 'info', 3000);
+$info = str_field($d, 'info', 3000, false, true);
 $guestsRaw = str_field($d, 'guests', 1000);
 $guests = [];
 foreach (preg_split('/[\s,;]+/', $guestsRaw, -1, PREG_SPLIT_NO_EMPTY) as $g) {
@@ -33,7 +33,7 @@ try { $start = new DateTimeImmutable($startIso); } catch (Throwable $e) { fail('
 $start = $start->setTimezone(tz());
 
 /* --- лимиты на человека и на сайт --- */
-$ip = client_ip();
+$ip = rl_ip();
 $emailH = pd_hash(email_key($email));
 $phoneH = $phone !== '' ? pd_hash($phone) : '';
 $ipH = pd_hash($ip);
@@ -124,7 +124,10 @@ $sentClient = send_mail($email, 'Встреча с аксиа: ' . $when, $clien
 
 foreach ($guests as $g) {
     send_mail($g, 'Приглашение на встречу с аксиа: ' . $when,
-        mail_layout('Вас пригласили на встречу', '<p>' . h($name) . ' пригласил(а) вас на встречу с командой аксиа.</p><p><b>' . h($when) . '</b></p>' . $linkHtml),
+        /* имя пригласившего в письмо гостю не подставляем: адрес гостя вводит посетитель, и чужой текст не должен
+           уходить на произвольные адреса от имени компании */
+        mail_layout('Вас пригласили на встречу', '<p>Вас пригласили на встречу с командой аксиа.</p><p><b>' . h($when) . '</b></p>' . $linkHtml
+            . '<p style="font-size:13px;color:#6b7aa8">Если вы не ожидали это письмо, просто проигнорируйте его.</p>'),
         "Вас пригласили на встречу с аксиа\n\n$when\n" . ($b['join_url'] ? "Яндекс Телемост: {$b['join_url']}\n" : ''),
         ['attachments' => [['invite.ics', build_ics($b, $title, $b['join_url'] ? 'Яндекс Телемост: ' . $b['join_url'] : '', 'PUBLISH'), 'text/calendar; charset=utf-8; method=PUBLISH']]]);
 }

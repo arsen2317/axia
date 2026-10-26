@@ -9,13 +9,13 @@ require_method('POST');
 $d = json_body();
 guard_form($d, 'contact');
 
-$name = str_field($d, 'name', 120, true);
+$name = name_field($d);
 $email = str_field($d, 'email', 254, true);
 if (!valid_email($email)) fail('Проверьте адрес почты', 422, ['field' => 'email']);
 $phone = phone_clean(str_field($d, 'cc', 8), str_field($d, 'phone', 32));
-$comment = str_field($d, 'comment', 4000);
+$comment = str_field($d, 'comment', 4000, false, true);
 
-$ip = client_ip();
+$ip = rl_ip();
 rate_or_fail('contact:hour:' . $ip, 5, 3600);
 rate_or_fail('contact:mail:' . pd_hash(email_key($email)), 3, 3600);
 rate_or_fail('contact:total', 100, 86400, 'Форма временно недоступна. Напишите нам на ' . cfg('mail.to'));

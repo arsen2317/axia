@@ -1,10 +1,12 @@
 <?php
 /* Общая шапка и подвал для страниц «Новости», статей и служебных страниц */
 declare(strict_types=1);
+defined('ROOT') || exit;
 
 function page_open(string $title, string $description = '', array $meta = []): void
 {
     header('Content-Type: text/html; charset=utf-8');
+    security_headers();
     $t = h($title);
     echo '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
         . '<title>' . $t . '</title>'

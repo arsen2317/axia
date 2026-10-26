@@ -1,6 +1,7 @@
 <?php
 /* Защита форм: ограничение частоты запросов, капча Яндекс SmartCaptcha, ловушка для ботов. */
 declare(strict_types=1);
+defined('ROOT') || exit;
 
 /* Скользящее окно: не больше $limit событий за $windowSec по ключу. true — можно, false — лимит исчерпан.
    $consume = false — только проверить, не записывая событие */
@@ -71,8 +72,7 @@ function guard_form(array $d, string $scope): void
     /* форма отправлена быстрее, чем человек успел бы её заполнить */
     $elapsed = isset($d['elapsed']) && is_numeric($d['elapsed']) ? (int)$d['elapsed'] : 0;
     if ($elapsed < 2500) fail('Не удалось отправить, попробуйте ещё раз', 400);
-    $ip = client_ip();
-    rate_or_fail($scope . ':burst:' . $ip, 5, 600);
+    rate_or_fail($scope . ':burst:' . rl_ip(), 5, 600);
     if (!captcha_verify(str_field($d, 'captcha', 4000))) fail('Проверка «я не робот» не пройдена. Попробуйте ещё раз.', 403, ['captcha' => true]);
     if (empty($d['consent'])) fail('Нужно согласие на обработку персональных данных', 422, ['field' => 'consent']);
 }
@@ -96,10 +96,20 @@ function email_key(string $e): string
     return $local . '@' . $domain;
 }
 
+/* Имя: только буквы, пробелы, дефис, апостроф и точка. Ссылки и адреса в имени запрещены — имя попадает в письма,
+   и иначе форму можно было бы использовать для рассылки спама от имени компании */
+function name_field(array $d, string $k = 'name'): string
+{
+    $v = preg_replace('/\s+/u', ' ', str_field($d, $k, 80, true)) ?? '';
+    if (!preg_match("/^[\p{L}\p{M}][\p{L}\p{M} .'’\-]*$/u", $v)) fail('Имя может содержать только буквы, пробелы и дефис', 422, ['field' => $k]);
+    return $v;
+}
+
 function phone_clean(string $cc, string $phone): string
 {
     $digits = preg_replace('/\D+/', '', $phone) ?? '';
     if ($digits === '') return '';
-    $ccd = preg_replace('/\D+/', '', $cc) ?? '';
+    if (strlen($digits) < 6 || strlen($digits) > 15) fail('Проверьте номер телефона', 422, ['field' => 'phone']);
+    $ccd = substr(preg_replace('/\D+/', '', $cc) ?? '', 0, 4);
     return '+' . $ccd . $digits;
 }

@@ -7,7 +7,7 @@ require __DIR__ . '/../lib/booking.php';
 
 $id = preg_replace('/[^a-f0-9]/', '', (string)($_REQUEST['id'] ?? ''));
 $t = preg_replace('/[^a-f0-9]/', '', (string)($_REQUEST['t'] ?? ''));
-rate_or_fail('cancel:' . client_ip(), 20, 3600);
+rate_or_fail('cancel:' . rl_ip(), 20, 3600);
 
 $b = null;
 foreach (bookings() as $x) if ($x['id'] === $id && hash_equals((string)($x['token_h'] ?? ''), hash('sha256', $t))) $b = $x;
@@ -30,6 +30,8 @@ $msgs = [
 [$title, $text] = $msgs[$state];
 header('Content-Type: text/html; charset=utf-8');
 header('X-Robots-Tag: noindex');
+header('Cache-Control: no-store');
+security_headers();
 ?><!doctype html>
 <html lang="ru">
 <head>

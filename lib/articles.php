@@ -1,13 +1,14 @@
 <?php
 /* Статьи (новости): хранение в data/articles/<id>.json, картинки — в uploads/, вывод в HTML. */
 declare(strict_types=1);
+defined('ROOT') || exit;
 
 const ARTICLE_DIR = DATA . '/articles';
 
 function articles_all(): array
 {
     $out = [];
-    foreach (glob(ARTICLE_DIR . '/*.json') ?: [] as $f) {
+    foreach (glob(ARTICLE_DIR . '/*.php') ?: [] as $f) {
         $a = read_json($f, null);
         if (is_array($a) && isset($a['id'])) $out[] = $a;
     }
@@ -24,7 +25,7 @@ function articles_published(): array
 function article_get(string $id): ?array
 {
     if (!preg_match('/^[a-f0-9]{16}$/', $id)) return null;
-    $a = read_json(ARTICLE_DIR . '/' . $id . '.json', null);
+    $a = read_json(ARTICLE_DIR . '/' . $id . '.php', null);
     return is_array($a) ? $a : null;
 }
 
@@ -38,7 +39,7 @@ function article_delete(string $id): void
 {
     $a = article_get($id);
     if (!$a) return;
-    @unlink(ARTICLE_DIR . '/' . $id . '.json');
+    @unlink(ARTICLE_DIR . '/' . $id . '.php');
     /* картинки статьи больше нигде не используются — удаляем файлы */
     foreach (article_images($a) as $url) upload_delete($url);
 }
@@ -106,7 +107,7 @@ function article_normalize(array $in, ?array $old): array
 
 function article_save(array $a, ?array $old): void
 {
-    write_json(ARTICLE_DIR . '/' . $a['id'] . '.json', $a);
+    write_json(ARTICLE_DIR . '/' . $a['id'] . '.php', $a);
     /* картинки, которые убрали из статьи, удаляем с диска */
     if ($old) foreach (array_diff(article_images($old), article_images($a)) as $url) upload_delete($url);
 }
@@ -126,13 +127,14 @@ function upload_delete(string $url): void
 /** Принимает загруженный файл, пересохраняет через GD (это убирает всё, кроме самой картинки), возвращает URL или ошибку */
 function upload_image(array $file): array
 {
-    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) return [null, 'Файл не загрузился'];
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) return [null, 'Файл не загрузился (возможно, он больше лимита хостинга)'];
+    if (!is_uploaded_file($file['tmp_name'] ?? '')) return [null, 'Файл не загрузился'];
     if ($file['size'] > 15 * 1024 * 1024) return [null, 'Файл больше 15 МБ'];
     $info = @getimagesize($file['tmp_name']);
     $types = [IMAGETYPE_JPEG => 'jpeg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp'];
     if (!$info || !isset($types[$info[2]])) return [null, 'Нужна картинка JPG, PNG или WebP'];
     [$w, $h] = $info;
-    if ($w * $h > 50_000_000) return [null, 'Слишком большое разрешение'];
+    if ($w < 1 || $h < 1 || $w * $h > 40_000_000) return [null, 'Слишком большое разрешение (максимум 40 мегапикселей)'];
     $src = match ($types[$info[2]]) {
         'jpeg' => @imagecreatefromjpeg($file['tmp_name']),
         'png' => @imagecreatefrompng($file['tmp_name']),

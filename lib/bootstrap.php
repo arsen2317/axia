@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 define('ROOT', dirname(__DIR__));
-define('DATA', ROOT . '/data');
+
+/* Ошибки PHP не показываем посетителям (там пути и детали сервера) — только в журнал */
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL);
 
 function cfg(?string $path = null, $default = null)
 {
@@ -25,20 +29,35 @@ function cfg(?string $path = null, $default = null)
     return $v;
 }
 
+/* Папка данных. Надёжнее всего вынести её за пределы корня сайта ('data_dir' в config.local.php):
+   на виртуальных хостингах статические файлы часто отдаёт nginx в обход .htaccess */
+define('DATA', rtrim((string)(cfg('data_dir', '') ?: ROOT . '/data'), '/'));
+
 date_default_timezone_set((string)cfg('timezone', 'Europe/Moscow'));
+
+set_exception_handler(function (Throwable $e) {
+    log_error('uncaught: ' . get_class($e) . ': ' . $e->getMessage() . ' @ ' . basename($e->getFile()) . ':' . $e->getLine());
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    echo json_encode(['ok' => false, 'error' => 'Ошибка сервера. Попробуйте позже.'], JSON_UNESCAPED_UNICODE);
+});
 
 function secret(): string
 {
     $s = (string)cfg('secret', '');
     if ($s !== '') return $s;
-    /* секрет не задан — генерируем один раз и храним в data/ */
-    $f = DATA . '/.secret';
-    if (!is_file($f)) {
-        ensure_dir(DATA);
-        file_put_contents($f, bin2hex(random_bytes(32)), LOCK_EX);
+    /* секрет не задан — генерируем один раз и храним в data/ (в .php-файле: даже если папка доступна снаружи,
+       сервер выполнит его, а не отдаст содержимое) */
+    $f = DATA . '/secret.php';
+    $v = read_json($f, null);
+    if (!is_string($v) || strlen($v) < 32) {
+        $v = bin2hex(random_bytes(32));
+        write_json($f, $v);
         @chmod($f, 0600);
     }
-    return trim((string)file_get_contents($f));
+    return $v;
 }
 
 function ensure_dir(string $dir): void
@@ -46,13 +65,18 @@ function ensure_dir(string $dir): void
     if (!is_dir($dir)) @mkdir($dir, 0775, true);
 }
 
-/* ---- JSON-файлы с блокировкой ---- */
+/* ---- Файлы данных ----
+   Данные лежат в .php-файлах, первая строка которых — <?php exit; ?>. Если веб-сервер по ошибке отдаст такой файл
+   по прямой ссылке, PHP его выполнит и вернёт пустую страницу, а не содержимое. */
+
+const DATA_GUARD = "<?php exit; ?>\n";
 
 function read_json(string $file, $default = [])
 {
     if (!is_file($file)) return $default;
-    $raw = file_get_contents($file);
-    $v = json_decode((string)$raw, true);
+    $raw = (string)file_get_contents($file);
+    if (str_starts_with($raw, DATA_GUARD)) $raw = substr($raw, strlen(DATA_GUARD));
+    $v = json_decode($raw, true);
     return $v === null ? $default : $v;
 }
 
@@ -60,7 +84,8 @@ function write_json(string $file, $data): void
 {
     ensure_dir(dirname($file));
     $tmp = $file . '.' . bin2hex(random_bytes(4)) . '.tmp';
-    file_put_contents($tmp, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), LOCK_EX);
+    $body = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    file_put_contents($tmp, (str_ends_with($file, '.php') ? DATA_GUARD : '') . $body, LOCK_EX);
     rename($tmp, $file);
 }
 
@@ -82,31 +107,60 @@ function with_lock(string $name, callable $fn)
 
 function settings(): array
 {
-    return read_json(DATA . '/settings.json', []) + ['booking_enabled' => true];
+    return read_json(DATA . '/settings.php', []) + ['booking_enabled' => true];
 }
 
 function save_settings(array $s): void
 {
-    write_json(DATA . '/settings.json', $s + settings());
+    write_json(DATA . '/settings.php', $s + settings());
 }
 
 /* ---- HTTP ---- */
 
 function client_ip(): string
 {
-    /* за прокси хостинга (nginx перед Apache) настоящий адрес приходит в X-Real-IP / X-Forwarded-For.
-       Берём его, только если запрос пришёл с локального адреса, иначе заголовок мог подделать сам клиент */
+    /* По умолчанию — адрес соединения. Если хостинг ставит перед PHP свой прокси и у всех посетителей адрес
+       127.0.0.1 (видно в админке), включите 'trust_proxy'. Тогда заголовкам верим, только если запрос пришёл
+       с локального адреса. X-Real-IP прокси выставляет сам; в X-Forwarded-For клиент может дописать что угодно
+       В НАЧАЛО, поэтому берём ПОСЛЕДНИЙ адрес — его добавил наш прокси */
     $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     $local = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
-    if ($local) {
-        foreach (['HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR'] as $h) {
-            if (!empty($_SERVER[$h])) {
-                $cand = trim(explode(',', (string)$_SERVER[$h])[0]);
-                if (filter_var($cand, FILTER_VALIDATE_IP)) return $cand;
-            }
-        }
+    if ($local && cfg('trust_proxy', false)) {
+        $real = trim((string)($_SERVER['HTTP_X_REAL_IP'] ?? ''));
+        if (filter_var($real, FILTER_VALIDATE_IP)) return $real;
+        $xff = array_map('trim', explode(',', (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '')));
+        $last = end($xff);
+        if ($last !== false && filter_var($last, FILTER_VALIDATE_IP)) return $last;
     }
     return $ip;
+}
+
+/* Ключ для лимитов: для IPv6 — сеть /64 (у одного абонента их миллионы адресов, иначе лимиты легко обойти) */
+function rl_ip(): string
+{
+    $ip = client_ip();
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        $bin = inet_pton($ip);
+        return $bin === false ? $ip : bin2hex(substr($bin, 0, 8)) . '::/64';
+    }
+    return $ip;
+}
+
+/* Заголовки безопасности для страниц, которые отдаёт PHP */
+function security_headers(bool $isAdmin = false): void
+{
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
+    header('X-Frame-Options: ' . ($isAdmin ? 'DENY' : 'SAMEORIGIN'));
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' https://smartcaptcha.yandexcloud.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://smartcaptcha.yandexcloud.net; font-src 'self'; connect-src 'self' https://smartcaptcha.yandexcloud.net; frame-src https://smartcaptcha.yandexcloud.net; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors " . ($isAdmin ? "'none'" : "'self'"));
+    if (is_https()) header('Strict-Transport-Security: max-age=31536000');
+    if ($isAdmin) header('Cache-Control: no-store');
+}
+
+function is_https(): bool
+{
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
 }
 
 function json_out($data, int $code = 200): void
@@ -144,10 +198,13 @@ function json_body(int $maxBytes = 20000): array
     return $d;
 }
 
-function str_field(array $d, string $k, int $max, bool $required = false): string
+/* $multiline = false — однострочное поле: переводы строк тоже убираем (защита заголовков писем и .ics) */
+function str_field(array $d, string $k, int $max, bool $required = false, bool $multiline = false): string
 {
     $v = isset($d[$k]) && is_scalar($d[$k]) ? trim((string)$d[$k]) : '';
-    $v = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $v) ?? '';
+    if (!mb_check_encoding($v, 'UTF-8')) fail('Неверная кодировка', 422);
+    $v = preg_replace($multiline ? '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u' : '/[\x00-\x1F\x7F\x{2028}\x{2029}]/u', $multiline ? '' : ' ', $v) ?? '';
+    $v = trim($v);
     if ($required && $v === '') fail('Заполните обязательные поля', 422, ['field' => $k]);
     if (mb_strlen($v) > $max) fail('Слишком длинное значение', 422, ['field' => $k]);
     return $v;
@@ -162,8 +219,9 @@ function site_url(string $path = ''): string
 {
     $base = rtrim((string)cfg('site_url', ''), '/');
     if ($base === '') {
-        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
-        $base = ($https ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        /* адрес сайта не задан: берём из запроса, но только безопасные символы (заголовок Host присылает клиент) */
+        $host = preg_replace('/[^a-z0-9.\-:]/i', '', (string)($_SERVER['HTTP_HOST'] ?? 'localhost'));
+        $base = (is_https() ? 'https://' : 'http://') . $host;
     }
     return $base . $path;
 }
@@ -177,5 +235,12 @@ function pd_hash(string $v): string
 function log_error(string $msg): void
 {
     ensure_dir(DATA . '/logs');
-    @file_put_contents(DATA . '/logs/error-' . date('Y-m') . '.log', date('c') . ' ' . $msg . "\n", FILE_APPEND | LOCK_EX);
+    $f = DATA . '/logs/error-' . date('Y-m') . '.php';
+    if (!is_file($f)) {
+        @file_put_contents($f, DATA_GUARD, LOCK_EX);
+        /* журналы старше полугода удаляем */
+        foreach (glob(DATA . '/logs/error-*.php') ?: [] as $old) if (filemtime($old) < time() - 183 * 86400) @unlink($old);
+    }
+    /* в журнал — без переводов строк и не больше 1000 символов на запись */
+    @file_put_contents($f, date('c') . ' ' . mb_substr(str_replace(["\r", "\n"], ' ', $msg), 0, 1000) . "\n", FILE_APPEND | LOCK_EX);
 }

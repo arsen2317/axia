@@ -6,7 +6,7 @@ require __DIR__ . '/../lib/guard.php';
 require __DIR__ . '/../lib/booking.php';
 
 if (!settings()['booking_enabled']) json_out(['ok' => true, 'enabled' => false, 'slots' => []]);
-rate_or_fail('slots:' . client_ip(), 60, 60);
+rate_or_fail('slots:' . rl_ip(), 60, 60);
 
 $slots = array_map(fn($s) => $s[0]->format(DATE_ATOM), free_slots());
 json_out([

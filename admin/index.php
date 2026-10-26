@@ -9,10 +9,11 @@ require __DIR__ . '/../lib/articles.php';
 admin_session();
 $error = null;
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['login'])) {
-    $error = admin_login((string)$_POST['login'], (string)($_POST['password'] ?? ''));
+    $t = (string)($_POST['csrf'] ?? '');
+    $error = hash_equals(csrf_token(), $t) ? admin_login((string)$_POST['login'], (string)($_POST['password'] ?? '')) : 'Страница устарела, попробуйте ещё раз';
     if ($error === null) { header('Location: /admin/'); exit; }
 }
-if (isset($_GET['logout'])) { admin_logout(); header('Location: /admin/'); exit; }
+if (isset($_GET['logout']) && hash_equals(csrf_token(), (string)($_GET['t'] ?? ''))) { admin_logout(); header('Location: /admin/'); exit; }
 
 if (!admin_logged_in()) {
     admin_head('Вход');
@@ -24,6 +25,7 @@ if (!admin_logged_in()) {
 <p class="ad-note ad-note--warn">Пароль администратора ещё не задан. Укажите <code>admin.password_hash</code> в <code>config/config.local.php</code> (см. README).</p>
 <?php endif; ?>
 <?php if ($error): ?><p class="ad-note ad-note--err" role="alert"><?= h($error) ?></p><?php endif; ?>
+<input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
 <label class="ad-field"><span>Логин</span><input name="login" autocomplete="username" required autofocus></label>
 <label class="ad-field"><span>Пароль</span><input name="password" type="password" autocomplete="current-password" required></label>
 <button class="ad-btn ad-btn--primary" type="submit">Войти</button>
@@ -49,7 +51,7 @@ admin_head('Панель');
 ?>
 <header class="ad-top">
 <a class="ad-logo" href="/admin/">аксиа · админка</a>
-<nav class="ad-top__nav"><a href="/" target="_blank" rel="noopener">сайт ↗</a><a href="/news" target="_blank" rel="noopener">новости ↗</a><a href="/admin/?logout=1">выйти</a></nav>
+<nav class="ad-top__nav"><a href="/" target="_blank" rel="noopener">сайт ↗</a><a href="/news" target="_blank" rel="noopener">новости ↗</a><a href="/admin/?logout=1&amp;t=<?= h(csrf_token()) ?>">выйти</a></nav>
 </header>
 <main class="ad-main" data-csrf="<?= h(csrf_token()) ?>">
 
@@ -60,6 +62,7 @@ admin_head('Панель');
 <span class="ad-switch__track" aria-hidden="true"></span>
 <span id="booking-label"><?= $s['booking_enabled'] ? 'Включена — на сайте календарь со слотами' : 'Выключена — на сайте вместо календаря форма обратной связи' ?></span>
 </label>
+<p class="ad-hint">Ваш IP, как его видит сервер: <b><?= h(client_ip()) ?></b><?= filter_var(client_ip(), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false ? ' — внутренний адрес: включите trust_proxy в настройках, иначе лимиты работают на всех посетителей сразу' : '' ?></p>
 <p class="ad-hint">Подключения: <?php foreach ($checks as $k => $v): ?><span class="ad-pill <?= $v ? 'is-on' : '' ?>"><?= h($k) ?>: <?= $v ? 'настроено' : 'тестовый режим' ?></span> <?php endforeach; ?></p>
 
 <h3>Ближайшие встречи</h3>
