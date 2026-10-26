@@ -28,35 +28,23 @@ $msgs = [
     'done' => ['Встреча отменена', 'Время освободилось. Если захотите — выберите новое на сайте.'],
 ];
 [$title, $text] = $msgs[$state];
-header('Content-Type: text/html; charset=utf-8');
 header('X-Robots-Tag: noindex');
 header('Cache-Control: no-store');
-security_headers();
-?><!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title><?= h($title) ?> — аксиа</title>
-<link rel="stylesheet" href="/assets/css/fonts.css">
-<link rel="stylesheet" href="/assets/css/pages.css">
-</head>
-<body class="pg">
-<main class="pg-msg">
-<a class="pg-logo" href="/">аксиа</a>
+require __DIR__ . '/../lib/views.php';
+page_open($title . ' — аксиа', '', ['label' => 'Встреча']);
+?>
+<main class="pg-main pg-msg">
 <h1 class="pg-msg__title"><?= h($title) ?></h1>
 <p class="pg-msg__text"><?= h($text) ?></p>
 <?php if ($state === 'confirm'): ?>
 <form method="post" action="/api/cancel.php">
 <input type="hidden" name="id" value="<?= h($id) ?>">
 <input type="hidden" name="t" value="<?= h($t) ?>">
-<button class="pg-btn" type="submit">Да, отменить</button>
-<a class="pg-btn pg-btn--ghost" href="/">Нет, оставить</a>
+<button class="btn btn--light" type="submit">Да, отменить</button>
+<a class="btn btn--ghost" href="/">Нет, оставить</a>
 </form>
 <?php else: ?>
-<a class="pg-btn" href="/#contact">На сайт</a>
+<a class="btn btn--light" href="/#contact">На сайт</a>
 <?php endif; ?>
 </main>
-</body>
-</html>
+<?php page_close();

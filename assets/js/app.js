@@ -178,6 +178,13 @@ class Page extends DCLogic {
     this.updateWho();
     this.updateAppr();
     this.loadBooking();
+    /* переход с внутренних страниц по ссылке вида /#team: секции появляются после отрисовки, поэтому докручиваем сами */
+    if (location.hash.length > 1) {
+      const id = decodeURIComponent(location.hash.slice(1));
+      const go = () => { const el = document.getElementById(id); if (el) el.scrollIntoView({ block: 'start' }); };
+      requestAnimationFrame(() => requestAnimationFrame(go));
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(go);
+    }
   }
   componentWillUnmount() {
     if (this.pagingStop) this.pagingStop();

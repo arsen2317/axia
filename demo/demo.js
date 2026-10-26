@@ -137,9 +137,12 @@
   var root = document.getElementById('demo-root');
   var page = document.body.getAttribute('data-demo');
 
+  /* полоска «демо-режим» — в начале содержимого страницы (под шапкой) */
   function banner(text) {
-    var b = document.createElement('p'); b.className = 'demo-banner'; b.innerHTML = text;
-    document.body.insertBefore(b, document.body.firstChild);
+    setTimeout(function () {
+      var b = document.createElement('p'); b.className = 'demo-banner'; b.innerHTML = text;
+      root.insertBefore(b, root.firstChild);
+    }, 0);
   }
 
   if (page === 'news') {

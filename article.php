@@ -8,12 +8,12 @@ require __DIR__ . '/lib/views.php';
 $a = article_by_slug((string)($_GET['slug'] ?? ''));
 if (!$a) {
     http_response_code(404);
-    page_open('Статья не найдена — аксиа');
+    page_open('Статья не найдена — аксиа', '', ['label' => 'Новости']);
     echo '<main class="pg-main"><h1 class="pg-title">не найдено</h1><p class="pg-empty">Такой статьи нет или она снята с публикации. <a href="/news">Все новости</a></p></main>';
     page_close();
     exit;
 }
-page_open($a['title'] . ' — аксиа', $a['description'], ['active' => '/news', 'image' => $a['cover']]);
+page_open($a['title'] . ' — аксиа', $a['description'], ['label' => 'Новости', 'image' => $a['cover']]);
 ?>
 <main class="pg-main">
 <article class="art">

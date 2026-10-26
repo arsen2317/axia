@@ -6,7 +6,7 @@ require __DIR__ . '/lib/articles.php';
 require __DIR__ . '/lib/views.php';
 
 $list = articles_published();
-page_open('Новости — аксиа', 'Новости и публикации команды аксиа', ['active' => '/news']);
+page_open('Новости — аксиа', 'Новости и публикации команды аксиа', ['label' => 'Новости']);
 ?>
 <main class="pg-main">
 <h1 class="pg-title">новости</h1>
