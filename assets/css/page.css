@@ -536,7 +536,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   display: flex; flex-direction: column; gap: 0.75rem; overflow: hidden;
   opacity: var(--dv-t, 0); transform: translateY(calc((1 - var(--dv-t, 0)) * 0.75rem));
 }
-.axia .dv__name { margin: 0; font-size: 1.125rem; font-weight: 600; line-height: 1.3; color: #e8e6e0; text-wrap: wrap; }
+.axia .dv__name { margin: 0; font-size: 1.5rem; font-weight: 600; line-height: 1.2; color: #e8e6e0; text-wrap: wrap; }
 .axia .dv__desc { margin: 0; font-size: 0.9375rem; line-height: 1.3; color: rgba(232, 230, 224, 0.88); text-wrap: wrap; }
 @container axia (max-width: 64rem) {
   .axia .dv__title { font-size: 4rem; top: 8.25rem; }
@@ -814,7 +814,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 @container axia (width > 64rem) {
   .axia .dv__title { top: 8rem; }
   .axia .dv-p { fill: #1e2f63; }
-  .axia .dv__card { padding: 0 1.25rem 1.25rem; gap: 0.5rem; }
+  .axia .dv__card { padding: 0 1.25rem 1.25rem; gap: 0.75rem; }
   .axia .dv__ill { display: flex; justify-content: center; flex: 1 1 0; min-height: 0; margin-bottom: 0.25rem; }
   .axia .dv__ill .dv__art { display: block; height: 100%; width: auto; aspect-ratio: 408 / 398; max-width: 64%; overflow: visible; }   /* иллюстрация — по центру свободного места над текстом */
   .axia .dv__card { pointer-events: auto; }
@@ -1088,7 +1088,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
     background: #1e2f63; border-radius: 0.75rem; padding: 1.25rem; gap: 0.5rem;
   }
   .axia .dv__br { display: none; }
-  .axia .dv__name { order: 1; font-size: 1.0625rem; font-weight: 700; }
+  .axia .dv__name { order: 1; font-size: 1.375rem; font-weight: 700; line-height: 1.2; }
   .axia .dv__desc { order: 2; font-size: 0.875rem; line-height: 1.35; }
   .axia .dv__ill { order: 3; display: flex; justify-content: center; position: static; height: auto; margin: 0.75rem 0 0; }
   .axia .dv__ill .dv__art { display: block; width: 62%; height: auto; max-width: none; aspect-ratio: 408 / 398; overflow: visible; }
@@ -1112,7 +1112,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .dirs__sticky { padding-top: 8.25rem; padding-bottom: 4rem; }
   .axia .dv__cards { gap: 1rem; }
   .axia .dv__card { padding: 1.75rem; }
-  .axia .dv__name { font-size: 1.375rem; }
+  .axia .dv__name { font-size: 1.75rem; line-height: 1.2; }
   .axia .dv__desc { font-size: clamp(1.125rem, 2.33cqw, 2rem); line-height: 1.22; }   /* как текст в «о нас» */
   .axia .dv__ill .dv__art { width: 42%; }
 }
