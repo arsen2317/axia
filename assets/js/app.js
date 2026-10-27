@@ -912,7 +912,10 @@ void main(){
             const bottomTop = team.getBoundingClientRect().top + team.offsetHeight - 2 * px - lr.height;   /* верх списка, если он внизу */
             const jacket = pr.left + pr.width * 0.06;                                                     /* левый край пиджака на фото */
             const hit = lr.right > jacket - 8 && bottomTop + lr.height > pr.top + pr.height * 0.45;
-            team.style.setProperty('--tm-lt', hit ? '13rem' : 'auto');
+            /* под заголовком — от его фактического низа (заголовок бывает в одну или две строки) */
+            const ttlEl = team.querySelector('.tm__title'), cb = list.offsetParent || team;
+            const under = ttlEl ? ttlEl.getBoundingClientRect().bottom - cb.getBoundingClientRect().top + 2.5 * px : 13 * px;
+            team.style.setProperty('--tm-lt', hit ? under.toFixed(1) + 'px' : 'auto');
             team.style.setProperty('--tm-lb', hit ? 'auto' : '2rem');
           }
         }

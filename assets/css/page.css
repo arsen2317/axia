@@ -1160,3 +1160,6 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia .cal__note { margin: 0.5rem 0 0; color: var(--ink-soft); font-size: 0.9375rem; line-height: 1.4; }
 .axia .cal--form .book { margin-top: 1.5rem; }
 .axia .cal--form .cal__head { flex-direction: column; align-items: flex-start; }
+/* «ключевая команда»: на десктопе — в две строки, на планшете и мобильном перенос по ширине */
+.axia .tm__br { display: none; }
+@container axia (width > 64rem) { .axia .tm__br { display: inline; } }
