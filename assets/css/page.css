@@ -529,7 +529,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   text-box: trim-both ex alphabetic;
 }
 .axia .dv__svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: visible; pointer-events: none; }
-.axia .dv-p { fill: #4d6ac5; }
+.axia .dv-p { fill: #1e2f63; }   /* цвет карточек — как у панели с календарём (.cal) */
 .axia .dv__cards { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .axia .dv__card {
   position: absolute; box-sizing: border-box; padding: 1.25rem;
@@ -813,7 +813,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .dv__ill { display: none; }
 @container axia (width > 64rem) {
   .axia .dv__title { top: 8rem; }
-  .axia .dv-p { fill: #4f6bc4; }
+  .axia .dv-p { fill: #1e2f63; }
   .axia .dv__card { padding: 0 1.25rem 1.25rem; gap: 0.5rem; }
   .axia .dv__ill { display: flex; justify-content: center; flex: 1 1 0; min-height: 0; margin-bottom: 0.25rem; }
   .axia .dv__ill .dv__art { display: block; height: 100%; width: auto; aspect-ratio: 408 / 398; max-width: 64%; overflow: visible; }   /* иллюстрация — по центру свободного места над текстом */
@@ -873,7 +873,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 @container axia (40rem < width <= 64rem) {
   /* НАПРАВЛЕНИЯ: иллюстрации как на десктопе; анимации всех трёх проигрываются разом, когда карточки на экране
      (--dv-play ставит скрипт: paused → running) */
-  .axia .dv-p { fill: #4f6bc4; }
+  .axia .dv-p { fill: #1e2f63; }
   .axia .dv__card { padding: 0 1rem 1rem; gap: 0.5rem; }
   .axia .dv__ill { display: flex; justify-content: center; flex: 1 1 0; min-height: 0; margin-bottom: 0.25rem; }
   .axia .dv__ill .dv__art { display: block; height: 100%; width: auto; aspect-ratio: 408 / 398; max-width: 82%; overflow: visible; }
@@ -1085,7 +1085,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .dv__card {
     position: relative !important; left: auto !important; top: auto !important; width: auto !important; height: auto !important;
     opacity: 1; transform: none; overflow: visible;
-    background: #4f6bc4; border-radius: 0.75rem; padding: 1.25rem; gap: 0.5rem;
+    background: #1e2f63; border-radius: 0.75rem; padding: 1.25rem; gap: 0.5rem;
   }
   .axia .dv__br { display: none; }
   .axia .dv__name { order: 1; font-size: 1.0625rem; font-weight: 700; }
