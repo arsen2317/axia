@@ -13,7 +13,7 @@
     nav.classList.toggle('is-open', open);
     if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
-  var desktop = function () { return root.clientWidth > 1024; };
+  var desktop = function () { return root.clientWidth > 1056; };
 
   if (toggle) toggle.addEventListener('click', function () { setOpen(!nav.classList.contains('is-open')); });
   var navLogo = root.querySelector('.logo--nav');

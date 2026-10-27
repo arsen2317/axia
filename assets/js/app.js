@@ -89,7 +89,7 @@ class Page extends DCLogic {
       {
         const its = doc.querySelectorAll('.sol__item'), ax0 = its[0] && its[0].closest('.axia');
         let live = -1;
-        if (ax0 && ax0.clientWidth <= 1024) {
+        if (ax0 && ax0.clientWidth <= 1056) {
           let best = Infinity; const vh0 = win.innerHeight;
           its.forEach((it, i) => { const r = it.getBoundingClientRect(); if (r.bottom < 0 || r.top > vh0) return; const d0 = Math.abs((r.top + r.bottom) / 2 - vh0 / 2); if (d0 < best) { best = d0; live = i; } });
         }
@@ -99,7 +99,7 @@ class Page extends DCLogic {
       if (!light) {
         const card = doc.querySelector('.sol__item.is-open .sol__card'), bar = doc.querySelector('.nav__bar');
         const axr0 = card && card.closest('.axia');
-        if (card && bar && axr0 && axr0.clientWidth <= 1024) {
+        if (card && bar && axr0 && axr0.clientWidth <= 1056) {
           const cr = card.getBoundingClientRect(), br = bar.getBoundingClientRect();
           const cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2, R = cr.width / 2, y = br.top + br.height / 2;
           let n = 0;
@@ -132,7 +132,7 @@ class Page extends DCLogic {
           /* мобильный: карточки друг под другом — анимация карточки проигрывается, когда карточка целиком
              на экране и её центр в средней части экрана; ушла с середины — анимация сбрасывается и при
              возвращении проиграется снова */
-          if (cw <= 1024) {
+          if (cw <= 1056) {
             this.dvOnM = this.dvOnM || [false, false, false];
             const vhh = win.innerHeight;
             dirs.querySelectorAll('.dv__card').forEach((c, i) => {
@@ -339,7 +339,7 @@ void main(){
     const doc = sec.ownerDocument, root = sec.closest('.axia');
     const px = parseFloat(getComputedStyle(root || doc.documentElement).fontSize) || 16;
     const ttl = st.querySelector('.dv__title');
-    if (ttl && W <= 1024) ttl.style.top = '';   /* положение заголовка от десктопа (ниже) не переносим на планшет и мобильный */
+    if (ttl && W <= 1056) ttl.style.top = '';   /* положение заголовка от десктопа (ниже) не переносим на планшет и мобильный */
     const tB = ttl ? ttl.offsetTop + ttl.offsetHeight : 0;
     const ctaEl = root ? root.querySelector('.header .cta') : null;
     let bot = H - 2.5 * px;
@@ -351,8 +351,8 @@ void main(){
       g = { vert: true, cx: W / 2, cy: top + (3 * ch + 2 * gap) / 2, Lc: ch, gap, Uh: (3 * ch + 2 * gap) / 2, Vh: cw / 2, rc: 0.75 * px, rot: false };
     } else {
       let Lc, gap, Hc;
-      const top = tB + (W <= 1024 ? 3 : 3.5) * px;
-      if (W <= 1024) { gap = 0.75 * px; Lc = (W - 5 * px - 2 * gap) / 3; Hc = Math.min(Lc * 2.2, bot - top); }   /* планшет: карточки выше — сверху иллюстрация */
+      const top = tB + (W <= 1056 ? 3 : 3.5) * px;
+      if (W <= 1056) { gap = 0.75 * px; Lc = (W - 5 * px - 2 * gap) / 3; Hc = Math.min(Lc * 2.2, bot - top); }   /* планшет: карточки выше — сверху иллюстрация */
       else {
         /* десктоп (макет): карточки во всю ширину между полями сетки, почти квадратные, с иллюстрацией сверху */
         const f = W / 1200, gut = ttl ? ttl.offsetLeft : 2.5 * px;
@@ -514,7 +514,7 @@ void main(){
     const settle = () => {
       if (touching || anim) return;
       const g = geo();
-      if (g.W <= 1024) { startY = null; return; }   /* планшет и мобильный — без доводчика */
+      if (g.W <= 1056) { startY = null; return; }   /* планшет и мобильный — без доводчика */
       const y = g.y, dir = Math.sign(y - (startY == null ? restY : startY));
       startY = null; restY = y;
       for (const [a, b] of g.free) if (y > a + 2 && y < b - 2) return;          /* внутри свободной зоны */
@@ -639,7 +639,7 @@ void main(){
     const key = win.innerWidth + 'x' + win.innerHeight;
     if (!force && key === this.tmPgKey) return;
     this.tmPgKey = key;
-    const desktop = root.clientWidth > 1024;
+    const desktop = root.clientWidth > 1056;
     const map = [];
     tm.querySelectorAll('.tm__card').forEach((card) => {
       const flow = card.querySelector('.tm__flow'), desc = flow && flow.querySelector('.tm__desc');
@@ -772,7 +772,7 @@ void main(){
         /* «О НАС» закреплена: высота = экран + S, S кратно высоте плитки паттерна (сетка дальше без шва) */
         const tileH = portrait ? 690 * W / 768 : 566 * W / 1200;
         const S = Math.max(1, Math.round((1.5 * vh) / tileH)) * tileH;
-        if (W <= 1024) {
+        if (W <= 1056) {
           /* планшет и мобильный: не закрепляется — оба абзаца сразу; высота — экран или сколько нужно тексту */
           const abc = root.querySelector('.ab__content');
           let need = vh;
@@ -805,7 +805,7 @@ void main(){
         if (solEl0 && !portrait && P > 1) {
           const it = solEl0.querySelector('.sol__item'), tt = solEl0.querySelector('.sol__title');
           const d0 = it ? it.offsetWidth : 0, tH0 = tt ? tt.offsetHeight : 0;
-          const minY0 = 6.5 * px0 + tH0 + 3.5 * px0 + d0 / 2 + (W <= 1024 ? d0 * 0.1 : 0);
+          const minY0 = 6.5 * px0 + tH0 + 3.5 * px0 + d0 / 2 + (W <= 1056 ? d0 * 0.1 : 0);
           const maxY0 = vh - d0 / 2 - 2 * px0;   /* низ кругов — не ближе 2rem к низу экрана */
           let base0 = (y0 + ph - 2 * vh) % P; if (base0 < 0) base0 += P;
           let fits = false, next = Infinity;
@@ -823,13 +823,13 @@ void main(){
       if (team) {
         const px = parseFloat(getComputedStyle(root).fontSize) || 16;
         const mobile = W <= 640;
-        const D = portrait ? (mobile ? (W - 2 * px - 3 * 0.5 * px) / 2 + 0.5 * px : W <= 1024 ? (W - 5 * px - 3 * 0.5 * px) / 2 + 0.5 * px : W * 0.26) : W * 0.20;   /* вертикальные экраны: две колонки (поля 16 / 40) */
+        const D = portrait ? (mobile ? (W - 2 * px - 3 * 0.5 * px) / 2 + 0.5 * px : W <= 1056 ? (W - 5 * px - 3 * 0.5 * px) / 2 + 0.5 * px : W * 0.26) : W * 0.20;   /* вертикальные экраны: две колонки (поля 16 / 40) */
         const titleOff = (mobile ? 6.5 : 9) * px;
         const minY = (portrait ? 2 : 7) * px + titleOff + D / 2;   /* на вертикальных — без лишнего отступа сверху */
         /* «Подхода» нет: в формулах сетки ниже его экран (vh) больше не участвует — компенсируем отрицательной «лишней высотой» */
         /* мобильный: «Направления» выше экрана (карточки друг под другом) — сетка следующих секций сдвигается на эту разницу */
         const dirsEl = root.querySelector('#directions');
-        const apprExtra = -vh + (W <= 1024 && dirsEl ? Math.max(0, dirsEl.offsetHeight - vh) : 0);
+        const apprExtra = -vh + (W <= 1056 && dirsEl ? Math.max(0, dirsEl.offsetHeight - vh) : 0);
         root.style.setProperty('--appr-extra', apprExtra.toFixed(1) + 'px');
         /* «Решения» (между «Подходом» и «Командой»): центр ряда кругов — на горизонтальной линии сетки.
            Фон «Решений» закреплён и показывает сетку со сдвигом 3vh + gap + apprExtra − phase */
@@ -837,7 +837,7 @@ void main(){
         if (sol) {
           const item = sol.querySelector('.sol__item'), ttl = sol.querySelector('.sol__title');
           const d = item ? item.offsetWidth : 0, tH = ttl ? ttl.offsetHeight : 0;
-          const minY = (portrait ? 5.5 : 6.5) * px + tH + 3.5 * px + d / 2 + (W <= 1024 ? d * 0.1 : 0);   /* на планшете и мобильном — ещё высота выступающего номера */
+          const minY = (portrait ? 5.5 : 6.5) * px + tH + 3.5 * px + d / 2 + (W <= 1056 ? d * 0.1 : 0);   /* на планшете и мобильном — ещё высота выступающего номера */
           const maxY = vh - d / 2 - 1 * px;
           let cy = Math.max(minY, Math.min(vh * 0.6, maxY));
           if (!portrait) {
@@ -871,7 +871,7 @@ void main(){
           /* описания вписаны в круг: блок текста центрируем по вертикали (пересчёт только при смене размера круга) */
           /* мобильный: круги друг под другом, ровно на кругах фоновой сетки (их диаметр = шаг плитки);
              первый — на ближайшем круге сетки под заголовком */
-          if (W <= 1024 && d) {
+          if (W <= 1056 && d) {
             const sbg = sol.querySelector('.sol__bg'), trk = sol.querySelector('.sol__track');
             if (sbg && trk && ttl) {
               const tile = portrait ? 690 * W / 768 : 566 * W / 1200, c0 = portrait ? 235 * W / 768 : 259 * W / 1200;
@@ -907,7 +907,7 @@ void main(){
            (широкий и невысокий экран) — поднимаем его под заголовок */
         {
           const list = team.querySelector('.tm__thumbs'), ph0 = team.querySelector('.tm__photo');
-          if (list && ph0 && W > 1024) {
+          if (list && ph0 && W > 1056) {
             const pr = ph0.getBoundingClientRect(), lr = list.getBoundingClientRect();
             const bottomTop = team.getBoundingClientRect().top + team.offsetHeight - 2 * px - lr.height;   /* верх списка, если он внизу */
             const jacket = pr.left + pr.width * 0.06;                                                     /* левый край пиджака на фото */
@@ -928,7 +928,7 @@ void main(){
           root.style.setProperty('--meet-cut', cut.toFixed(1) + 'px');
           const meetEl = root.querySelector('.meet');
           /* планшет: фон «Обсудить задачу» не закреплён — сетка в подвале продолжается после всей высоты блока */
-          if (W <= 1024 && meetEl) root.style.setProperty('--foot-pat', (bpy - meetEl.offsetHeight).toFixed(1) + 'px');
+          if (W <= 1056 && meetEl) root.style.setProperty('--foot-pat', (bpy - meetEl.offsetHeight).toFixed(1) + 'px');
           else root.style.setProperty('--foot-pat', (bpy - vh - cut).toFixed(1) + 'px');
         }
         this.updateMeet();
@@ -1272,7 +1272,7 @@ void main(){
   solToggle(i, e) {
     const li = e && e.currentTarget;
     const ax = li && li.closest('.axia');
-    if ((ax ? ax.clientWidth : window.innerWidth) > 1024) return;   /* десктоп — по наведению, клик ничего не переключает */
+    if ((ax ? ax.clientWidth : window.innerWidth) > 1056) return;   /* десктоп — по наведению, клик ничего не переключает */
     if (li) this.fitSolOne(li.querySelector('.sol__tx'), li.offsetWidth);
     this.setState({ solOpen: this.state.solOpen === i ? -1 : i });
     (window.requestAnimationFrame || setTimeout)(() => this.updateLabel && this.updateLabel());   /* цвет меню над открытым кругом */
@@ -1866,7 +1866,7 @@ void main(){
         /* планшет и мобильный: лого внутри плашки меню — часть кнопки меню: раскрывает / закрывает его */
         if (a.classList.contains('logo--nav')) {
           const r = a.closest('.axia');
-          if ((r ? r.clientWidth : window.innerWidth) <= 1024) { this.setState({ open: !this.state.open, suppress: false, solOpen: -1 }); return; }
+          if ((r ? r.clientWidth : window.innerWidth) <= 1056) { this.setState({ open: !this.state.open, suppress: false, solOpen: -1 }); return; }
         }
         /* клик по пункту меню: меню сворачивается сразу (на десктопе — даже если курсор ещё над ним) */
         if (a.closest('.nav')) { this.setState({ open: false, suppress: true }); if (a.blur) a.blur(); }
@@ -1906,7 +1906,7 @@ void main(){
       close: () => {
         const upd = {};
         if (this.state.suppress) upd.suppress = false;
-        if (this.state.open && window.innerWidth > 1024) upd.open = false;
+        if (this.state.open && window.innerWidth > 1056) upd.open = false;
         if (Object.keys(upd).length) this.setState(upd);
       }
     };
