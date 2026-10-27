@@ -3,6 +3,9 @@ body{margin:0}
    кнопки, карточки), растёт строго пропорционально ширине экрана до 2560 px; шире 2560 — размер
    не сбрасывается, а держится на уровне 2560 (≈ 28.4px на rem). Каркас в cqw растёт и так */
 html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
+/* ПЛАНШЕТ шире 768 px (до 1056): макет нарисован на ширину 768 — всё в rem растёт пропорционально ширине экрана
+   (768 → 16px на rem, 1032 → 21.5px). Брейкпойнты в rem сдвигаются вместе с кеглем, поэтому планшет остаётся планшетом */
+@media (min-width: 769px) and (max-width: 1056px) { html:root { font-size: max(16px, calc(100vw / 48)); } }
 /* HERO, основной вариант: сетка без мерцания (статичный паттерн), поверх — поле из фраз,
    «αξία» собрана из букв того же текста. Вектор «αξία» скрыт и служит маской.
    Прежний вариант (WebGL-мерцание сетки) — свойство hero = "webgl" (артборд «Hero — исходный вариант»). */
@@ -333,7 +336,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
     padding: 8.25rem var(--gutter) 0;
   }
   .axia .tm__title { margin: 0; font-size: 4rem; white-space: nowrap; }
-  .axia .tm__br { display: none; }   /* на планшете заголовок в одну строку */
+  .axia .tm__br { display: inline; }   /* «ключевая / команда» — в две строки и на планшете */
   .axia .tm__photo { top: auto; bottom: -6%; left: 84%; height: min(93%, 124cqw); }
   .axia .tm__info { margin: 3rem 0 0; max-width: 20.5rem; }
   .axia .tm__name, .axia .tm__role { font-size: 1.25rem; }
@@ -755,7 +758,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .tm__thumbs {
     position: relative; left: auto; bottom: auto; transform: none; order: 3;
     flex-direction: column; align-items: stretch; gap: 0.875rem;
-    width: 100%; max-width: 20.5rem; margin-top: 2.5rem;
+    width: 100%; max-width: 20.5rem; margin-top: 3.5rem;
   }
   .axia .tm__thumb {
     width: auto; height: auto; background: none; border-radius: 0;
@@ -1161,8 +1164,7 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia .cal--form .book { margin-top: 1.5rem; }
 .axia .cal--form .cal__head { flex-direction: column; align-items: flex-start; }
 /* «ключевая команда»: на десктопе — в две строки, на планшете и мобильном перенос по ширине */
-.axia .tm__br { display: none; }
-@container axia (width > 66rem) { .axia .tm__br { display: inline; } }
+.axia .tm__br { display: inline; }   /* «ключевая / команда» — всегда в две строки */
 /* НАПРАВЛЕНИЯ, карточки: текст по центру; на десктопе название всегда в две строки (перенос — <br class="dv__br">
    в разметке, на второй строке не меньше двух слов), кегль уменьшается на узких экранах, чтобы строки не переносились */
 .axia .dv__name, .axia .dv__desc { text-align: center; }
