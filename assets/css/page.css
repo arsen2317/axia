@@ -650,7 +650,8 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   /* точка выбранного — слева от аватара */
   .axia .tm__thumb::before { left: -1.0625rem; top: 50%; margin: -0.3125rem 0 0; background: #e7dddd; }
   @media (hover: hover) { .axia .tm__thumb:hover img { transform: none; } .axia .tm__thumb:hover .tm__tn { color: #333333; } }
-  .axia .tm__desc { margin-top: 1.125rem; font-size: 0.9375rem; line-height: 1.2; }
+  /* --tm-k ставит скрипт: на невысоких экранах описание уменьшается, чтобы «основное» и «подробнее» влезли каждое на свою страницу */
+  .axia .tm__desc { margin-top: 1.125rem; font-size: calc(0.9375rem * var(--tm-k, 1)); line-height: 1.2; }
   .axia .tm__desc p + p { margin-top: 0.83em; }
 }
 /* КОМАНДА: описание в две страницы (основное / подробнее), переключение стрелками внизу колонки */

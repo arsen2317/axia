@@ -640,12 +640,49 @@ void main(){
     if (!force && key === this.tmPgKey) return;
     this.tmPgKey = key;
     const desktop = root.clientWidth > 1056;
+    const cards = Array.from(tm.querySelectorAll('.tm__card'));
+    /* меряем все абзацы в естественном виде: временно показываем их поверх классов и с обычным отступом */
+    const natural = (card, fn) => {
+      const flow = card.querySelector('.tm__flow'), desc = flow && flow.querySelector('.tm__desc');
+      if (!flow || !desc) return fn(null);
+      const ps = Array.from(desc.querySelectorAll('p'));
+      const saved = ps.map((p) => p.className);
+      ps.forEach((p) => { p.className = 'tm__p'; });
+      try { return fn({ flow, desc, ps }); } finally { ps.forEach((p, i) => { p.className = saved[i]; }); }
+    };
+    /* АВТОПОДГОНКА (десктоп): «основное» и «подробнее» (абзац с data-br) должны поместиться каждое на свою страницу.
+       Если не помещаются — уменьшаем кегль описания (одинаково у всех участников, чтобы при переключении не прыгал),
+       но не мельче 12.5px; если не хватает и этого — лишнее уйдёт на третью страницу, как раньше */
+    {
+      const fits = () => cards.every((card) => natural(card, (m) => {
+        if (!m) return true;
+        const H = m.flow.clientHeight - m.desc.offsetTop;
+        const gap = m.ps.length > 1 ? parseFloat(getComputedStyle(m.ps[1]).marginTop) || 0 : 0;
+        const g = [0, 0], c = [0, 0]; let i = 0;
+        m.ps.forEach((p) => { if (p.hasAttribute('data-br')) i = 1; g[i] += (c[i] ? gap : 0) + p.offsetHeight; c[i]++; });
+        return g[0] <= H + 0.5 && g[1] <= H + 0.5;
+      }));
+      tm.style.setProperty('--tm-k', '1');
+      if (desktop && !fits()) {
+        const d0 = cards[0] && cards[0].querySelector('.tm__desc');
+        const base = d0 ? parseFloat(getComputedStyle(d0).fontSize) || 15 : 15;
+        let lo = Math.min(1, 12.5 / base), hi = 1;
+        tm.style.setProperty('--tm-k', lo.toFixed(4));
+        if (fits()) {
+          for (let i = 0; i < 7; i++) {
+            const mid = (lo + hi) / 2;
+            tm.style.setProperty('--tm-k', mid.toFixed(4));
+            if (fits()) lo = mid; else hi = mid;
+          }
+        }
+        tm.style.setProperty('--tm-k', lo.toFixed(4));
+      }
+    }
     const map = [];
-    tm.querySelectorAll('.tm__card').forEach((card) => {
+    cards.forEach((card) => {
       const flow = card.querySelector('.tm__flow'), desc = flow && flow.querySelector('.tm__desc');
       if (!flow || !desc) { map.push([]); return; }
       const ps = Array.from(desc.querySelectorAll('p'));
-      /* меряем все абзацы в естественном виде: временно показываем их поверх классов и с обычным отступом */
       const saved = ps.map((p) => p.className);
       ps.forEach((p) => { p.className = 'tm__p'; });
       const gap = ps.length > 1 ? parseFloat(getComputedStyle(ps[1]).marginTop) || 0 : 0;
