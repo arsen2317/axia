@@ -3,6 +3,9 @@ body{margin:0}
    кнопки, карточки), растёт строго пропорционально ширине экрана до 2560 px; шире 2560 — размер
    не сбрасывается, а держится на уровне 2560 (≈ 28.4px на rem). Каркас в cqw растёт и так */
 html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
+/* ПЛАНШЕТ шире 768 px (до 1056): макет нарисован на ширину 768 — всё в rem растёт пропорционально ширине экрана
+   (768 → 16px на rem, 1032 → 21.5px). Брейкпойнты в rem сдвигаются вместе с кеглем, поэтому планшет остаётся планшетом */
+@media (min-width: 769px) and (max-width: 1056px) { html:root { font-size: max(16px, calc(100vw / 48)); } }
 /* HERO, основной вариант: сетка без мерцания (статичный паттерн), поверх — поле из фраз,
    «αξία» собрана из букв того же текста. Вектор «αξία» скрыт и служит маской.
    Прежний вариант (WebGL-мерцание сетки) — свойство hero = "webgl" (артборд «Hero — исходный вариант»). */
@@ -31,7 +34,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia.axia { --ring: calc(100cqw - 2 * var(--gutter)); }
 }
 /* ПОДХОД, десктоп: панель со словами вписана в круг (планшет и мобила — без изменений) */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   /* зона круга: от центральной вертикали экрана до правого края, по высоте — два шага сетки
      (от линии над центром до линии под ним; центральная линия стоит посередине экрана).
      Круг вписан в зону с полями 40px, справа всегда ровно var(--gutter), как у остального контента.
@@ -71,7 +74,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* ПОДХОД, планшет и мобильный: круг во всю ширину контент-зоны. Панель — квадрат во всю ширину экрана
    (прозрачный, круг со словами рисуется на холсте), поэтому секция растёт по высоте под контент.
    Сетка следующих секций сдвинута на лишнюю высоту «Подхода» (--appr-extra, считает скрипт) — шва нет. */
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .appr { height: auto; }
   /* фон секции — обычный слой во всю её высоту (не закрепляется): сетка едет вместе с контентом */
   .axia .appr__bg { position: absolute; top: 0; left: 0; right: 0; height: 100%; }
@@ -102,7 +105,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 }
 /* КОМАНДА, планшет (вертикальный): фото шириной в две колонки (поля 40, межколонник 8), шаг между фото — две линии сетки */
 @media (orientation: portrait) {
-  @container axia (width > 40rem) and (width <= 64rem) {
+  @container axia (width > 40rem) and (width <= 66rem) {
     .axia .team { --team-d: calc((100vw - 2 * 2.5rem - 3 * 0.5rem) / 2 + 0.5rem); }
   }
 }
@@ -181,8 +184,8 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   transition: transform 0.45s cubic-bezier(0.5, 0, 0.2, 1), background-color 0.3s linear;
 }
 /* наведение: номер и ромб въезжают внутрь круга и становятся синими — номер сверху над описанием, ромб снизу под ним */
-@container axia (max-width: 64rem) { .axia .sol__item.is-open .sol__num { transform: translate(-50%, calc(var(--sol-d) * 0.0353)); color: #2c4595; } }
-@container axia (max-width: 64rem) { .axia .sol__item.is-open .sol__dot { transform: translateY(calc(var(--sol-d) * -0.0353 - 0.6629rem)) rotate(45deg); background-color: #2c4595; } }
+@container axia (max-width: 66rem) { .axia .sol__item.is-open .sol__num { transform: translate(-50%, calc(var(--sol-d) * 0.0353)); color: #2c4595; } }
+@container axia (max-width: 66rem) { .axia .sol__item.is-open .sol__dot { transform: translateY(calc(var(--sol-d) * -0.0353 - 0.6629rem)) rotate(45deg); background-color: #2c4595; } }
 .axia .sol__name { margin: 0; font-weight: 600; font-size: calc(var(--sol-d) * 0.076); line-height: 1.3; transition: opacity 0.2s ease; }
 .axia .sol__desc {
   /* текст вписан в круг: слева и справа — «обтекатели» с формой круга (shape-outside), строки короче
@@ -196,12 +199,12 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .sol__fl { float: left;  shape-outside: radial-gradient(circle at 100% 50%, transparent calc(var(--sol-d) * 0.455), #000 calc(var(--sol-d) * 0.455 + 1px)); }
 .axia .sol__fr { float: right; shape-outside: radial-gradient(circle at 0% 50%,   transparent calc(var(--sol-d) * 0.455), #000 calc(var(--sol-d) * 0.455 + 1px)); }
 .axia .sol__tx { display: block; margin-top: var(--tx-mt, 30%); }
-@container axia (max-width: 64rem) { .axia .sol__item.is-open .sol__card { background-color: #fbfbef; } }
-@container axia (max-width: 64rem) { .axia .sol__item.is-open .sol__card::before { opacity: 0; } }
-@container axia (max-width: 64rem) { .axia .sol__item.is-open .sol__name { opacity: 0; } }
-@container axia (max-width: 64rem) { .axia .sol__item.is-open .sol__desc { opacity: 1; } }
+@container axia (max-width: 66rem) { .axia .sol__item.is-open .sol__card { background-color: #fbfbef; } }
+@container axia (max-width: 66rem) { .axia .sol__item.is-open .sol__card::before { opacity: 0; } }
+@container axia (max-width: 66rem) { .axia .sol__item.is-open .sol__name { opacity: 0; } }
+@container axia (max-width: 66rem) { .axia .sol__item.is-open .sol__desc { opacity: 1; } }
 .axia .sol__item:focus-visible .sol__card { outline: 2px solid #fbfbef; outline-offset: 4px; }
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .sol { --sol-d: 46cqw; --sol-step: calc(var(--sol-d) + 2rem); }
   /* номер стоит на верхней точке круга и выступает над ним — отступ от заголовка считаем от верха номера */
   .axia .sol__title { font-size: 4rem; bottom: calc(100% - var(--sol-cy, 60vh) + var(--sol-d) / 2 + var(--sol-d) * 0.1 + 3.5rem); }
@@ -230,7 +233,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .team__anchor { top: calc(var(--team-line, 30rem) - var(--team-d) / 2 - 6.5rem); height: calc(var(--team-d) + 6.5rem + 5rem); }
 }
 /* ШАПКА, десктоп: «обсудить задачу» — тёмная кнопка, как на планшете и мобильном (остаётся вверху справа) */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .header .cta {
     display: inline-flex; align-items: center; justify-content: center;
     height: 2.5rem; padding: 0 1.125rem; font-size: 0.875rem;   /* компактнее: 40 px высота, кегль 14 */
@@ -241,7 +244,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .header .cta::after { display: none; }
   .axia .header .cta:active { color: var(--ink); background: #1c1c1c; }
 }
-@media (hover: hover) { @container axia (width > 64rem) { .axia .header .cta:hover { opacity: 1; color: var(--ink); background: #333333; } } }
+@media (hover: hover) { @container axia (width > 66rem) { .axia .header .cta:hover { opacity: 1; color: var(--ink); background: #333333; } } }
 /* ---------- КОМАНДА (по макету): светлый экран, большое фото по центру, описание справа, переключатель — кружки слева внизу ----------
    Фото на белом фоне смешиваются с фоном секции (multiply), поэтому сливаются с градиентом снизу. */
 .axia .team { height: auto; z-index: 2; }                 /* z 2 — над «заглушкой низа экрана» (синий градиент) */
@@ -305,7 +308,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .tm__more:hover .tm__arrow { transform: translateX(0.25rem); }
 }
 .axia .tm__more:focus-visible { outline: 2px solid var(--tm-ink); outline-offset: 3px; border-radius: 0.125rem; }
-@container axia (max-width: 64rem) { .axia .tm__more { margin-top: 1.5rem; } }   /* планшет и мобильный: сразу под описанием */
+@container axia (max-width: 66rem) { .axia .tm__more { margin-top: 1.5rem; } }   /* планшет и мобильный: сразу под описанием */
 .axia .tm__thumbs { position: absolute; left: var(--gutter); bottom: 1.75rem; z-index: 2; order: 3; display: flex; gap: 1rem; }
 .axia .tm__thumb {
   all: unset; box-sizing: border-box; position: relative; flex: none;
@@ -326,14 +329,14 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .tm__photo { transform: translate(-50%, var(--tm-dy, 0%)); }
 .axia .tm__photo:nth-child(1) { --tm-dy: -4.5%; }
 /* ПЛАНШЕТ: текст слева, фото справа (низ уходит за край экрана), кружки по центру над кнопкой «обсудить задачу» */
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .tm {
     height: 100vh; height: 100dvh; min-height: 46rem;
     display: flex; flex-direction: column;
     padding: 8.25rem var(--gutter) 0;
   }
   .axia .tm__title { margin: 0; font-size: 4rem; white-space: nowrap; }
-  .axia .tm__br { display: none; }   /* на планшете заголовок в одну строку */
+  .axia .tm__br { display: inline; }   /* «ключевая / команда» — в две строки и на планшете */
   .axia .tm__photo { top: auto; bottom: -6%; left: 84%; height: min(93%, 124cqw); }
   .axia .tm__info { margin: 3rem 0 0; max-width: 20.5rem; }
   .axia .tm__name, .axia .tm__role { font-size: 1.25rem; }
@@ -371,7 +374,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
    сжимается к центру до компактного вида (подпись раздела + бургер). Шире, чем колонка меню, — на --nav-x с каждой стороны,
    но не заходя на логотип и кнопку */
 .nav__row { display: none; }
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .nav {
     --nav-x: max(0px, min(7.5rem, (100cqw - 2 * var(--gutter) - 24rem - 3rem) / 2 - 11rem));
     left: 0; right: 0;
@@ -459,7 +462,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 @media (hover: hover) { .axia .foot__col a:hover { color: #e8e6e0; } }
 .axia .foot__col a:focus-visible { outline: 2px solid #e8e6e0; outline-offset: 3px; border-radius: 0.125rem; }
 /* планшет: колонки 2 × 2 */
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .foot { padding-top: 3rem; padding-bottom: 3rem; }
   .axia .foot__logo { font-size: 3rem; gap: 1.5rem; }
   .axia .foot__mark { width: 2rem; height: 2.5rem; }
@@ -506,7 +509,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 }
 .axia .who__title { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 4.5rem; line-height: 0.95; letter-spacing: 0; white-space: nowrap; }
 .axia .who__text { margin: 0; font-size: 1.125rem; line-height: 1.4; }
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .who__title { font-size: 4rem; }
 }
 @container axia (max-width: 40rem) {
@@ -529,16 +532,16 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   text-box: trim-both ex alphabetic;
 }
 .axia .dv__svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: visible; pointer-events: none; }
-.axia .dv-p { fill: #4d6ac5; }
+.axia .dv-p { fill: #1e2f63; }   /* цвет карточек — как у панели с календарём (.cal) */
 .axia .dv__cards { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .axia .dv__card {
   position: absolute; box-sizing: border-box; padding: 1.25rem;
   display: flex; flex-direction: column; gap: 0.75rem; overflow: hidden;
   opacity: var(--dv-t, 0); transform: translateY(calc((1 - var(--dv-t, 0)) * 0.75rem));
 }
-.axia .dv__name { margin: 0; font-size: 1.125rem; font-weight: 600; line-height: 1.3; color: #e8e6e0; text-wrap: wrap; }
+.axia .dv__name { margin: 0; font-size: 1.5rem; font-weight: 600; line-height: 1.2; color: #e8e6e0; text-wrap: wrap; }
 .axia .dv__desc { margin: 0; font-size: 0.9375rem; line-height: 1.3; color: rgba(232, 230, 224, 0.88); text-wrap: wrap; }
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .dv__title { font-size: 4rem; top: 8.25rem; }
   .axia .dv__card { padding: 1rem; gap: 0.5rem; }
   .axia .dv__name { font-size: 1rem; }
@@ -580,7 +583,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .book:has(.consent__box:not(:checked)) button[type="submit"] { opacity: 0.4; pointer-events: none; cursor: default; }
 /* ОБСУДИТЬ ЗАДАЧУ, десктоп: заголовок и панель записи справа начинаются на одной высоте
    (блок заголовка обрезан по высоте букв, отступ сверху у панели = положение заголовка, его считает скрипт) */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .meet__title { text-box: trim-both cap alphabetic; }
   .axia .meet__main { padding-top: var(--meet-pt, 7rem); padding-bottom: 3rem; justify-content: flex-start; }
 }
@@ -589,7 +592,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* ПОДХОД без круга со словами: обычный экран (без перехода в «Решения»), заголовок и текст — по центру */
 .axia .appr, .axia .appr.appr { height: calc(100vh + var(--appr-g, 0px)); height: calc(100dvh + var(--appr-g, 0px)); margin-bottom: 0; }
 /* фон «Подхода» на десктопе выше экрана на --appr-g (сетка идёт дальше обычным скроллом), текст закреплён на это время */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .appr .appr__bg { height: calc(100vh + var(--appr-g, 0px)); height: calc(100dvh + var(--appr-g, 0px)); }
   .axia .appr .appr__stage { margin-top: calc(-100vh - var(--appr-g, 0px)); margin-top: calc(-100dvh - var(--appr-g, 0px)); }
 }
@@ -598,7 +601,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   padding: 7rem var(--gutter) 4rem;
 }
 .axia .appr .appr__copy { max-width: 36rem; }
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .appr, .axia .appr.appr { height: auto; }
   .axia .appr .appr__stage { min-height: 100vh; min-height: 100dvh; grid-template-rows: 1fr; }
 }
@@ -619,7 +622,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 }
 /* HERO, десктоп: «аксиа» левым краем ровно на вертикальной линии сетки (316.5 из 1200 ширины),
    а не на начале колонки (они расходятся на несколько пикселей); 0.01em — левый отступ буквы «α» */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .intro__title { margin-left: calc(1.375cqw - 1.375rem - 0.01em); }
 }
 /* КОМАНДА, десктоп (обновлённый макет): белый фон; под заголовком — список участников (аватар, имя, должность),
@@ -627,7 +630,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .tm__tx { display: none; }
 .axia .tm__desc p { margin: 0; }
 .axia .tm__desc p + p { margin-top: 0.67em; }
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .tm { background: #ffffff; }
   /* список — по ширине первой колонки сетки, прижат к низу экрана */
   .axia .tm__thumbs {
@@ -647,7 +650,8 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   /* точка выбранного — слева от аватара */
   .axia .tm__thumb::before { left: -1.0625rem; top: 50%; margin: -0.3125rem 0 0; background: #e7dddd; }
   @media (hover: hover) { .axia .tm__thumb:hover img { transform: none; } .axia .tm__thumb:hover .tm__tn { color: #333333; } }
-  .axia .tm__desc { margin-top: 1.125rem; font-size: 0.9375rem; line-height: 1.2; }
+  /* --tm-k ставит скрипт: на невысоких экранах описание уменьшается, чтобы «основное» и «подробнее» влезли каждое на свою страницу */
+  .axia .tm__desc { margin-top: 1.125rem; font-size: calc(0.9375rem * var(--tm-k, 1)); line-height: 1.2; }
   .axia .tm__desc p + p { margin-top: 0.83em; }
 }
 /* КОМАНДА: описание в две страницы (основное / подробнее), переключение стрелками внизу колонки */
@@ -666,13 +670,13 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 @media (hover: hover) { .axia .tm__arr:hover { background: var(--tm-ink); border-color: var(--tm-ink); color: #ffffff; } }
 .axia .tm__arr:focus-visible { outline: 2px solid var(--tm-ink); outline-offset: 2px; }
 .axia .tm__arr.is-off { opacity: 0.3; pointer-events: none; cursor: default; }
-@container axia (max-width: 64rem) { .axia .tm__nav { margin-top: 0; } }
+@container axia (max-width: 66rem) { .axia .tm__nav { margin-top: 0; } }
 /* десктоп: низ стрелок — на том же расстоянии от низа экрана, что и низ списка аватаров (2rem) */
-@container axia (width > 64rem) { .axia .tm__info { margin-bottom: 2rem; } }
+@container axia (width > 66rem) { .axia .tm__info { margin-bottom: 2rem; } }
 /* высоту блока описания задаёт только видимая страница (иначе длинный доп. текст выталкивал стрелки ниже края);
    если текст всё равно не помещается на низком экране — он прокручивается внутри, а стрелки всегда стоят внизу */
 .axia .tm__flow { position: relative; }
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   /* колонка описания занимает всё место между должностью и стрелками; лишние абзацы уходят на следующую страницу */
   .axia .tm__flow { flex: 1 1 0; min-height: 0; overflow: hidden; }
   .axia .tm__nav { flex: none; }
@@ -699,7 +703,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .tm__pgbtn.is-off { opacity: 0.3; pointer-events: none; }
 .axia .tm__flow .tm__desc { margin-top: 0.875rem; }
 .axia .tm__mail { flex: none; font-size: 1rem; }
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .tm__flow { flex: 1 1 0; min-height: 0; overflow: hidden; }
   .axia .tm__mail { margin-top: auto; padding-top: 1.25rem; font-size: 1rem; }
 }
@@ -725,7 +729,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .foot > .foot__col { position: relative; z-index: 2; grid-row: 1; }
 .axia .foot__col--nav { grid-column: 3; }
 .axia .foot__col--legal { grid-column: 4; }
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .foot { padding: 3.5rem var(--gutter) 3.5rem; row-gap: 3rem; }
   .axia .foot__brand { grid-column: 1 / -1; grid-row: 1; grid-template-rows: auto auto; }
   .axia .foot__brand .foot__logo { grid-row: 1; margin-bottom: 1.5rem; }
@@ -744,18 +748,18 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .tm__card *::selection, .axia .tm__thumbs *::selection { background: transparent; color: inherit; }
 .axia .tm__mail::selection { background: #b4d5fe; }
 /* КОМАНДА, десктоп: почта — сразу под должностью (где были стрелки), «О Ксении · 1/2» со стрелками — внизу колонки */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .tm__card > .tm__mail { order: 1; margin-top: 1rem; padding-top: 0; }
   .axia .tm__card > .tm__flow { order: 2; }
   .axia .tm__card > .tm__pager { order: 3; flex: none; margin-top: 0; padding-top: 1.25rem; }
 }
 /* КОМАНДА, ПЛАНШЕТ: список участников (аватар, имя, должность) — сразу под заголовком, как на десктопе; ниже — описание */
-@container axia (40rem < width <= 64rem) {
+@container axia (40rem < width <= 66rem) {
   .axia .tm { height: auto; min-height: 100vh; min-height: 100dvh; padding-bottom: calc(1rem + var(--bar-h, 3.5rem) + 2rem); background: #ffffff; }
   .axia .tm__thumbs {
     position: relative; left: auto; bottom: auto; transform: none; order: 3;
     flex-direction: column; align-items: stretch; gap: 0.875rem;
-    width: 100%; max-width: 20.5rem; margin-top: 2.5rem;
+    width: 100%; max-width: 20.5rem; margin-top: 3.5rem;
   }
   .axia .tm__thumb {
     width: auto; height: auto; background: none; border-radius: 0;
@@ -797,7 +801,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .foot__contacts a { color: #8ba2e2; }
 @media (hover: hover) { .axia .foot__contacts a:hover { color: #e8e6e0; } }
 .axia .foot__ico { width: 2rem; height: 2rem; margin-block: calc((1.3em - 2rem) / 2); }
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .foot { padding-top: 3.5rem; }
   .axia .foot__brand { display: flex; flex-direction: column; align-items: flex-start; align-self: stretch; }
   .axia .foot__brand .foot__logo { font-size: 3rem; gap: 1.5rem; }
@@ -809,12 +813,12 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .foot > .foot__col { padding-top: 0.5625rem; gap: 0.95rem; }
 }
 /* НАПРАВЛЕНИЯ, десктоп (макет): иллюстрация сверху по центру карточки, ниже — название и описание */
-@container axia (width > 64rem) { .axia .dv__br { display: none; } }   /* десктоп: название карточки в одну строку, если помещается */
+@container axia (width > 66rem) { .axia .dv__br { display: inline; } }   /* десктоп: название карточки в одну строку, если помещается */
 .axia .dv__ill { display: none; }
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .dv__title { top: 8rem; }
-  .axia .dv-p { fill: #4f6bc4; }
-  .axia .dv__card { padding: 0 1.25rem 1.25rem; gap: 0.5rem; }
+  .axia .dv-p { fill: #1e2f63; }
+  .axia .dv__card { padding: 0 1.25rem 1.25rem; gap: 0.75rem; }
   .axia .dv__ill { display: flex; justify-content: center; flex: 1 1 0; min-height: 0; margin-bottom: 0.25rem; }
   .axia .dv__ill .dv__art { display: block; height: 100%; width: auto; aspect-ratio: 408 / 398; max-width: 64%; overflow: visible; }   /* иллюстрация — по центру свободного места над текстом */
   .axia .dv__card { pointer-events: auto; }
@@ -862,7 +866,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .foot__wl4 { clip-path: inset(0 0 0 71.3%); transition-delay: 0.41s; }
 /* десктоп (по макету): подвал ≈ 39% ширины по высоте, верх «ξ» на 11% ширины ниже края подвала,
    низ букв срезан нижним краем */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .foot { min-height: 38.9cqw; align-content: start; }
   .axia .foot__word { top: 11.15cqw; }
 }
@@ -870,10 +874,10 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* ===== ПЛАНШЕТ (правки) ===== */
 @keyframes dvo-pop { 0% { transform: none; } 45% { transform: scale(1.05); } 100% { transform: none; } }
 @keyframes dvo-face-k { 0% { opacity: 0; } 45% { opacity: 0.16; } 100% { opacity: 0; } }
-@container axia (40rem < width <= 64rem) {
+@container axia (40rem < width <= 66rem) {
   /* НАПРАВЛЕНИЯ: иллюстрации как на десктопе; анимации всех трёх проигрываются разом, когда карточки на экране
      (--dv-play ставит скрипт: paused → running) */
-  .axia .dv-p { fill: #4f6bc4; }
+  .axia .dv-p { fill: #1e2f63; }
   .axia .dv__card { padding: 0 1rem 1rem; gap: 0.5rem; }
   .axia .dv__ill { display: flex; justify-content: center; flex: 1 1 0; min-height: 0; margin-bottom: 0.25rem; }
   .axia .dv__ill .dv__art { display: block; height: 100%; width: auto; aspect-ratio: 408 / 398; max-width: 82%; overflow: visible; }
@@ -907,7 +911,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 @media (prefers-reduced-motion: reduce) { .axia .dv__card .dv__art * { animation: none !important; } }
 /* РЕШЕНИЯ, десктоп: заголовок — по центру свободной зоны между низом шапки (4.875rem) и верхом номеров кругов
    (номер стоит на верхней точке круга и выступает над ней на ≈0.081 диаметра) */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .sol__title {
     bottom: auto; text-box: trim-both ex alphabetic;
     top: calc((4.875rem + var(--sol-cy, 60vh) - var(--sol-d) / 2 - var(--sol-d) * 0.081) / 2);
@@ -915,7 +919,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   }
 }
 /* РЕШЕНИЯ, десктоп: отступ снизу до «Команды» (--sol-pb считает скрипт); в нём сетка продолжается без шва */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .sol {
     padding-bottom: var(--sol-pb, 0px);
     background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
@@ -956,14 +960,14 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .ab__text--1 { opacity: max(0, 1 - 2 * var(--ab-f, 0)); transform: translate3d(0, calc(var(--ab-f, 0) * -1rem), 0); }
 .axia .ab__text--2 { opacity: max(0, 2 * var(--ab-f, 0) - 1); transform: translate3d(0, calc((1 - var(--ab-f, 0)) * 1rem), 0); }
 /* десктоп: заголовок слева мельче — больше воздуха между ним и текстом справа */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .ab__title { font-size: clamp(1.875rem, 3.1cqw, 3rem); padding-right: 5cqw; }
   .axia .ab__text { font-size: clamp(1rem, 1.75cqw, 1.625rem); line-height: 1.32; }   /* правый текст — мельче */
   /* блок — по центру места ПОД шапкой (под меню), а не всего экрана: визуальный центр чуть ниже середины */
   .axia .ab__content { align-content: center; padding-top: 5.5rem; padding-bottom: 0; }   /* заголовок не доходит до правого текста: зазор ≈ 5% ширины + промежуток сетки */
 }
 /* планшет и мобильный: заголовок сверху во всю ширину, абзацы под ним */
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .ab__content { display: flex; flex-direction: column; gap: 2rem; padding-top: 9rem; }
   .axia .ab__title { font-size: clamp(2rem, 6cqw, 3rem); }
 }
@@ -975,15 +979,15 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* НАПРАВЛЕНИЯ (десктоп и планшет): сверху название и описание, иллюстрация внизу — у всех карточек одной высоты
    и прижата к низу, поэтому все три стоят на одном уровне, независимо от длины текста */
 @container axia (width > 40rem) {
-  .axia .dv__card { padding: 1.25rem; }
+  .axia .dv__card { padding: 2rem; }
   .axia .dv__name { order: 1; }
   .axia .dv__desc { order: 2; }
   .axia .dv__ill { order: 3; flex: none; height: 50%; margin: auto 0 0; align-items: center; }
 }
-@container axia (40rem < width <= 64rem) { .axia .dv__card { padding: 1rem; } .axia .dv__ill { height: 42%; } }
+@container axia (40rem < width <= 66rem) { .axia .dv__card { padding: 1rem; } .axia .dv__ill { height: 42%; } }
 /* «О НАС», ПЛАНШЕТ И МОБИЛЬНЫЙ: без закрепления и смены абзацев — оба абзаца сразу, друг под другом
    (планшет — один экран, мобильный — сколько нужно тексту) */
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .ab__bg { position: absolute; inset: 0; height: auto; }
   .axia .ab__pin { position: absolute; inset: 0; height: auto; margin: 0; }
   .axia .ab__side { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -992,7 +996,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .ab__content { justify-content: center; padding-top: 6rem; padding-bottom: 6rem; }
 }
 /* НАПРАВЛЕНИЯ, десктоп: иллюстрации крупнее */
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .dv__ill { height: 56%; }
   .axia .dv__ill .dv__art { max-width: 80%; }
 }
@@ -1002,7 +1006,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .dv__ill { position: absolute; left: 1.25rem; right: 1.25rem; bottom: 1.25rem; top: calc(var(--dv-tmax, 50%) + 1rem); height: auto; margin: 0; }
   .axia .dv__ill .dv__art { height: 100%; max-width: 80%; }
 }
-@container axia (40rem < width <= 64rem) { .axia .dv__ill { left: 1rem; right: 1rem; bottom: 1rem; } }
+@container axia (40rem < width <= 66rem) { .axia .dv__ill { left: 1rem; right: 1rem; bottom: 1rem; } }
 /* ===== МОБИЛЬНЫЙ (правки под тач) ===== */
 @container axia (max-width: 40rem) {
   /* ПОДВАЛ: «αξία» внизу, низ букв срезан краем (как в hero) */
@@ -1019,7 +1023,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
    описание открывается (класс is-open), плюс поворачивается в «×» */
 /* десктоп: как было — без плюса, описание по наведению (и фокусу с клавиатуры) */
 .axia .sol__plus { display: none; }
-@container axia (width > 64rem) {
+@container axia (width > 66rem) {
   .axia .sol__item:hover .sol__num, .axia .sol__item:focus .sol__num { transform: translate(-50%, calc(var(--sol-d) * 0.0353)); color: #2c4595; }
   .axia .sol__item:hover .sol__dot, .axia .sol__item:focus .sol__dot { transform: translateY(calc(var(--sol-d) * -0.0353 - 0.6629rem)) rotate(45deg); background-color: #2c4595; }
   .axia .sol__item:hover .sol__card, .axia .sol__item:focus .sol__card { background-color: #fbfbef; }
@@ -1027,7 +1031,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .sol__item:hover .sol__name, .axia .sol__item:focus .sol__name { opacity: 0; }
   .axia .sol__item:hover .sol__desc, .axia .sol__item:focus .sol__desc { opacity: 1; }
 }
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
 .axia .sol__item { --sol-cell: var(--sol-d); position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .axia .sol__card { --sol-d: calc(var(--sol-cell) * 0.82); position: absolute; left: 50%; top: 50%; width: var(--sol-d); height: var(--sol-d); margin: calc(var(--sol-d) / -2) 0 0 calc(var(--sol-d) / -2); }
 .axia .sol__plus { display: block;
@@ -1044,12 +1048,12 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 }
 @container axia (max-width: 40rem) { .axia .sol__dot { display: block; } }
 /* планшет: ромб — в пропорции к кругу (как на десктопе: ~6.5% диаметра) */
-@container axia (40rem < width <= 64rem) {
+@container axia (40rem < width <= 66rem) {
   .axia .sol__dot { --dd: calc(var(--sol-d) * 0.065); width: var(--dd); height: var(--dd); margin: 0 0 calc(var(--dd) / -2) calc(var(--dd) / -2); }
   .axia .sol__item.is-open .sol__dot { transform: translateY(calc(var(--sol-d) * -0.0353 - var(--dd) * 0.707)) rotate(45deg); }
 }
 /* РЕШЕНИЯ, ПЛАНШЕТ И МОБИЛЬНЫЙ */
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   /* РЕШЕНИЯ: без закрепления и горизонтальной ленты — круги друг под другом, ровно на кругах фоновой сетки
      (диаметр = шаг плитки сетки, отступ первого круга — --sol-mt от скрипта); описание — по касанию (фокус) */
   .axia .sol { --sol-d: calc(100cqw * 690 / 768); height: auto; padding-bottom: 3rem; }
@@ -1064,16 +1068,16 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 }
 /* ПОДВАЛ, планшет: лого крупнее, телеграм и почта дальше друг от друга, разделы и реквизиты — ниже
    (отступ от контактов вдвое больше), сам подвал выше */
-@container axia (40rem < width <= 64rem) {
+@container axia (40rem < width <= 66rem) {
   .axia .foot { row-gap: 5rem; padding-top: 4.5rem; padding-bottom: calc(21cqw + 4rem); }
   .axia .foot__brand .foot__logo { font-size: 3.75rem; gap: 1.75rem; }
   .axia .foot__brand .foot__mark { width: 2.5rem; height: 3.05rem; }
   .axia .foot__contacts { row-gap: 1.875rem; gap: 1.875rem; }
 }
 /* планшет в горизонтальной ориентации: сетка «альбомная» — круг по её кругу */
-@media (orientation: landscape) { @container axia (max-width: 64rem) { .axia .sol { --sol-d: calc(100cqw * 566 / 1200); } } }
+@media (orientation: landscape) { @container axia (max-width: 66rem) { .axia .sol { --sol-d: calc(100cqw * 566 / 1200); } } }
 /* НАПРАВЛЕНИЯ, ПЛАНШЕТ И МОБИЛЬНЫЙ: по одной карточке в ряд */
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   /* НАПРАВЛЕНИЯ: карточки друг под другом, без ограничения высоты: название, описание, иллюстрация;
      секция — сколько нужно (сетка дальше сдвигается на лишнюю высоту, см. --appr-extra) */
   .axia .dirs { height: auto; }
@@ -1085,10 +1089,10 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .dv__card {
     position: relative !important; left: auto !important; top: auto !important; width: auto !important; height: auto !important;
     opacity: 1; transform: none; overflow: visible;
-    background: #4f6bc4; border-radius: 0.75rem; padding: 1.25rem; gap: 0.5rem;
+    background: #1e2f63; border-radius: 0.75rem; padding: 1.75rem; gap: 0.5rem;
   }
   .axia .dv__br { display: none; }
-  .axia .dv__name { order: 1; font-size: 1.0625rem; font-weight: 700; }
+  .axia .dv__name { order: 1; font-size: 1.375rem; font-weight: 700; line-height: 1.2; }
   .axia .dv__desc { order: 2; font-size: 0.875rem; line-height: 1.35; }
   .axia .dv__ill { order: 3; display: flex; justify-content: center; position: static; height: auto; margin: 0.75rem 0 0; }
   .axia .dv__ill .dv__art { display: block; width: 62%; height: auto; max-width: none; aspect-ratio: 408 / 398; overflow: visible; }
@@ -1108,30 +1112,30 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .dv__card .dvl-p4 { --dy: 13px; --up: -3px; }
   .axia .dv__card .dvl-b { stroke-dasharray: 1; animation: dv-draw-up 0.9s ease-out 0.5s both; }
 }
-@container axia (40rem < width <= 64rem) {
+@container axia (40rem < width <= 66rem) {
   .axia .dirs__sticky { padding-top: 8.25rem; padding-bottom: 4rem; }
   .axia .dv__cards { gap: 1rem; }
-  .axia .dv__card { padding: 1.75rem; }
-  .axia .dv__name { font-size: 1.375rem; }
+  .axia .dv__card { padding: 2.5rem; }
+  .axia .dv__name { font-size: 1.75rem; line-height: 1.2; }
   .axia .dv__desc { font-size: clamp(1.125rem, 2.33cqw, 2rem); line-height: 1.22; }   /* как текст в «о нас» */
   .axia .dv__ill .dv__art { width: 42%; }
 }
 /* ПЛАНШЕТ: «задачи» — заголовок прямо над первым кругом (отступ сверху считает скрипт, --sol-pt);
    «направления» — больше воздуха между заголовком и карточками */
-@container axia (max-width: 64rem) { .axia .sol__stage { padding-top: var(--sol-pt, 6.25rem); } }
-@container axia (40rem < width <= 64rem) {
+@container axia (max-width: 66rem) { .axia .sol__stage { padding-top: var(--sol-pt, 6.25rem); } }
+@container axia (40rem < width <= 66rem) {
   .axia .dv__title { margin-bottom: 3.75rem; }
 }
 /* ЗАДАЧИ, планшет и мобильный: без плюса — обводка закрытого круга мягко «дышит» (ярче / тусклее), намёк на нажатие;
    круги мерцают со сдвигом фазы, а не все разом */
 @keyframes sol-pulse { 0%, 100% { border-color: rgba(232, 230, 224, 0.4); } 50% { border-color: rgba(232, 230, 224, 0.95); } }
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .axia .sol__plus { display: none !important; }
   .axia .sol__item.is-live:not(.is-open) .sol__card::before { animation: sol-pulse 2.4s ease-in-out infinite; }   /* только круг перед глазами */
 }
 @media (prefers-reduced-motion: reduce) { .axia .sol__card::before { animation: none !important; } }
 /* КОМАНДА, планшет: «О Ксении · 1/2» со стрелками — внизу секции (как на десктопе): блок описания тянется до низа */
-@container axia (40rem < width <= 64rem) {
+@container axia (40rem < width <= 66rem) {
   .axia .tm__info { flex: 1 1 auto; grid-template-rows: minmax(0, 1fr); }
   .axia .tm__card { height: 100%; }
   .axia .tm__card > .tm__pager { margin-top: auto; padding-top: 2rem; }
@@ -1160,3 +1164,11 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia .cal__note { margin: 0.5rem 0 0; color: var(--ink-soft); font-size: 0.9375rem; line-height: 1.4; }
 .axia .cal--form .book { margin-top: 1.5rem; }
 .axia .cal--form .cal__head { flex-direction: column; align-items: flex-start; }
+/* «ключевая команда»: на десктопе — в две строки, на планшете и мобильном перенос по ширине */
+.axia .tm__br { display: inline; }   /* «ключевая / команда» — всегда в две строки */
+/* НАПРАВЛЕНИЯ, карточки: текст по центру; на десктопе название всегда в две строки (перенос — <br class="dv__br">
+   в разметке, на второй строке не меньше двух слов), кегль уменьшается на узких экранах, чтобы строки не переносились */
+.axia .dv__name, .axia .dv__desc { text-align: center; }
+@container axia (width > 66rem) {
+  .axia .dv__name { white-space: nowrap; font-size: min(1.5rem, 1.75cqw); }
+}

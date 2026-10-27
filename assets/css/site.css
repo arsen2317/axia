@@ -1,6 +1,6 @@
 /* аксиа — стили сайта. Базовый размер 16px, всё в rem.
    Раскладка: container queries по контейнеру .axia —
-   десктоп > 64rem, планшет ≤ 64rem, мобильный ≤ 40rem.
+   десктоп > 66rem, планшет ≤ 66rem, мобильный ≤ 40rem.
    Фон: на вертикальных экранах (portrait) — вертикальный паттерн. */
 
 @font-face {
@@ -316,10 +316,10 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   line-height: 1.3;
 }
 
-/* ---------- ПЛАНШЕТ ≤ 64rem ----------
+/* ---------- ПЛАНШЕТ ≤ 66rem ----------
    лого переезжает в плашку меню, «Разделы» скрыты,
    «обсудить задачу» закреплена внизу экрана. */
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .nav__icon--desk { display: none; }
   .nav__icon--touch { display: block; color: var(--ink); }
   /* без ховера: меню открывается только по тапу */
@@ -492,7 +492,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .dirs__title, .dirs__text { opacity: 0; transition: opacity 0.28s ease; }
 .dirs__slide.is-active .dirs__title, .dirs__slide.is-active .dirs__text { opacity: 1; }
 
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .dirs__title { font-size: 4rem; }
 }
 @container axia (max-width: 40rem) {
@@ -570,7 +570,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 }
 .appr__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .appr__stage { grid-template-rows: auto minmax(0, 1fr); }
   .appr__text { grid-column: 1 / -1; padding: 6.5rem var(--gutter) 2.5rem; }
   .appr__title { font-size: 4.5rem; }
@@ -641,7 +641,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .team__item:nth-child(3) { top: calc(var(--team-line, 30rem) + 2 * var(--team-step, 20rem) - var(--team-d) / 2); }
   .team__name { margin-top: 1.25rem; }
 }
-@container axia (max-width: 64rem) { .team__title { font-size: 4rem; } }
+@container axia (max-width: 66rem) { .team__title { font-size: 4rem; } }
 @container axia (max-width: 40rem) {
   .team { --team-d: 40vw; }
   .team__title { font-size: 3rem; top: calc(var(--team-line, 30rem) - var(--team-d) / 2 - 6.5rem); }
@@ -913,7 +913,7 @@ textarea.field__input { height: auto; min-height: 6.5rem; padding: 0.875rem 1rem
 @keyframes modal-rise { from { opacity: 0; transform: translateY(1rem); } }
 
 /* планшет: одна колонка; нижняя фиксированная кнопка «обсудить задачу» прячется, когда мы уже в этом блоке */
-@container axia (max-width: 64rem) {
+@container axia (max-width: 66rem) {
   .meet { display: block; min-height: 0; }
   .meet::before { margin-bottom: -100vh; margin-bottom: -100dvh; }
   .meet__side { position: relative; height: auto; padding: 8rem 0 2.5rem; gap: 2.5rem; }
