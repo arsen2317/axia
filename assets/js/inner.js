@@ -2,7 +2,8 @@
    - в самом верху страницы меню на десктопе развёрнуто в строку разделов, при скролле сжимается до «подпись + бургер»;
    - бургер (и логотип в плашке на планшете и мобильном) открывает список разделов; тап мимо меню или Esc — закрывает;
    - когда страница докручена почти до конца, «αξία» в подвале выезжает снизу;
-   - над светлой страницей статьи меню и лого — серые. */
+   - над светлой страницей статьи меню и лого — серые;
+   - если новости выключены в админке, пунктов «новости» в меню и подвале нет. */
 (function () {
   'use strict';
   var root = document.querySelector('.axia');
@@ -27,6 +28,14 @@
   if (nav) nav.addEventListener('mouseleave', function () { if (desktop()) setOpen(false); });
   document.addEventListener('pointerdown', function (e) { if (nav && !e.target.closest('.nav')) setOpen(false); }, true);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+
+  /* новости выключены в админке (или статей нет) — прячем пункты «новости» в меню и подвале.
+     На Vercel (демо, без PHP) — по настройке демо-админки в этом браузере */
+  fetch('/api/settings.php', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (d) {
+    if (d && d.ok && d.newsVisible === false) root.classList.add('no-news');
+  }).catch(function () {
+    try { if ((JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).newsEnabled === false) root.classList.add('no-news'); } catch (e) {}
+  });
 
   var ticking = false;
   function update() {

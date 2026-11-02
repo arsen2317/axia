@@ -41,7 +41,7 @@
 <li><a href="#directions">направления</a></li>
 <li><a href="#solutions">решения</a></li>
 <li><a href="#team">команда</a></li>
-<li><a href="/news">новости</a></li>
+<sc-if value="{{newsOn}}"><li><a href="#news">новости</a></li></sc-if>
 </ul>
 <button class="nav__toggle" type="button" aria-label="Разделы" aria-expanded="{{expanded}}" aria-controls="nav-body" onClick="{{toggle}}">
 <span class="nav__label">{{navLabel}}</span>
@@ -57,7 +57,7 @@
 <li><a class="nav__link" href="#directions">направления</a></li>
 <li><a class="nav__link" href="#solutions">решения</a></li>
 <li><a class="nav__link" href="#team">команда</a></li>
-<li><a class="nav__link" href="/news">новости</a></li>
+<sc-if value="{{newsOn}}"><li><a class="nav__link" href="#news">новости</a></li></sc-if>
 </ul>
 </div>
 </div>
@@ -360,6 +360,26 @@
 </div>
 </section>
 
+<!-- ========== НОВОСТИ ==========
+     Три последние статьи (/api/articles.php) и ссылка на страницу со всеми новостями.
+     Блок, пункт меню и пункт подвала скрываются, если новости выключены в админке или статей ещё нет. -->
+<sc-if value="{{newsOn}}" hint-placeholder-val="{{ false }}">
+<section class="news" id="news" data-nav-label="Новости" aria-labelledby="news-title" ref="{{setNews}}">
+<div class="news__head">
+<h2 class="news__title" id="news-title">новости</h2>
+<a class="news__all" href="/news">смотреть все новости<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+</div>
+<ul class="news__list">
+<sc-for list="{{news}}" as="n" hint-placeholder-count="3">
+<li class="news__item"><a class="news__link" href="{{n.url}}">
+<span class="news__cover"><sc-if value="{{n.cover}}"><img src="{{n.cover}}" alt="" loading="lazy" decoding="async"></sc-if></span>
+<span class="news__body"><time class="news__date" datetime="{{n.date}}">{{n.dateLabel}}</time><span class="news__name">{{n.title}}</span><sc-if value="{{n.description}}"><span class="news__desc">{{n.description}}</span></sc-if></span>
+</a></li>
+</sc-for>
+</ul>
+</section>
+</sc-if>
+
 <!-- ========== ОБСУДИТЬ ЗАДАЧУ ========== -->
 <section class="meet" id="contact" data-nav-label="Обсудить задачу" aria-labelledby="meet-title">
 
@@ -539,7 +559,7 @@
 <li><a href="#directions">направления</a></li>
 <li><a href="#solutions">решения</a></li>
 <li><a href="#team">команда</a></li>
-<li><a href="/news">новости</a></li>
+<sc-if value="{{newsOn}}"><li><a href="/news">новости</a></li></sc-if>
 </ul>
 <ul class="foot__col foot__col--legal">
 <li>ООО «Аксиа Консалтинг»</li>

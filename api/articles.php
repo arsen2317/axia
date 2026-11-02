@@ -1,5 +1,5 @@
 <?php
-/* Последние статьи в JSON — для будущего блока новостей на главной */
+/* Последние статьи в JSON — для блока «Новости» на главной */
 declare(strict_types=1);
 require __DIR__ . '/../lib/bootstrap.php';
 require __DIR__ . '/../lib/articles.php';

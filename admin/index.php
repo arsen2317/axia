@@ -92,6 +92,12 @@ admin_head('Панель');
 </section>
 <section class="ad-card">
 <div class="ad-card__head"><h2>Статьи</h2><a class="ad-btn ad-btn--primary" href="/admin/edit.php">Новая статья</a></div>
+<label class="ad-switch">
+<input type="checkbox" id="news-toggle" <?= $s['news_enabled'] ? 'checked' : '' ?>>
+<span class="ad-switch__track" aria-hidden="true"></span>
+<span id="news-label"><?= $s['news_enabled'] ? 'Новости на сайте показываются: блок на главной, пункты в меню и подвале' : 'Новости скрыты: на главной нет блока, в меню и подвале нет пункта «новости»' ?></span>
+</label>
+<p class="ad-hint">Отдельная страница /news и сами статьи остаются доступны по прямой ссылке. Пока нет ни одной опубликованной статьи, блок не показывается в любом случае.</p>
 <?php if (!$articles): ?>
 <p class="ad-hint">Статей пока нет.</p>
 <?php else: ?>

@@ -127,6 +127,7 @@
         var next = all.filter(function (x) { return x.id !== a.id; }); next.push(a);
         return save(KEY_ART, next) ? resolve({ ok: true, article: a }) : reject(new Error('Не хватило места в браузере'));
       }
+      if (action === 'news') { var s3 = load(KEY_SET, {}); s3.newsEnabled = !!body.enabled; save(KEY_SET, s3); return resolve({ ok: true, enabled: s3.newsEnabled }); }
       if (action === 'schedule') { var s2 = load(KEY_SET, {}); s2.schedule = body.slots; save(KEY_SET, s2); return resolve({ ok: true, slots: body.slots }); }
       if (action === 'cancel') return resolve({ ok: true });
       reject(new Error('Неизвестное действие'));
@@ -214,8 +215,11 @@
     return def;
   }
 
+  var NEWS_ON = 'Новости на сайте показываются: блок на главной, пункты в меню и подвале';
+  var NEWS_OFF = 'Новости скрыты: на главной нет блока, в меню и подвале нет пункта «новости»';
   function renderDashboard() {
     var on = load(KEY_SET, {}).bookingEnabled !== false;
+    var newsOn = load(KEY_SET, {}).newsEnabled !== false;
     var list = articles(), t = today();
     document.body.insertAdjacentHTML('afterbegin', '<header class="ad-top"><a class="ad-logo" href="/admin/">аксиа · админка <span class="ad-pill">демо</span></a>'
       + '<nav class="ad-top__nav"><a href="/" target="_blank" rel="noopener">сайт ↗</a><a href="/news" target="_blank" rel="noopener">новости ↗</a><a href="#" data-logout>выйти</a></nav></header>');
@@ -228,6 +232,8 @@
       + '<div id="schedule" data-grid="' + esc(JSON.stringify(demoGrid())) + '" data-slots="' + esc(JSON.stringify(demoSchedule())) + '" data-duration="30"></div>'
       + '<h3>Ближайшие встречи</h3><p class="ad-hint">В демо-режиме встреч нет. На настоящем сайте здесь список записей с кнопкой «Отменить».</p></section>'
       + '<section class="ad-card"><div class="ad-card__head"><h2>Статьи</h2><a class="ad-btn ad-btn--primary" href="/admin/edit.php">Новая статья</a></div>'
+      + '<label class="ad-switch"><input type="checkbox" id="news-toggle"' + (newsOn ? ' checked' : '') + '><span class="ad-switch__track" aria-hidden="true"></span><span id="news-label">' + (newsOn ? NEWS_ON : NEWS_OFF) + '</span></label>'
+      + '<p class="ad-hint">Отдельная страница /news и сами статьи остаются доступны по прямой ссылке. Пока нет ни одной опубликованной статьи, блок не показывается в любом случае. В демо переключатель влияет на сайт в этом же браузере.</p>'
       + (list.length ? '<ul class="ad-list">' + list.map(function (a) {
         var st = a.status === 'published' ? (a.published_at > t ? 'запланирована на ' : 'опубликована ') + ruDate(a.published_at) : 'черновик';
         return '<li class="ad-list__row"><span class="ad-list__main">' + (a.cover ? '<img class="ad-thumb" src="' + esc(a.cover) + '" alt="">' : '<span class="ad-thumb"></span>')
@@ -238,6 +244,10 @@
       }).join('') + '</ul>' : '<p class="ad-hint">Статей пока нет.</p>') + '</section>';
 
     var sc = document.createElement('script'); sc.src = '/admin/schedule.js'; document.body.appendChild(sc);
+    var nt = document.getElementById('news-toggle');
+    nt.addEventListener('change', function () {
+      adminApi('news', { enabled: nt.checked }).then(function (d) { document.getElementById('news-label').textContent = d.enabled ? NEWS_ON : NEWS_OFF; });
+    });
     var tg = document.getElementById('booking-toggle');
     tg.addEventListener('change', function () {
       adminApi('booking', { enabled: tg.checked }).then(function (d) {

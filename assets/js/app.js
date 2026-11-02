@@ -29,6 +29,16 @@ class Page extends DCLogic {
     this.setApprSection = (el) => { this.apprSec = el; if (el) this.updateAppr(); };
     this.solSec = null;
     this.setSol = (el) => { this.solSec = el; if (el) this.updateSol(); };
+    /* НОВОСТИ: блок появляется после загрузки статей — пересчитываем сетку (высота блока сдвигает фон «Обсудить задачу»)
+       и, если пришли по ссылке /#news с другой страницы, докручиваем к нему */
+    this.setNews = (el) => {
+      if (!el || el === this.newsSec) { this.newsSec = el; return; }
+      this.newsSec = el;
+      requestAnimationFrame(() => {
+        this.onScroll && this.onScroll();
+        if (location.hash === '#news' && !this.newsJumped) { this.newsJumped = true; el.scrollIntoView({ block: 'start' }); }
+      });
+    };
     this.wordsPanel = null;
     this.setWordsPanel = (el) => {
       if (el === this.wordsPanel) return;
@@ -489,6 +499,8 @@ void main(){
       }
       const team = q('.team');
       if (team) { const t = at(team); pts.push(t); if (team.offsetHeight > vh + 4) { pts.push(t + team.offsetHeight - vh); free.push([t, t + team.offsetHeight - vh]); } }
+      const news = q('.news');
+      if (news) { const t = at(news); pts.push(t); free.push([t, t + news.offsetHeight]); }   /* внутри «Новостей» — без доводки */
       const meet = q('.meet');
       if (meet) { const t = at(meet); pts.push(t); free.push([t, max + 1]); }
       const P = [...new Set(pts.filter((v) => v != null).map((v) => Math.min(Math.max(v, 0), max)))].sort((a, b) => a - b);
@@ -939,6 +951,9 @@ void main(){
         team.style.setProperty('--team-step', (portrait ? 2 * P : P).toFixed(1) + 'px');   /* крупные фото — через две линии сетки */
         /* высота «Команды» — чтобы сетка следующего блока продолжилась без шва */
         root.style.setProperty('--team-h', team.offsetHeight + 'px');
+        /* «Новости» между «Командой» и «Обсудить задачу»: их высота сдвигает сетку «Обсудить задачу» и подвала */
+        const newsEl = root.querySelector('.news'), newsH = newsEl ? newsEl.offsetHeight : 0;
+        root.style.setProperty('--news-h', newsH + 'px');
         /* КОМАНДА, десктоп: список участников прижат к низу; если там он налезает на пиджак на фото
            (широкий и невысокий экран) — поднимаем его под заголовок */
         {
@@ -958,7 +973,7 @@ void main(){
         /* ПОДВАЛ: низ «Обсудить задачу» — на ближайшей горизонтальной линии сетки, в подвале сетка продолжается.
            Фон «Обсудить задачу» (закреплённый слой) начинается с фазы bpy; его высоту добираем до линии (--meet-cut) */
         {
-          const bpy = ph - 4 * vh - gap - apprExtra - team.offsetHeight;
+          const bpy = ph - 4 * vh - gap - apprExtra - team.offsetHeight - newsH;
           let cut = (bpy + y0 - vh) % P; if (cut < 0) cut += P;
           if (cut > P - 0.5) cut = 0;
           root.style.setProperty('--meet-cut', cut.toFixed(1) + 'px');
@@ -1360,6 +1375,30 @@ void main(){
     const d = sel ? this.keyDate(sel) : this.today;
     this.setState({ selKey: sel, calY: d.getFullYear(), calM: d.getMonth() });
   }
+  /* демо на Vercel: три последние статьи из демо-админки (этот браузер) или примеры, если админку ещё не открывали;
+     блок скрыт, если новости выключены в демо-админке */
+  demoNews() {
+    let set = {}, arts = null;
+    try { set = JSON.parse(localStorage.getItem('axia-demo-settings')) || {}; } catch (e) { set = {}; }
+    if (set.newsEnabled === false) return [];
+    try { arts = JSON.parse(localStorage.getItem('axia-demo-articles')); } catch (e) { arts = null; }
+    const d0 = new Date(), ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const ago = (n) => { const d = new Date(d0); d.setDate(d.getDate() - n); return ymd(d); };
+    if (!Array.isArray(arts)) arts = [
+      { slug: 'kak-tsennosti-stanovyatsya-strategiey', title: 'Как ценности становятся стратегией', status: 'published', published_at: ago(2), cover: '/demo/img/cover-1.jpg', description: 'Пример статьи: почему корпоративные ценности работают только тогда, когда из них вырастают решения и правила.' },
+      { slug: 'otchet-ob-ustoychivom-razvitii', title: 'Отчёт об устойчивом развитии: с чего начать', status: 'published', published_at: ago(9), cover: '/demo/img/cover-2.jpg', description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.' },
+      { slug: 'sotsialnye-programmy-dlya-territoriy', title: 'Социальные программы для территорий', status: 'published', published_at: ago(20), cover: '', description: 'Третья демонстрационная статья — без обложки, чтобы было видно, как выглядит карточка без картинки.' }
+    ];
+    const today = ymd(d0);
+    return arts.filter((a) => a.status === 'published' && a.published_at <= today)
+      .sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(0, 3)
+      .map((a) => ({ title: a.title, description: a.description || '', date: a.published_at, dateLabel: this.ruDate(a.published_at), cover: a.cover || '', url: '/news/' + a.slug }));
+  }
+  ruDate(ymd) {
+    const m = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const [y, mo, d] = ymd.split('-').map(Number);
+    return d + ' ' + m[mo - 1] + ' ' + y;
+  }
   /* демо: расписание из демо-админки (этот браузер) или пн–пт 13:00–18:00; часть слотов «занята» — как будто в календаре */
   demoSlots() {
     let sched = null;
@@ -1387,11 +1426,13 @@ void main(){
         let on = true; try { on = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).bookingEnabled !== false; } catch (e) { on = true; }
         this.setState({ bookingOn: on });
         this.setSlots(this.demoSlots());
+        this.setState({ news: this.demoNews() });
         return;
       }
       this.captchaKey = st.captchaSiteKey || '';
       this.durationMin = st.durationMin || 30;
       this.setState({ bookingOn: !!st.bookingEnabled });
+      if (st.newsVisible) this.api('/api/articles.php?limit=3').then((d) => { if (d && d.ok) this.setState({ news: d.articles || [] }); });
       if (st.bookingEnabled) return this.loadSlots();
     });
   }
@@ -1869,6 +1910,9 @@ void main(){
       setWho: this.setWho,
       setApprSection: this.setApprSection,
       setSol: this.setSol,
+      setNews: this.setNews,
+      newsOn: (this.state.news || []).length > 0,
+      news: this.state.news || [],
       solI0: 'sol__item' + (this.state.solOpen === 0 ? ' is-open' : '') + (this.state.solLive === 0 ? ' is-live' : ''), solE0: this.state.solOpen === 0 ? 'true' : 'false',
       solT0: (e) => this.solToggle(0, e), solK0: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.solToggle(0, e); } },
       solI1: 'sol__item' + (this.state.solOpen === 1 ? ' is-open' : '') + (this.state.solLive === 1 ? ' is-live' : ''), solE1: this.state.solOpen === 1 ? 'true' : 'false',

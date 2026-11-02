@@ -669,8 +669,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   height: 100vh; height: 100dvh;
   margin-inline: calc(-1 * var(--gutter));
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
-  background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px) - var(--team-h, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px) - var(--team-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
 }
 @media (orientation: portrait) { .meet::before { background-image: url("../img/pattern-portrait.svg"); } }
 

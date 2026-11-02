@@ -218,9 +218,14 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   background-position-y: calc(var(--pat-phase, 0px) - 400vh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
   background-position-y: calc(var(--pat-phase, 0px) - 400dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
 }
-.axia .meet::before {
+/* «Новости» — сразу после «Команды»: сетка продолжается без шва; «Обсудить задачу» сдвинута ещё на высоту «Новостей» */
+.axia .news::before {
   background-position-y: calc(var(--pat-phase, 0px) - 400vh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
   background-position-y: calc(var(--pat-phase, 0px) - 400dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
+}
+.axia .meet::before {
+  background-position-y: calc(var(--pat-phase, 0px) - 400vh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 400dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
 }
 /* КОМАНДА: невидимая метка вокруг заголовка, фото и подписей — по ней меню «команда» центрирует блок на экране */
 .axia .team__anchor {
@@ -518,7 +523,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .who__text { font-size: 0.875rem; line-height: 1.4; }
 }
 /* всё ниже «Кто мы» берёт фазу сетки --pat-dn (её считает скрипт): сетка продолжается без шва */
-.axia .dirs, .axia .appr-gap, .axia .appr, .axia .sol, .axia .team, .axia .meet { --pat-phase: var(--pat-dn, 0px); }
+.axia .dirs, .axia .appr-gap, .axia .appr, .axia .sol, .axia .team, .axia .news, .axia .meet { --pat-phase: var(--pat-dn, 0px); }
 /* ---------- НАПРАВЛЕНИЯ: знак → карточки ----------
    Анимация проигрывается сама (не от скролла), поэтому секция — один экран, без закрепления.
    Сетка следующих секций от этого не сдвигается: закреплённый фон и раньше занимал ровно экран.
@@ -1206,3 +1211,63 @@ html { -webkit-tap-highlight-color: transparent; }
   .cookie__btn { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .cookie { transition: none; } }
+
+/* ===== НОВОСТИ (главная): заголовок, ссылка на все новости, три последние статьи =====
+   Между «Командой» и «Обсудить задачу», на той же сетке (фон — ::before, фазу считает скрипт через --team-h).
+   Карточки — того же тёмно-синего цвета, что карточки «Направлений» */
+.axia .news { position: relative; padding: 7.5rem var(--gutter) 6rem; }
+/* фон (сетка) — под «заглушкой низа экрана», как у «Обсудить задачу»; заголовок и карточки — над ней */
+.axia .news__head, .axia .news__list { position: relative; z-index: 2; }
+.axia .news::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background-color: var(--bg); background-image: url("../img/pattern.svg"); background-size: 100% auto; background-repeat: repeat-y;
+  background-position-x: center;
+}
+@media (orientation: portrait) { .axia .news::before { background-image: url("../img/pattern-portrait.svg"); } }
+.axia .news__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; margin: 0 0 3rem; }
+.axia .news__title { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 4.5rem; line-height: 0.95; letter-spacing: 0; color: #e8e6e0; }
+.axia .news__all {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0;
+  font-size: 1.0625rem; color: #e8e6e0; text-decoration: underline; text-underline-offset: 0.2em;
+  text-decoration-color: rgba(232, 230, 224, 0.45); transition: text-decoration-color 0.2s ease;
+}
+.axia .news__all svg { width: 1rem; height: 1rem; flex: none; transition: transform 0.2s ease; }
+@media (hover: hover) { .axia .news__all:hover { text-decoration-color: currentColor; } .axia .news__all:hover svg { transform: translateX(0.2rem); } }
+.axia .news__all:focus-visible, .axia .news__link:focus-visible { outline: 2px solid #e8e6e0; outline-offset: 3px; border-radius: 0.25rem; }
+.axia .news__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.axia .news__link {
+  display: flex; flex-direction: column; height: 100%; overflow: hidden; border-radius: 0.75rem;
+  background: #1e2f63; color: #e8e6e0; text-decoration: none; transition: background-color 0.2s ease;
+}
+@media (hover: hover) { .axia .news__link:hover { background: #243870; } .axia .news__link:hover .news__cover img { transform: scale(1.03); } }
+.axia .news__cover { display: block; aspect-ratio: 16 / 10; overflow: hidden; background: #253a77 url("../img/pattern.svg") center / 160% auto no-repeat; }   /* без обложки — сетка сайта */
+.axia .news__cover img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.axia .news__body { display: flex; flex-direction: column; gap: 0.5rem; padding: 1.25rem 1.5rem 1.5rem; }
+.axia .news__date { font-size: 0.875rem; color: rgba(232, 230, 224, 0.65); }
+.axia .news__name { font-size: 1.25rem; font-weight: 700; line-height: 1.25; }
+.axia .news__desc { font-size: 0.9375rem; line-height: 1.4; color: rgba(232, 230, 224, 0.8); }
+@container axia (max-width: 66rem) {
+  .axia .news { padding-top: 6rem; padding-bottom: 4.5rem; }
+  .axia .news__title { font-size: 4rem; }
+  /* планшет: три карточки друг под другом, обложка слева */
+  .axia .news__list { grid-template-columns: minmax(0, 1fr); }
+  .axia .news__link { flex-direction: row; }
+  .axia .news__cover { flex: none; width: 40%; aspect-ratio: 16 / 10; }
+  .axia .news__body { justify-content: center; }
+}
+@container axia (max-width: 40rem) {
+  .axia .news { padding-top: 5rem; padding-bottom: 3.5rem; }
+  .axia .news__head { margin-bottom: 2rem; }
+  .axia .news__title { font-size: 2.75rem; }
+  .axia .news__list { gap: 0.75rem; }
+  .axia .news__link { flex-direction: column; }
+  .axia .news__cover { width: auto; }
+  .axia .news__body { padding: 1rem 1.25rem 1.25rem; }
+}
+/* планшет и мобильный: у верха «Обсудить задачу» сетка не видна — сетка «Новостей» плавно гаснет к низу блока */
+@container axia (max-width: 66rem) {
+  .axia .news::before {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 9rem), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 9rem), transparent);
+  }
+}

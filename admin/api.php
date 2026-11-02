@@ -17,6 +17,11 @@ switch ($action) {
         save_settings(['booking_enabled' => !empty($d['enabled'])]);
         json_out(['ok' => true, 'enabled' => settings()['booking_enabled']]);
 
+    case 'news':
+        $d = json_body();
+        save_settings(['news_enabled' => !empty($d['enabled'])]);
+        json_out(['ok' => true, 'enabled' => (bool)settings()['news_enabled']]);
+
     case 'schedule':
         $d = json_body();
         $grid = array_flip(schedule_grid());

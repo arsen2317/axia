@@ -107,7 +107,7 @@ function with_lock(string $name, callable $fn)
 
 function settings(): array
 {
-    return read_json(DATA . '/settings.php', []) + ['booking_enabled' => true];
+    return read_json(DATA . '/settings.php', []) + ['booking_enabled' => true, 'news_enabled' => true];
 }
 
 function save_settings(array $s): void
