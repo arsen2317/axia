@@ -1280,13 +1280,13 @@ html { -webkit-tap-highlight-color: transparent; }
 
 /* ===== НАПРАВЛЕНИЯ, ВЕРСИЯ 1: СВЕТЛЫЕ КАРТОЧКИ =====
    (версия 2 — тёмные карточки с крупными иллюстрациями — коммит 04b67c1)
-   Карточки — того же цвета, что заголовок «направления» (--ink, #e8e6e0), название и описание — тёмно-синие.
+   Карточки — светлые, #EFEDF9; название и описание — синие.
    Иллюстрации нарисованы светло-лавандовыми градиентами под тёмный фон; на светлом их цвета сдвинуты темнее
    (та же гамма, на 1–2 ступени насыщеннее), чтобы объём и свет читались так же */
-.axia .dv-p { fill: var(--ink, #e8e6e0); }
+.axia .dv-p { fill: #EFEDF9; }
 .axia .dv__name { color: var(--bg, #2c4595); }   /* название — цвета синего фона сайта */
 .axia .dv__desc { color: rgba(30, 47, 99, 0.82); }
-@container axia (max-width: 66rem) { .axia .dv__card { background: var(--ink, #e8e6e0); } }
+@container axia (max-width: 66rem) { .axia .dv__card { background: #EFEDF9; } }
 /* иллюстрации: светлый вариант — от почти белого до насыщенного синего (тон — близкий к #2c4595, сайта) */
 .axia .dv__art { --dv-w: #EEF2FE; --dv-l: #A3B7F4; --dv-m: #5A7BE6; --dv-v: #2A4FD4; }
 .axia .dv__art stop[stop-color="#DADFFA"], .axia .dv__art stop[stop-color="#DBE0FA"],
