@@ -1289,11 +1289,9 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia .dv__art stop[stop-color="#8A9DEE"], .axia .dv__art stop[stop-color="#8399EE"] { stop-color: #5670DD; }
 .axia .dv__art stop[stop-color="#6A82E8"], .axia .dv__art stop[stop-color="#6680E6"],
 .axia .dv__art stop[stop-color="#5F79E6"], .axia .dv__art stop[stop-color="#5D78E6"] { stop-color: #2C4595; }
-.axia .dv__art [stroke="#DADFFA"] { stroke: #2C4595; }
+.axia .dv__art [stroke="#DADFFA"] { stroke: #A3B3F3; }   /* кончик стрелки — того же светлого цвета, что её линия */
 /* НАПРАВЛЕНИЯ: верхний отступ карточки на 6px меньше бокового — компенсирует межстрочный зазор над первой строкой названия,
    чтобы текст визуально стоял на том же расстоянии от края, что и слева */
 @container axia (width > 66rem) { .axia .dv__card { padding-top: calc(2rem - 6px); } }
 @container axia (40rem < width <= 66rem) { .axia .dv__card { padding-top: calc(2.5rem - 6px); } }
 @container axia (max-width: 40rem) { .axia .dv__card { padding-top: calc(1.75rem - 6px); } }
-/* НАПРАВЛЕНИЯ, стрелка во второй иллюстрации: линия и кончик одного цвета (тёмно-синий — кончик выходит за диски на светлую карточку) */
-.axia .dv__art #dvp-arrowFade stop { stop-color: #2C4595; }
