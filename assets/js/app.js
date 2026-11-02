@@ -1588,6 +1588,8 @@ void main(){
       /* мобильный (≤ 640px): сетка мельче, слово ярче, фон из фраз почти не виден */
       mob = hero.clientWidth <= 640;
       fs = mob ? 8 : 12;
+      /* высота строки текстовой сетки — по ней CSS опускает «αξία» на целое число строк (--hd-row) */
+      hero.style.setProperty('--hd-row', Math.round(fs * (mob ? 1.35 : 1.6)) + 'px');
       aField = mob ? 0.025 : 0.045;   /* фон из фраз (было 0.015 / 0.035) */ aWord = mob ? 0.45 : 0.3; aFlash = Math.min(aWord * 1.9, 0.85);
       cField = 'rgba(232,230,224,' + aField + ')';
       cWord = 'rgba(232,230,224,' + aWord + ')';

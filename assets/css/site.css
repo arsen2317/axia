@@ -91,15 +91,16 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   bottom: 0;
   width: 98.4%;
   height: auto;
-  /* svg выше видимой части: утапливаем низ букв за край экрана (по правкам — чуть меньше, буквы выше) */
-  transform: translate(-50%, 30%);
+  /* svg выше видимой части: утапливаем низ букв за край экрана (по правкам — чуть меньше, буквы выше);
+     затем ниже ровно на 3 строки текстовой сетки фона (--hd-row ставит скрипт: 19px на десктопе, 11px на мобильном) */
+  transform: translate(-50%, calc(30% + 3 * var(--hd-row, 0px)));
   pointer-events: none;
   user-select: none;
 }
 @media (orientation: portrait) {
   .hero { background-image: url("../img/pattern-portrait.svg"); }
   /* буквы чуть подняты: низ обрезается меньше, чем на десктопе; по бокам чуть шире экрана */
-  .hero__word { width: 104.6%; transform: translate(-50%, 28%); }
+  .hero__word { width: 104.6%; transform: translate(-50%, calc(28% + 3 * var(--hd-row, 0px))); }
 }
 
 /* ---------- ФОН: паттерн рисуется в WebGL (мерцание по сетке + отклик на курсор) ----------
