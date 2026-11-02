@@ -1304,7 +1304,7 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia #dvp-disc stop:nth-child(4), .axia #dvl-plate stop:nth-child(4) { stop-color: var(--dv-v); }
 /* октаэдр (по образцу): грани наливаются синим к внутренним рёбрам и к левой вершине; самые светлые места —
    бледно-голубые (--dv-p), а не белые, чтобы все вершины читались на светлой карточке.
-   Задние рёбра (просвечивают сквозь грани) — тёмные, как в исходнике; ребро вправо от центральной точки — светлое */
+   Все рёбра — синие, как в исходнике (передние гаснут к краям, задние просвечивают сквозь грани) */
 .axia .dv__art { --dv-p: #CBD6F8; }
 .axia #dvo-gTL stop:nth-child(1) { stop-color: var(--dv-p); }
 .axia #dvo-gTL stop:nth-child(2) { stop-color: var(--dv-m); }
@@ -1316,7 +1316,6 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia #dvo-gBL stop:nth-child(3) { stop-color: var(--dv-v); }
 .axia #dvo-gBR stop:nth-child(2) { stop-color: var(--dv-m); }
 .axia #dvo-gBR stop:nth-child(3) { stop-color: var(--dv-p); }
-.axia #dvo-fRight stop { stop-color: var(--dv-w); }
 /* слои: кромки между пластинами — еле заметные светлые линии */
 .axia #dvl-rim stop { stop-color: var(--dv-l); }
 /* края дисков — насыщенные, без светлой обводки */
