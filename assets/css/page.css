@@ -1302,10 +1302,20 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia #dvp-disc stop:nth-child(2), .axia #dvl-plate stop:nth-child(2) { stop-color: var(--dv-l); }
 .axia #dvp-disc stop:nth-child(3), .axia #dvl-plate stop:nth-child(3) { stop-color: var(--dv-m); }
 .axia #dvp-disc stop:nth-child(4), .axia #dvl-plate stop:nth-child(4) { stop-color: var(--dv-v); }
-/* октаэдр, левая верхняя грань: насыщенная у вершины, светлая к левому углу */
-.axia #dvo-gTL stop:nth-child(1) { stop-color: var(--dv-v); }
-.axia #dvo-gTL stop:nth-child(2) { stop-color: var(--dv-m); }
-.axia #dvo-gTL stop:nth-child(3) { stop-color: var(--dv-w); }
+/* октаэдр (по образцу): грани светлые к внешним краям и насыщенные к вершине и центральной точке;
+   задние рёбра и ребро вправо от центральной точки — светлые, остальные передние рёбра — насыщенные */
+.axia #dvo-gTL stop:nth-child(1) { stop-color: var(--dv-w); }
+.axia #dvo-gTL stop:nth-child(2) { stop-color: var(--dv-l); }
+.axia #dvo-gTL stop:nth-child(3) { stop-color: var(--dv-v); }
+.axia #dvo-gTR stop:nth-child(1) { stop-color: var(--dv-v); }
+.axia #dvo-gTR stop:nth-child(2) { stop-color: var(--dv-l); }
+.axia #dvo-gTR stop:nth-child(3) { stop-color: var(--dv-w); }
+.axia #dvo-gBL stop:nth-child(3) { stop-color: var(--dv-v); }
+.axia #dvo-gBR stop:nth-child(2) { stop-color: var(--dv-m); }
+.axia #dvo-eUp stop, .axia #dvo-eDown stop, .axia #dvo-eLeft stop, .axia #dvo-eRight stop { stop-color: #ffffff; }
+.axia #dvo-fRight stop { stop-color: var(--dv-l); }
+/* слои: кромки между пластинами — еле заметные светлые линии */
+.axia #dvl-rim stop { stop-color: var(--dv-l); }
 /* края дисков — насыщенные, без светлой обводки */
 .axia #dvp-rim stop { stop-color: var(--dv-v); }
 /* просвечивание второго слоя на верхней пластине — синим тоном, а не тёмно-серым */
