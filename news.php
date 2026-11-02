@@ -8,8 +8,8 @@ require __DIR__ . '/lib/views.php';
 $list = articles_published();
 page_open('Новости — аксиа', 'Новости и публикации команды аксиа', ['label' => 'Новости']);
 ?>
-<main class="pg-main">
-<h1 class="pg-title">новости</h1>
+<main class="pg-main pg-main--grid">
+<div class="pg-head"><h1 class="pg-title">новости</h1><a class="pg-back" href="/"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4"></path></svg>вернуться на главную</a></div>
 <?php if (!$list): ?>
 <p class="pg-empty">Здесь скоро появятся публикации.</p>
 <?php else: ?>

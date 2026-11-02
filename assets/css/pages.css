@@ -98,7 +98,17 @@ body.pg:has(.art) { background: #f7f6f3; }
 @container axia (max-width: 40rem) { .doc .doc__card { padding: 1rem 1.125rem; } }
 /* новости выключены в админке: на внутренних страницах нет пунктов «новости» в меню и подвале (класс ставит inner.js) */
 .axia.no-news [data-news] { display: none; }
-/* внутренние страницы — без меню разделов: на планшете и мобильном логотип стоит сам по себе (на главной он внутри плашки меню) */
-@container axia (max-width: 66rem) { .pg-axia .header > .logo { display: inline-flex; } }
-/* десктоп: без меню кнопка «обсудить задачу» остаётся у правого края (в своей колонке шапки) */
-@container axia (width > 66rem) { .pg-axia .header > .cta { grid-column: -2 / -1; } }
+/* СТРАНИЦА НОВОСТЕЙ: фоновая сетка, как на главной; справа от заголовка — «вернуться на главную»
+   (в том же виде, что «смотреть все новости» в блоке новостей на главной) */
+.pg-main--grid { background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y; }
+@media (orientation: portrait) { .pg-main--grid { background-image: url("../img/pattern-portrait.svg"); } }
+.pg-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; margin: 0 0 48px; }
+.pg-head .pg-title { margin: 0; }
+.axia .pg-back {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0;
+  font-size: 1.0625rem; color: var(--ink); text-decoration: underline; text-underline-offset: 0.2em;
+  text-decoration-color: rgba(232, 230, 224, 0.45); transition: text-decoration-color 0.2s ease;
+}
+.axia .pg-back svg { width: 1rem; height: 1rem; flex: none; transition: transform 0.2s ease; }
+@media (hover: hover) { .axia .pg-back:hover { text-decoration-color: currentColor; } .axia .pg-back:hover svg { transform: translateX(-0.2rem); } }
+@container axia (max-width: 40rem) { .pg-head { margin-bottom: 2rem; } }

@@ -1385,14 +1385,14 @@ void main(){
     const d0 = new Date(), ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const ago = (n) => { const d = new Date(d0); d.setDate(d.getDate() - n); return ymd(d); };
     if (!Array.isArray(arts)) arts = [
-      { slug: 'kak-tsennosti-stanovyatsya-strategiey', title: 'Как ценности становятся стратегией', status: 'published', published_at: ago(2), cover: '/demo/img/cover-1.jpg', description: 'Пример статьи: почему корпоративные ценности работают только тогда, когда из них вырастают решения и правила.' },
-      { slug: 'otchet-ob-ustoychivom-razvitii', title: 'Отчёт об устойчивом развитии: с чего начать', status: 'published', published_at: ago(9), cover: '/demo/img/cover-2.jpg', description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.' },
-      { slug: 'sotsialnye-programmy-dlya-territoriy', title: 'Социальные программы для территорий', status: 'published', published_at: ago(20), cover: '', description: 'Третья демонстрационная статья — без обложки, чтобы было видно, как выглядит карточка без картинки.' }
+      { slug: 'kak-tsennosti-stanovyatsya-strategiey', title: 'Как ценности становятся стратегией', status: 'published', published_at: ago(2), cover: '', description: 'Пример статьи: почему корпоративные ценности работают только тогда, когда из них вырастают решения и правила.' },
+      { slug: 'otchet-ob-ustoychivom-razvitii', title: 'Отчёт об устойчивом развитии: с чего начать', status: 'published', published_at: ago(9), cover: '', description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.' },
+      { slug: 'sotsialnye-programmy-dlya-territoriy', title: 'Социальные программы для территорий', status: 'published', published_at: ago(20), cover: '', description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.' }
     ];
     const today = ymd(d0);
     return arts.filter((a) => a.status === 'published' && a.published_at <= today)
       .sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(0, 3)
-      .map((a) => ({ title: a.title, description: a.description || '', date: a.published_at, dateLabel: this.ruDate(a.published_at), cover: a.cover || '', url: '/news/' + a.slug }));
+      .map((a) => ({ title: a.title, description: a.description || '', date: a.published_at, dateLabel: this.ruDate(a.published_at), cover: String(a.cover || '').indexOf('/demo/img/') === 0 ? '' : (a.cover || ''), url: '/news/' + a.slug }));
   }
   ruDate(ymd) {
     const m = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];

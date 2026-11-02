@@ -21,21 +21,20 @@
     return [
       { id: rid(), slug: 'kak-tsennosti-stanovyatsya-strategiey', title: 'Как ценности становятся стратегией', status: 'published', published_at: daysAgo(2),
         description: 'Пример статьи: почему корпоративные ценности работают только тогда, когда из них вырастают решения и правила.',
-        author: 'Ксения Лопаткина', cover: '/demo/img/cover-1.jpg', cover_alt: '',
+        author: 'Ксения Лопаткина', cover: '', cover_alt: '',
         blocks: [
           { type: 'text', text: 'Это **демонстрационная статья**: так будет выглядеть публикация на сайте. Текст, подзаголовки, цитаты и картинки добавляются в админке.\n\nВторой абзац — чтобы было видно расстояние между абзацами и длину строки.' },
           { type: 'heading', text: 'Подзаголовок внутри статьи' },
           { type: 'text', text: 'Абзац с [ссылкой](https://axiagroup.ru) и *курсивом*. Обычный текст статьи идёт колонкой удобной для чтения ширины.' },
-          { type: 'image', url: '/demo/img/cover-2.jpg', caption: 'Подпись к иллюстрации — необязательна' },
           { type: 'quote', text: 'Ценности — не слова на стене, а то, как принимаются решения.' },
           { type: 'text', text: 'Заключительный абзац статьи.' }
         ], created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
       { id: rid(), slug: 'otchet-ob-ustoychivom-razvitii', title: 'Отчёт об устойчивом развитии: с чего начать', status: 'published', published_at: daysAgo(9),
         description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.',
-        author: '', cover: '/demo/img/cover-2.jpg', cover_alt: '',
+        author: '', cover: '', cover_alt: '',
         blocks: [{ type: 'text', text: 'Текст второй демонстрационной статьи.' }], created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
       { id: rid(), slug: 'sotsialnye-programmy-dlya-territoriy', title: 'Социальные программы для территорий', status: 'published', published_at: daysAgo(20),
-        description: 'Третья демонстрационная статья — без обложки, чтобы было видно, как выглядит карточка без картинки.',
+        description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.',
         author: '', cover: '', cover_alt: '',
         blocks: [{ type: 'text', text: 'Текст третьей демонстрационной статьи.' }], created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
       { id: rid(), slug: 'chernovik', title: 'Черновик (не виден на сайте)', status: 'draft', published_at: today(),
@@ -46,6 +45,14 @@
   function articles() {
     var a = load(KEY_ART, null);
     if (!Array.isArray(a)) { a = seed(); save(KEY_ART, a); }
+    /* демо-статьи из прошлых версий: убираем примерные картинки (/demo/img/ больше нет) */
+    var fixed = false;
+    a.forEach(function (x) {
+      if (String(x.cover || '').indexOf('/demo/img/') === 0) { x.cover = ''; fixed = true; }
+      var bl = (x.blocks || []).filter(function (b) { return !(b.type === 'image' && String(b.url || '').indexOf('/demo/img/') === 0); });
+      if (bl.length !== (x.blocks || []).length) { x.blocks = bl; fixed = true; }
+    });
+    if (fixed) save(KEY_ART, a);
     return a.slice().sort(function (x, y) { return (y.published_at || '').localeCompare(x.published_at || ''); });
   }
   function published() { var t = today(); return articles().filter(function (a) { return a.status === 'published' && a.published_at <= t; }); }
@@ -143,7 +150,7 @@
 
   if (page === 'news') {
     var list = published();
-    root.innerHTML = '<h1 class="pg-title">новости</h1>' + (list.length ? '<ul class="news-list">' + list.map(function (a) {
+    root.innerHTML = '<div class="pg-head"><h1 class="pg-title">новости</h1><a class="pg-back" href="/"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4"></path></svg>вернуться на главную</a></div>' + (list.length ? '<ul class="news-list">' + list.map(function (a) {
       return '<li class="news-item"><a class="news-item__link" href="/news/' + esc(a.slug) + '"><span class="news-item__cover">' + (a.cover ? '<img src="' + esc(a.cover) + '" alt="' + esc(a.cover_alt) + '" loading="lazy">' : '') + '</span>'
         + '<span class="news-item__body"><time class="news-item__date" datetime="' + esc(a.published_at) + '">' + esc(ruDate(a.published_at)) + '</time><span class="news-item__title">' + esc(a.title) + '</span>'
         + (a.description ? '<span class="news-item__desc">' + esc(a.description) + '</span>' : '') + '</span></a></li>';
