@@ -1287,15 +1287,32 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia .dv__name { color: var(--bg, #2c4595); }   /* название — цвета синего фона сайта */
 .axia .dv__desc { color: rgba(30, 47, 99, 0.82); }
 @container axia (max-width: 66rem) { .axia .dv__card { background: var(--ink, #e8e6e0); } }
+/* иллюстрации: светлый вариант — от почти белого до насыщенного синего (тон — близкий к #2c4595, сайта) */
+.axia .dv__art { --dv-w: #EEF2FE; --dv-l: #A3B7F4; --dv-m: #5A7BE6; --dv-v: #2A4FD4; }
 .axia .dv__art stop[stop-color="#DADFFA"], .axia .dv__art stop[stop-color="#DBE0FA"],
-.axia .dv__art stop[stop-color="#D8DDFA"], .axia .dv__art stop[stop-color="#D5DBFA"] { stop-color: #A3B3F3; }
+.axia .dv__art stop[stop-color="#D8DDFA"], .axia .dv__art stop[stop-color="#D5DBFA"] { stop-color: var(--dv-w); }
 .axia .dv__art stop[stop-color="#C2CBF7"], .axia .dv__art stop[stop-color="#C2CBF8"], .axia .dv__art stop[stop-color="#C8D0FA"],
-.axia .dv__art stop[stop-color="#CCD3F8"], .axia .dv__art stop[stop-color="#B9C4F7"] { stop-color: #8296EC; }
+.axia .dv__art stop[stop-color="#CCD3F8"], .axia .dv__art stop[stop-color="#B9C4F7"] { stop-color: var(--dv-l); }
 .axia .dv__art stop[stop-color="#9DAEF2"], .axia .dv__art stop[stop-color="#94A6F0"],
-.axia .dv__art stop[stop-color="#8A9DEE"], .axia .dv__art stop[stop-color="#8399EE"] { stop-color: #5670DD; }
+.axia .dv__art stop[stop-color="#8A9DEE"], .axia .dv__art stop[stop-color="#8399EE"] { stop-color: var(--dv-m); }
 .axia .dv__art stop[stop-color="#6A82E8"], .axia .dv__art stop[stop-color="#6680E6"],
-.axia .dv__art stop[stop-color="#5F79E6"], .axia .dv__art stop[stop-color="#5D78E6"] { stop-color: #2C4595; }
-.axia .dv__art [stroke="#DADFFA"] { stroke: #A3B3F3; }   /* кончик стрелки — того же светлого цвета, что её линия */
+.axia .dv__art stop[stop-color="#5F79E6"], .axia .dv__art stop[stop-color="#5D78E6"] { stop-color: var(--dv-v); }
+/* диски и пластины: центр светлый, к краям — насыщенный синий (обратно исходному варианту для тёмного фона) */
+.axia #dvp-disc stop:nth-child(1), .axia #dvl-plate stop:nth-child(1) { stop-color: var(--dv-w); }
+.axia #dvp-disc stop:nth-child(2), .axia #dvl-plate stop:nth-child(2) { stop-color: var(--dv-l); }
+.axia #dvp-disc stop:nth-child(3), .axia #dvl-plate stop:nth-child(3) { stop-color: var(--dv-m); }
+.axia #dvp-disc stop:nth-child(4), .axia #dvl-plate stop:nth-child(4) { stop-color: var(--dv-v); }
+/* октаэдр, левая верхняя грань: насыщенная у вершины, светлая к левому углу */
+.axia #dvo-gTL stop:nth-child(1) { stop-color: var(--dv-v); }
+.axia #dvo-gTL stop:nth-child(2) { stop-color: var(--dv-m); }
+.axia #dvo-gTL stop:nth-child(3) { stop-color: var(--dv-w); }
+/* края дисков — насыщенные, без светлой обводки */
+.axia #dvp-rim stop { stop-color: var(--dv-v); }
+/* просвечивание второго слоя на верхней пластине — синим тоном, а не тёмно-серым */
+.axia .dv__art [fill="#1E2F63"] { fill: var(--dv-v); }
+/* стрелка — насыщенная синяя целиком (линия и кончик) */
+.axia #dvp-arrowFade stop { stop-color: var(--dv-v); }
+.axia .dv__art [stroke="#DADFFA"] { stroke: var(--dv-v); }
 /* НАПРАВЛЕНИЯ: верхний отступ карточки на 6px меньше бокового — компенсирует межстрочный зазор над первой строкой названия,
    чтобы текст визуально стоял на том же расстоянии от края, что и слева */
 @container axia (width > 66rem) { .axia .dv__card { padding-top: calc(2rem - 6px); } }
