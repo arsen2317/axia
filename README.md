@@ -26,7 +26,8 @@ tools/build-pages.php   пересборка статических страни
 lib/partials/           шапка и подвал внутренних страниц (копия шапки и подвала главной)
 assets/js/typograph.js  неразрывные пробелы после предлогов и союзов на всех страницах
 assets/js/inner.js      поведение шапки и подвала на внутренних страницах
-assets/js/cookies.js    плашка о cookie на всех страницах (выбор хранится в localStorage браузера)
+assets/js/cookies.js    плашка о cookie с выбором «Принять» / «Отклонить» (выбор — в localStorage браузера);
+                        аналитику подключать только через axiaCookies.onAccept(…)
 lib/consent.php         журнал согласий на обработку ПД (data/consents/), выгрузка — /admin/consents.php
 ```
 

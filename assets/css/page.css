@@ -1185,7 +1185,7 @@ html { -webkit-tap-highlight-color: transparent; }
 /* ПЛАШКА О COOKIE (assets/js/cookies.js): слева внизу на десктопе; на планшете и мобильном — над кнопкой «обсудить задачу» */
 .cookie {
   position: fixed; z-index: 1000; left: 2.5rem; bottom: 2rem;
-  box-sizing: border-box; width: min(34rem, calc(100vw - 2rem));
+  box-sizing: border-box; width: min(38rem, calc(100vw - 2rem));
   display: flex; align-items: center; gap: 1.25rem;
   padding: 1rem 1rem 1rem 1.25rem; border-radius: 0.75rem;
   background: #1e2f63; color: #e8e6e0; border: 1px solid rgba(232, 230, 224, 0.14);
@@ -1202,6 +1202,10 @@ html { -webkit-tap-highlight-color: transparent; }
   background: #e8e6e0; color: #1e2f63; font: inherit; font-weight: 600; transition: background-color 0.2s ease;
 }
 .cookie__btn:hover { background: #ffffff; }
+.cookie__actions { flex: none; display: flex; gap: 0.5rem; }
+/* «Отклонить» — равноценная кнопка, только контурная (выбор не навязывается) */
+.cookie__btn--ghost { background: transparent; color: #e8e6e0; box-shadow: inset 0 0 0 1px rgba(232, 230, 224, 0.45); }
+.cookie__btn--ghost:hover { background: rgba(232, 230, 224, 0.12); }
 .cookie__btn:focus-visible, .cookie__link:focus-visible { outline: 2px solid #e8e6e0; outline-offset: 2px; }
 @media (max-width: 1056px) {
   .cookie { left: 50%; bottom: 6.25rem; transform: translate(-50%, 1rem); }
@@ -1209,7 +1213,8 @@ html { -webkit-tap-highlight-color: transparent; }
 }
 @media (max-width: 640px) {
   .cookie { bottom: 5.25rem; flex-direction: column; align-items: stretch; gap: 0.75rem; padding: 1rem; }
-  .cookie__btn { width: 100%; }
+  .cookie__actions { width: 100%; }
+  .cookie__btn { flex: 1 1 0; }
 }
 @media (prefers-reduced-motion: reduce) { .cookie { transition: none; } }
 

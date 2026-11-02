@@ -140,15 +140,8 @@
   var page = document.body.getAttribute('data-demo');
 
   /* полоска «демо-режим» — в начале содержимого страницы (под шапкой) */
-  function banner(text) {
-    setTimeout(function () {
-      var b = document.createElement('p'); b.className = 'demo-banner'; b.innerHTML = text;
-      root.insertBefore(b, root.firstChild);
-    }, 0);
-  }
 
   if (page === 'news') {
-    banner('Демо-режим: статьи хранятся в вашем браузере. Добавить или изменить — в <a href="/admin/">админке</a>.');
     var list = published();
     root.innerHTML = '<h1 class="pg-title">новости</h1>' + (list.length ? '<ul class="news-list">' + list.map(function (a) {
       return '<li class="news-item"><a class="news-item__link" href="/news/' + esc(a.slug) + '"><span class="news-item__cover">' + (a.cover ? '<img src="' + esc(a.cover) + '" alt="' + esc(a.cover_alt) + '" loading="lazy">' : '') + '</span>'
@@ -158,7 +151,6 @@
   }
 
   if (page === 'article') {
-    banner('Демо-режим: статья хранится в вашем браузере. <a href="/admin/">Админка</a>');
     var slug = decodeURIComponent(location.pathname.replace(/^\/news\//, '').replace(/\/$/, ''));
     var art = null; published().forEach(function (a) { if (a.slug === slug) art = a; });
     if (!art) {
