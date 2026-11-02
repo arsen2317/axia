@@ -58,3 +58,34 @@ body.pg { background: var(--bg); }
   .pg-main { padding-top: 7.5rem; padding-bottom: 4rem; }
   .pg-title { margin-bottom: 2rem; }
 }
+
+/* СТАТЬЯ НА СВЕТЛОЙ ПОДЛОЖКЕ: длинный текст читается легче тёмным по светлому.
+   Сама статья — светлая карточка на синем фоне; цвета — как у светлых блоков главной («команда», раскрытые «задачи») */
+.art {
+  --art-ink: #262626; --art-muted: #6b6b6b; --art-accent: #2c4595;
+  box-sizing: border-box; max-width: 52rem;
+  background: #f7f6f3; color: var(--art-ink);
+  border-radius: 16px; padding: 2.5rem 3rem 3rem;
+}
+.art .art__back { color: var(--art-muted); }
+.art .art__back:hover { color: var(--art-accent); }
+.art .art__title { color: var(--art-accent); }
+.art .art__meta, .art .art__body figcaption { color: var(--art-muted); }
+.art .art__lead { color: var(--art-ink); }
+.art .art__body a { color: var(--art-accent); text-decoration-color: rgba(44, 69, 149, 0.45); }
+.art .art__body a:hover { text-decoration-color: currentColor; }
+.art .art__body blockquote { border-left-color: var(--art-accent); color: var(--art-accent); }
+.art a:focus-visible { outline-color: var(--art-accent); }
+.art ::selection { background: rgba(44, 69, 149, 0.18); }
+@container axia (max-width: 40rem) {
+  .art { padding: 1.5rem 1.25rem 2rem; border-radius: 12px; }
+  .art__back { margin-bottom: 1.25rem; }
+}
+/* шапка над светлой карточкой статьи (классы ставит inner.js) — как над светлой «Командой» на главной */
+.axia.is-light-logo .header > .logo { color: #595959; }
+.axia.is-light-nav .nav { color: #595959; background: rgba(238, 238, 238, 0.85); border-color: transparent; }
+.axia.is-light-nav .nav::before { opacity: 0; }
+.axia.is-light-nav .nav__toggle, .axia.is-light-nav .nav__icon, .axia.is-light-nav .nav__label { color: #6b6b6b; }
+.axia.is-light-nav .nav .logo { color: #595959; }
+.axia.is-light-nav .nav__link, .axia.is-light-nav .nav__row a { color: #6b6b6b; }
+.axia.is-light-nav .nav.is-open .nav__icon { color: #595959; }

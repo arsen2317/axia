@@ -1,12 +1,14 @@
 /* Шапка и подвал на внутренних страницах (новости, статья, документы) — то же поведение, что на главной:
    - в самом верху страницы меню на десктопе развёрнуто в строку разделов, при скролле сжимается до «подпись + бургер»;
    - бургер (и логотип в плашке на планшете и мобильном) открывает список разделов; тап мимо меню или Esc — закрывает;
-   - когда страница докручена почти до конца, «αξία» в подвале выезжает снизу. */
+   - когда страница докручена почти до конца, «αξία» в подвале выезжает снизу;
+   - над светлой карточкой статьи меню и лого — серые. */
 (function () {
   'use strict';
   var root = document.querySelector('.axia');
   if (!root) return;
   var nav = root.querySelector('.nav'), toggle = root.querySelector('.nav__toggle'), foot = root.querySelector('.foot');
+  var logo = root.querySelector('.header > .logo');
 
   function setOpen(open) {
     if (!nav) return;
@@ -33,6 +35,18 @@
     if (top !== root.classList.contains('is-top')) {
       root.classList.toggle('is-top', top);
       if (!top) setOpen(false);
+    }
+    /* над светлой карточкой статьи плашка меню и лого становятся серыми (как над светлой «Командой» на главной) */
+    var art = root.querySelector('.art');   /* в демо статья появляется позже — ищем каждый раз */
+    if (art) {
+      var ar = art.getBoundingClientRect();
+      var over = function (el) {
+        if (!el) return false;
+        var r = el.getBoundingClientRect();
+        return r.width > 0 && ar.top < r.bottom && ar.bottom > r.top && ar.left < r.right && ar.right > r.left;
+      };
+      root.classList.toggle('is-light-nav', over(nav));
+      root.classList.toggle('is-light-logo', over(logo));
     }
     if (foot) {
       var fr = foot.getBoundingClientRect(), vh = window.innerHeight;

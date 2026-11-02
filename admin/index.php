@@ -41,6 +41,7 @@ $now = time();
 $upcoming = array_values(array_filter(bookings(), fn($b) => ($b['status'] ?? '') === 'active' && $b['end'] > $now));
 usort($upcoming, fn($a, $b) => $a['start'] <=> $b['start']);
 $articles = articles_all();
+$consentN = count(consent_all());
 $checks = [
     'Почта (SMTP)' => cfg('mail.smtp_user') !== '' && cfg('mail.smtp_pass') !== '',
     'SmartCaptcha' => captcha_enabled(),
@@ -81,6 +82,10 @@ admin_head('Панель');
 <?php endif; ?>
 </section>
 
+<section class="ad-card">
+<div class="ad-card__head"><h2>Согласия на обработку персональных данных</h2><?php if ($consentN): ?><a class="ad-btn" href="/admin/consents.php?t=<?= h(csrf_token()) ?>">Скачать CSV</a><?php endif; ?></div>
+<p class="ad-hint"><?= $consentN ? 'В журнале записей: <b>' . $consentN . '</b>.' : 'Пока записей нет.' ?> Каждая отправка формы «напишите нам» и запись на встречу сохраняет, кто, когда, с какого IP и с какой редакцией согласия и политики согласился. Файлы журнала — в <code>data/consents/</code>.</p>
+</section>
 <section class="ad-card">
 <div class="ad-card__head"><h2>Статьи</h2><a class="ad-btn ad-btn--primary" href="/admin/edit.php">Новая статья</a></div>
 <?php if (!$articles): ?>

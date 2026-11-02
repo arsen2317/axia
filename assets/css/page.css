@@ -145,7 +145,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .sol__title {
   position: absolute; left: var(--gutter); right: var(--gutter);
   bottom: calc(100% - var(--sol-cy, 60vh) + var(--sol-d) / 2 + 3.5rem);
-  margin: 0; text-align: center;
+  margin: 0; text-align: left;
   font-family: var(--font-display); font-weight: 700; font-size: 4.5rem; line-height: 0.95;
 }
 .axia .sol__track {
@@ -211,7 +211,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 }
 @container axia (max-width: 40rem) {
   .axia .sol { --sol-d: calc(100cqw - 4rem); --sol-step: calc(var(--sol-d) + 1rem); }
-  .axia .sol__title { font-size: 3rem; bottom: calc(100% - var(--sol-cy, 60vh) + var(--sol-d) / 2 + var(--sol-d) * 0.1 + 2.5rem); }
+  .axia .sol__title { font-size: min(3rem, 10cqw); bottom: calc(100% - var(--sol-cy, 60vh) + var(--sol-d) / 2 + var(--sol-d) * 0.1 + 2.5rem); }   /* «к нам приходят?» помещается в строку */
 }
 /* «Решения» стоят между «Подходом» и «Командой»: сетка следующих секций сдвинута ещё на экран (фон «Решений» закреплён и занимает ровно экран) */
 .axia .team::before {
@@ -527,7 +527,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .dirs__tail { display: none; }
 .axia .dv__title {
   position: absolute; left: var(--gutter); right: var(--gutter); top: 9.5rem; z-index: 2;
-  margin: 0; text-align: center;
+  margin: 0; text-align: left;
   font-family: var(--font-display); font-weight: 700; font-size: 4.5rem; line-height: 0.95; letter-spacing: 0;
   text-box: trim-both ex alphabetic;
 }
@@ -864,11 +864,11 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .foot__wl2 { clip-path: inset(0 44.88% 0 29.04%); transition-delay: 0.17s; }
 .axia .foot__wl3 { clip-path: inset(0 28.7% 0 55.12%); transition-delay: 0.29s; }
 .axia .foot__wl4 { clip-path: inset(0 0 0 71.3%); transition-delay: 0.41s; }
-/* десктоп (по макету): подвал ≈ 39% ширины по высоте, верх «ξ» на 11% ширины ниже края подвала,
+/* десктоп (по макету): подвал ≈ 39% ширины по высоте, верх «ξ» на 8% ширины ниже края подвала,
    низ букв срезан нижним краем */
 @container axia (width > 66rem) {
   .axia .foot { min-height: 38.9cqw; align-content: start; }
-  .axia .foot__word { top: 11.15cqw; }
+  .axia .foot__word { top: 8cqw; }   /* по правкам «αξία» чуть выше (было 11.15cqw) */
 }
 @media (prefers-reduced-motion: reduce) { .axia .foot__word { transform: none; transition: none; } }
 /* ===== ПЛАНШЕТ (правки) ===== */
@@ -927,14 +927,13 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   }
 }
 /* ===== О НАС (по черновику, без «αξία» на фоне) =====
-   Секция закреплена: высота = экран + S (S кратно высоте плитки паттерна — сетка дальше без шва).
-   Слева — заголовок, справа — два абзаца сменяют друг друга по фейду (--ab-f 0 → 1 ставит скрипт по прокрутке). */
-.axia .ab { position: relative; height: var(--who-h, 250vh); }
-/* фон-сетка и экран с текстом — два отдельных закреплённых слоя: сетка (z 0) под «заглушкой низа экрана» (z 1),
-   текст (z 2) — над ней */
-.axia .ab__pin { position: sticky; top: 0; z-index: 2; height: 100vh; height: 100dvh; margin-top: -100vh; margin-top: -100dvh; }
+   Один экран без закрепления (высоту --who-h ставит скрипт: экран или сколько нужно тексту).
+   Слева — заголовок, справа — три абзаца сразу, без смены по фейду. */
+.axia .ab { position: relative; height: var(--who-h, 100vh); }
+/* фон-сетка (z 0) и текст (z 2) — отдельные слои; между ними «заглушка низа экрана» (z 1) */
+.axia .ab__pin { position: absolute; inset: 0; z-index: 2; }
 .axia .ab__bg {
-  position: sticky; top: 0; z-index: 0; height: 100vh; height: 100dvh;
+  position: absolute; inset: 0; z-index: 0;
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
   background-position-y: calc(var(--pat-phase, 0px) - 100vh);
   background-position-y: calc(var(--pat-phase, 0px) - 100dvh);
@@ -950,21 +949,17 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   font-family: var(--font-display); font-weight: 700; letter-spacing: 0;
   font-size: clamp(2.25rem, 4cqw, 3.75rem); line-height: 1.08; color: #e8e6e0;
 }
-.axia .ab__side { grid-column: 3 / 5; display: grid; }
+.axia .ab__side { grid-column: 3 / 5; display: flex; flex-direction: column; gap: 1em; }
 .axia .ab__text {
-  grid-area: 1 / 1; margin: 0;
+  margin: 0;
   font-size: clamp(1.125rem, 2.33cqw, 2rem); line-height: 1.22; color: #e8e6e0;
-  will-change: opacity, transform;
 }
-/* по очереди: первый гаснет (первая половина), затем проявляется второй — без наложения текстов */
-.axia .ab__text--1 { opacity: max(0, 1 - 2 * var(--ab-f, 0)); transform: translate3d(0, calc(var(--ab-f, 0) * -1rem), 0); }
-.axia .ab__text--2 { opacity: max(0, 2 * var(--ab-f, 0) - 1); transform: translate3d(0, calc((1 - var(--ab-f, 0)) * 1rem), 0); }
-/* десктоп: заголовок слева мельче — больше воздуха между ним и текстом справа */
+/* десктоп: левая колонка с заголовком шире половины экрана, справа — три абзаца */
 @container axia (width > 66rem) {
-  .axia .ab__title { font-size: clamp(1.875rem, 3.1cqw, 3rem); padding-right: 5cqw; }
-  .axia .ab__text { font-size: clamp(1rem, 1.75cqw, 1.625rem); line-height: 1.32; }   /* правый текст — мельче */
-  /* блок — по центру места ПОД шапкой (под меню), а не всего экрана: визуальный центр чуть ниже середины */
-  .axia .ab__content { align-content: center; padding-top: 5.5rem; padding-bottom: 0; }   /* заголовок не доходит до правого текста: зазор ≈ 5% ширины + промежуток сетки */
+  .axia .ab__content { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-content: center; padding-top: 5.5rem; padding-bottom: 0; }
+  .axia .ab__title { grid-column: 1; font-size: clamp(1.875rem, 3.1cqw, 3rem); padding-right: 3cqw; }
+  .axia .ab__side { grid-column: 2; font-size: clamp(1rem, 1.6cqw, 1.5rem); }
+  .axia .ab__text { font-size: 1em; line-height: 1.32; }
 }
 /* планшет и мобильный: заголовок сверху во всю ширину, абзацы под ним */
 @container axia (max-width: 66rem) {
@@ -985,14 +980,10 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .dv__ill { order: 3; flex: none; height: 50%; margin: auto 0 0; align-items: center; }
 }
 @container axia (40rem < width <= 66rem) { .axia .dv__card { padding: 1rem; } .axia .dv__ill { height: 42%; } }
-/* «О НАС», ПЛАНШЕТ И МОБИЛЬНЫЙ: без закрепления и смены абзацев — оба абзаца сразу, друг под другом
-   (планшет — один экран, мобильный — сколько нужно тексту) */
+/* «О НАС», ПЛАНШЕТ И МОБИЛЬНЫЙ: блок — по центру экрана по вертикали (одинаковые поля сверху и снизу — под шапку
+   и кнопку «обсудить задачу»); мобильный — сколько нужно тексту */
 @container axia (max-width: 66rem) {
-  .axia .ab__bg { position: absolute; inset: 0; height: auto; }
-  .axia .ab__pin { position: absolute; inset: 0; height: auto; margin: 0; }
-  .axia .ab__side { display: flex; flex-direction: column; gap: 1.25rem; }
-  .axia .ab__text--1, .axia .ab__text--2 { opacity: 1; transform: none; }
-  /* блок — по центру экрана по вертикали (одинаковые поля сверху и снизу — под шапку и кнопку «обсудить задачу») */
+  .axia .ab__side { gap: 1.25rem; }
   .axia .ab__content { justify-content: center; padding-top: 6rem; padding-bottom: 6rem; }
 }
 /* НАПРАВЛЕНИЯ, десктоп: иллюстрации крупнее */
@@ -1082,6 +1073,14 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
      секция — сколько нужно (сетка дальше сдвигается на лишнюю высоту, см. --appr-extra) */
   .axia .dirs { height: auto; }
   .axia .dirs__bg { position: absolute; inset: 0; height: auto; }
+  /* сетка ниже шва (середина последней карточки) сдвинута на --dirs-shift — как у «Решений» и всего, что ниже
+     (сдвиг считает скрипт, чтобы круги «Решений» легли на круги сетки при постоянном зазоре между блоками) */
+  .axia .dirs__bg::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; top: var(--dirs-seam, 100%);
+    background: inherit;
+    background-position-y: calc(var(--pat-phase, 0px) - 100vh - var(--dirs-seam, 0px) + var(--dirs-shift, 0px));
+    background-position-y: calc(var(--pat-phase, 0px) - 100dvh - var(--dirs-seam, 0px) + var(--dirs-shift, 0px));
+  }
   .axia .dirs__sticky { position: relative; height: auto; margin-top: 0; overflow: visible; padding: 6.25rem var(--gutter) 3rem; }
   .axia .dv__svg { display: none; }
   .axia .dv__title { position: relative; top: auto; left: auto; right: auto; margin: 0 0 2rem; }
@@ -1166,9 +1165,44 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia .cal--form .cal__head { flex-direction: column; align-items: flex-start; }
 /* «ключевая команда»: на десктопе — в две строки, на планшете и мобильном перенос по ширине */
 .axia .tm__br { display: inline; }   /* «ключевая / команда» — всегда в две строки */
-/* НАПРАВЛЕНИЯ, карточки: текст по центру; на десктопе название всегда в две строки (перенос — <br class="dv__br">
+/* НАПРАВЛЕНИЯ, карточки: текст по левому краю (как заголовок раздела); на десктопе название всегда в две строки (перенос — <br class="dv__br">
    в разметке, на второй строке не меньше двух слов), кегль уменьшается на узких экранах, чтобы строки не переносились */
-.axia .dv__name, .axia .dv__desc { text-align: center; }
+.axia .dv__name, .axia .dv__desc { text-align: left; }
 @container axia (width > 66rem) {
   .axia .dv__name { white-space: nowrap; font-size: min(1.5rem, 1.75cqw); }
 }
+
+/* ссылка в тексте о команде (книги Андрея) */
+.axia .tm__link { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; text-decoration-color: currentColor; transition: opacity 0.2s ease; }
+@media (hover: hover) { .axia .tm__link:hover { opacity: 0.7; } }
+
+/* ПЛАШКА О COOKIE (assets/js/cookies.js): слева внизу на десктопе; на планшете и мобильном — над кнопкой «обсудить задачу» */
+.cookie {
+  position: fixed; z-index: 1000; left: 2.5rem; bottom: 2rem;
+  box-sizing: border-box; width: min(34rem, calc(100vw - 2rem));
+  display: flex; align-items: center; gap: 1.25rem;
+  padding: 1rem 1rem 1rem 1.25rem; border-radius: 0.75rem;
+  background: #1e2f63; color: #e8e6e0; border: 1px solid rgba(232, 230, 224, 0.14);
+  box-shadow: 0 0.75rem 2.5rem rgba(10, 18, 45, 0.35);
+  font-family: 'Golos Text', system-ui, sans-serif; font-size: 0.875rem; line-height: 1.35;
+  opacity: 0; transform: translateY(1rem); transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.cookie.is-on { opacity: 1; transform: none; }
+.cookie__text { margin: 0; flex: 1 1 auto; }
+.cookie__link { color: inherit; text-decoration: underline; text-underline-offset: 0.15em; text-decoration-color: rgba(232, 230, 224, 0.5); }
+.cookie__link:hover { text-decoration-color: currentColor; }
+.cookie__btn {
+  flex: none; cursor: pointer; border: 0; border-radius: 0.5rem; padding: 0.625rem 1.125rem;
+  background: #e8e6e0; color: #1e2f63; font: inherit; font-weight: 600; transition: background-color 0.2s ease;
+}
+.cookie__btn:hover { background: #ffffff; }
+.cookie__btn:focus-visible, .cookie__link:focus-visible { outline: 2px solid #e8e6e0; outline-offset: 2px; }
+@media (max-width: 1056px) {
+  .cookie { left: 50%; bottom: 6.25rem; transform: translate(-50%, 1rem); }
+  .cookie.is-on { transform: translate(-50%, 0); }
+}
+@media (max-width: 640px) {
+  .cookie { bottom: 5.25rem; flex-direction: column; align-items: stretch; gap: 0.75rem; padding: 1rem; }
+  .cookie__btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .cookie { transition: none; } }

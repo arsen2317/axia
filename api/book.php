@@ -8,6 +8,7 @@ require __DIR__ . '/../lib/bootstrap.php';
 require __DIR__ . '/../lib/guard.php';
 require __DIR__ . '/../lib/mail.php';
 require __DIR__ . '/../lib/booking.php';
+require __DIR__ . '/../lib/consent.php';
 
 require_method('POST');
 if (!settings()['booking_enabled']) fail('Запись на встречи сейчас недоступна. Напишите нам через форму.', 403, ['disabled' => true]);
@@ -71,6 +72,7 @@ $result = with_lock('booking', function () use ($start, $emailH, $phoneH, $ipH, 
 });
 if (isset($result['error'])) fail($result['error'], $result['code'], isset($result['taken']) ? ['taken' => true] : []);
 $b = $result['booking'];
+consent_log('booking', $name, $email, $phone);   /* журнал согласий на обработку ПД */
 
 function set_booking(string $id, array $patch): void
 {
