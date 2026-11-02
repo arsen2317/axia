@@ -1272,3 +1272,21 @@ html { -webkit-tap-highlight-color: transparent; }
     mask-image: linear-gradient(to bottom, #000 calc(100% - 9rem), transparent);
   }
 }
+
+/* ===== НАПРАВЛЕНИЯ: СВЕТЛЫЕ КАРТОЧКИ =====
+   Карточки — цвета фона «Команды» (белые), название и описание — тёмно-синие.
+   Иллюстрации нарисованы светло-лавандовыми градиентами под тёмный фон; на светлом их цвета сдвинуты темнее
+   (та же гамма, на 1–2 ступени насыщеннее), чтобы объём и свет читались так же */
+.axia .dv-p { fill: #ffffff; }
+.axia .dv__name { color: #1e2f63; }
+.axia .dv__desc { color: rgba(30, 47, 99, 0.82); }
+@container axia (max-width: 66rem) { .axia .dv__card { background: #ffffff; } }
+.axia .dv__art stop[stop-color="#DADFFA"], .axia .dv__art stop[stop-color="#DBE0FA"],
+.axia .dv__art stop[stop-color="#D8DDFA"], .axia .dv__art stop[stop-color="#D5DBFA"] { stop-color: #A3B3F3; }
+.axia .dv__art stop[stop-color="#C2CBF7"], .axia .dv__art stop[stop-color="#C2CBF8"], .axia .dv__art stop[stop-color="#C8D0FA"],
+.axia .dv__art stop[stop-color="#CCD3F8"], .axia .dv__art stop[stop-color="#B9C4F7"] { stop-color: #8296EC; }
+.axia .dv__art stop[stop-color="#9DAEF2"], .axia .dv__art stop[stop-color="#94A6F0"],
+.axia .dv__art stop[stop-color="#8A9DEE"], .axia .dv__art stop[stop-color="#8399EE"] { stop-color: #5670DD; }
+.axia .dv__art stop[stop-color="#6A82E8"], .axia .dv__art stop[stop-color="#6680E6"],
+.axia .dv__art stop[stop-color="#5F79E6"], .axia .dv__art stop[stop-color="#5D78E6"] { stop-color: #2C4595; }
+.axia .dv__art [stroke="#DADFFA"] { stroke: #2C4595; }
