@@ -89,3 +89,9 @@ body.pg { background: var(--bg); }
 .axia.is-light-nav .nav .logo { color: #595959; }
 .axia.is-light-nav .nav__link, .axia.is-light-nav .nav__row a { color: #6b6b6b; }
 .axia.is-light-nav .nav.is-open .nav__icon { color: #595959; }
+/* документ: карточка «цель / данные / основания / срок» в разделе 3 политики */
+.doc h3 { margin-top: 2em; }
+.doc .doc__card { margin: 0 0 1.5em; padding: 1.25rem 1.5rem; border-left: 2px solid var(--line); background: rgba(30, 47, 99, 0.45); border-radius: 0 10px 10px 0; }
+.doc .doc__card p { margin: 0 0 0.6em; }
+.doc .doc__card p:last-child { margin-bottom: 0; }
+@container axia (max-width: 40rem) { .doc .doc__card { padding: 1rem 1.125rem; } }
