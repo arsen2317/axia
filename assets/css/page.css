@@ -1276,8 +1276,8 @@ html { -webkit-tap-highlight-color: transparent; }
 /* ===== НАПРАВЛЕНИЯ, ВЕРСИЯ 2: ТЁМНЫЕ КАРТОЧКИ С КРУПНЫМИ ИЛЛЮСТРАЦИЯМИ =====
    (версия 1 — светлые карточки — коммит 33b89dc)
    Карточки тёмно-синие, название — крупное светлое, описание — светлое приглушённое.
-   Иллюстрации крупные, «утоплены» в низ карточки и срезаны её краем; цвета — насыщенный ультрамарин
-   чуть светлее карточки: фигуры читаются как объём, но не спорят с текстом */
+   Иллюстрации крупные, «утоплены» в низ карточки и срезаны её краем; цвета — синие из гаммы сайта
+   (от #2b428f до #5873c6, вокруг фона #2c4595), чуть светлее карточки: объём читается, но не спорит с текстом */
 .axia .dv-p { fill: #1c2a6c; }
 .axia .dv__name { color: #e8e6e0; }
 .axia .dv__desc { color: rgba(232, 230, 224, 0.82); }
@@ -1292,14 +1292,14 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia .dv__card--1 { --dv-art-y: 32%; }
 .axia .dv__card--2 { --dv-art-y: 36%; }
 .axia .dv__art stop[stop-color="#DADFFA"], .axia .dv__art stop[stop-color="#DBE0FA"],
-.axia .dv__art stop[stop-color="#D8DDFA"], .axia .dv__art stop[stop-color="#D5DBFA"] { stop-color: #3E51E0; }
+.axia .dv__art stop[stop-color="#D8DDFA"], .axia .dv__art stop[stop-color="#D5DBFA"] { stop-color: #5873C6; }
 .axia .dv__art stop[stop-color="#C2CBF7"], .axia .dv__art stop[stop-color="#C2CBF8"], .axia .dv__art stop[stop-color="#C8D0FA"],
-.axia .dv__art stop[stop-color="#CCD3F8"], .axia .dv__art stop[stop-color="#B9C4F7"] { stop-color: #3143D0; }
+.axia .dv__art stop[stop-color="#CCD3F8"], .axia .dv__art stop[stop-color="#B9C4F7"] { stop-color: #4964B5; }
 .axia .dv__art stop[stop-color="#9DAEF2"], .axia .dv__art stop[stop-color="#94A6F0"],
-.axia .dv__art stop[stop-color="#8A9DEE"], .axia .dv__art stop[stop-color="#8399EE"] { stop-color: #2636BC; }
+.axia .dv__art stop[stop-color="#8A9DEE"], .axia .dv__art stop[stop-color="#8399EE"] { stop-color: #3A54A4; }
 .axia .dv__art stop[stop-color="#6A82E8"], .axia .dv__art stop[stop-color="#6680E6"],
-.axia .dv__art stop[stop-color="#5F79E6"], .axia .dv__art stop[stop-color="#5D78E6"] { stop-color: #1C2A9E; }
-.axia .dv__art [stroke="#DADFFA"] { stroke: #3E51E0; }   /* кончик стрелки — того же цвета, что её линия */
+.axia .dv__art stop[stop-color="#5F79E6"], .axia .dv__art stop[stop-color="#5D78E6"] { stop-color: #2B428F; }
+.axia .dv__art [stroke="#DADFFA"] { stroke: #5873C6; }   /* кончик стрелки — того же цвета, что её линия */
 /* НАПРАВЛЕНИЯ: верхний отступ карточки на 6px меньше бокового — компенсирует межстрочный зазор над первой строкой названия,
    чтобы текст визуально стоял на том же расстоянии от края, что и слева */
 @container axia (width > 66rem) { .axia .dv__card { padding-top: calc(2rem - 6px); } }
