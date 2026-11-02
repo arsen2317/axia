@@ -1278,33 +1278,24 @@ html { -webkit-tap-highlight-color: transparent; }
   }
 }
 
-/* ===== НАПРАВЛЕНИЯ, ВЕРСИЯ 2: ТЁМНЫЕ КАРТОЧКИ С КРУПНЫМИ ИЛЛЮСТРАЦИЯМИ =====
-   (версия 1 — светлые карточки — коммит 33b89dc)
-   Карточки тёмно-синие, название — крупное светлое, описание — светлое приглушённое.
-   Иллюстрации крупные, «утоплены» в низ карточки и срезаны её краем; цвета — синие из гаммы сайта
-   (от #243696 до #4b62d3 — между фоном #2c4595 и насыщенным ультрамарином), чуть светлее карточки: объём читается, но не спорит с текстом */
-.axia .dv-p { fill: #1c2a6c; }
-.axia .dv__name { color: #e8e6e0; }
-.axia .dv__desc { color: rgba(232, 230, 224, 0.82); }
-@container axia (width > 66rem) {
-  .axia .dv__name { white-space: normal; font-size: min(2rem, 2.25cqw); line-height: 1.12; }
-  .axia .dv__desc { font-size: min(1rem, 1.15cqw); }
-}
-@container axia (max-width: 66rem) { .axia .dv__card { background: #1c2a6c; overflow: hidden; } }
-/* иллюстрация: крупнее и ниже — нижняя часть уходит за край карточки */
-.axia .dv__ill .dv__art { transform: translateY(var(--dv-art-y, 30%)) scale(var(--dv-art-k, 2)); transform-origin: 50% 50%; }
-.axia .dv__card--0 { --dv-art-y: 40%; }
-.axia .dv__card--1 { --dv-art-y: 32%; }
-.axia .dv__card--2 { --dv-art-y: 36%; }
+/* ===== НАПРАВЛЕНИЯ, ВЕРСИЯ 1: СВЕТЛЫЕ КАРТОЧКИ =====
+   (версия 2 — тёмные карточки с крупными иллюстрациями — коммит 04b67c1)
+   Карточки — того же цвета, что заголовок «направления» (--ink, #e8e6e0), название и описание — тёмно-синие.
+   Иллюстрации нарисованы светло-лавандовыми градиентами под тёмный фон; на светлом их цвета сдвинуты темнее
+   (та же гамма, на 1–2 ступени насыщеннее), чтобы объём и свет читались так же */
+.axia .dv-p { fill: var(--ink, #e8e6e0); }
+.axia .dv__name { color: var(--bg, #2c4595); }   /* название — цвета синего фона сайта */
+.axia .dv__desc { color: rgba(30, 47, 99, 0.82); }
+@container axia (max-width: 66rem) { .axia .dv__card { background: var(--ink, #e8e6e0); } }
 .axia .dv__art stop[stop-color="#DADFFA"], .axia .dv__art stop[stop-color="#DBE0FA"],
-.axia .dv__art stop[stop-color="#D8DDFA"], .axia .dv__art stop[stop-color="#D5DBFA"] { stop-color: #4B62D3; }
+.axia .dv__art stop[stop-color="#D8DDFA"], .axia .dv__art stop[stop-color="#D5DBFA"] { stop-color: #A3B3F3; }
 .axia .dv__art stop[stop-color="#C2CBF7"], .axia .dv__art stop[stop-color="#C2CBF8"], .axia .dv__art stop[stop-color="#C8D0FA"],
-.axia .dv__art stop[stop-color="#CCD3F8"], .axia .dv__art stop[stop-color="#B9C4F7"] { stop-color: #3D54C2; }
+.axia .dv__art stop[stop-color="#CCD3F8"], .axia .dv__art stop[stop-color="#B9C4F7"] { stop-color: #8296EC; }
 .axia .dv__art stop[stop-color="#9DAEF2"], .axia .dv__art stop[stop-color="#94A6F0"],
-.axia .dv__art stop[stop-color="#8A9DEE"], .axia .dv__art stop[stop-color="#8399EE"] { stop-color: #3045B0; }
+.axia .dv__art stop[stop-color="#8A9DEE"], .axia .dv__art stop[stop-color="#8399EE"] { stop-color: #5670DD; }
 .axia .dv__art stop[stop-color="#6A82E8"], .axia .dv__art stop[stop-color="#6680E6"],
-.axia .dv__art stop[stop-color="#5F79E6"], .axia .dv__art stop[stop-color="#5D78E6"] { stop-color: #243696; }
-.axia .dv__art [stroke="#DADFFA"] { stroke: #4B62D3; }   /* кончик стрелки — того же цвета, что её линия */
+.axia .dv__art stop[stop-color="#5F79E6"], .axia .dv__art stop[stop-color="#5D78E6"] { stop-color: #2C4595; }
+.axia .dv__art [stroke="#DADFFA"] { stroke: #A3B3F3; }   /* кончик стрелки — того же светлого цвета, что её линия */
 /* НАПРАВЛЕНИЯ: верхний отступ карточки на 6px меньше бокового — компенсирует межстрочный зазор над первой строкой названия,
    чтобы текст визуально стоял на том же расстоянии от края, что и слева */
 @container axia (width > 66rem) { .axia .dv__card { padding-top: calc(2rem - 6px); } }
