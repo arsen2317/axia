@@ -14,7 +14,7 @@ header('Content-Disposition: attachment; filename="consents-' . date('Y-m-d') . 
 header('Cache-Control: no-store');
 $out = fopen('php://output', 'w');
 fwrite($out, "\xEF\xBB\xBF");   /* BOM — чтобы Excel открыл кириллицу правильно */
-$cols = ['at' => 'Дата и время', 'form' => 'Форма', 'name' => 'Имя', 'email' => 'Почта', 'phone' => 'Телефон', 'ip' => 'IP', 'ua' => 'Браузер', 'page' => 'Страница', 'consent_doc' => 'Согласие (редакция)', 'privacy_doc' => 'Политика (редакция)'];
+$cols = ['at' => 'Дата и время', 'form' => 'Форма', 'name' => 'Имя', 'email' => 'Почта', 'phone' => 'Телефон', 'ip' => 'IP', 'ua' => 'Браузер', 'page' => 'Страница', 'privacy_doc' => 'Политика (редакция)'];
 $forms = ['contact' => 'напишите нам', 'booking' => 'запись на встречу'];
 fputcsv($out, array_values($cols), ';', '"', '');
 foreach ($rows as $r) {

@@ -84,7 +84,7 @@ admin_head('Панель');
 
 <section class="ad-card">
 <div class="ad-card__head"><h2>Согласия на обработку персональных данных</h2><?php if ($consentN): ?><a class="ad-btn" href="/admin/consents.php?t=<?= h(csrf_token()) ?>">Скачать CSV</a><?php endif; ?></div>
-<p class="ad-hint"><?= $consentN ? 'В журнале записей: <b>' . $consentN . '</b>.' : 'Пока записей нет.' ?> Каждая отправка формы «напишите нам» и запись на встречу сохраняет, кто, когда, с какого IP и с какой редакцией согласия и политики согласился. Файлы журнала — в <code>data/consents/</code>.</p>
+<p class="ad-hint"><?= $consentN ? 'В журнале записей: <b>' . $consentN . '</b>.' : 'Пока записей нет.' ?> Каждая отправка формы «напишите нам» и запись на встречу сохраняет, кто, когда, с какого IP и с какой редакцией политики согласился. Файлы журнала — в <code>data/consents/</code>.</p>
 </section>
 <section class="ad-card">
 <div class="ad-card__head"><h2>Статьи</h2><a class="ad-btn ad-btn--primary" href="/admin/edit.php">Новая статья</a></div>

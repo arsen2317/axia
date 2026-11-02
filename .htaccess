@@ -20,7 +20,7 @@ RewriteRule ^(README\.md|vercel\.json|composer\.(json|lock))$ - [F,L]
 RewriteRule ^news/?$ news.php [L]
 RewriteRule ^news/([a-z0-9-]+)/?$ article.php?slug=$1 [L,QSA]
 RewriteRule ^privacy/?$ privacy.html [L]
-RewriteRule ^consent/?$ consent.html [L]
+RewriteRule ^consent/?$ /privacy [R=301,L]   # отдельной страницы согласия нет — всё в политике
 </IfModule>
 
 <IfModule mod_headers.c>
