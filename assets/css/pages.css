@@ -98,3 +98,7 @@ body.pg:has(.art) { background: #f7f6f3; }
 @container axia (max-width: 40rem) { .doc .doc__card { padding: 1rem 1.125rem; } }
 /* новости выключены в админке: на внутренних страницах нет пунктов «новости» в меню и подвале (класс ставит inner.js) */
 .axia.no-news [data-news] { display: none; }
+/* внутренние страницы — без меню разделов: на планшете и мобильном логотип стоит сам по себе (на главной он внутри плашки меню) */
+@container axia (max-width: 66rem) { .pg-axia .header > .logo { display: inline-flex; } }
+/* десктоп: без меню кнопка «обсудить задачу» остаётся у правого края (в своей колонке шапки) */
+@container axia (width > 66rem) { .pg-axia .header > .cta { grid-column: -2 / -1; } }
