@@ -1360,13 +1360,17 @@ void main(){
     const d = sel ? this.keyDate(sel) : this.today;
     this.setState({ selKey: sel, calY: d.getFullYear(), calM: d.getMonth() });
   }
+  /* демо: расписание из демо-админки (этот браузер) или пн–пт 13:00–18:00; часть слотов «занята» — как будто в календаре */
   demoSlots() {
+    let sched = null;
+    try { sched = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).schedule || null; } catch (e) { sched = null; }
     const out = [];
     for (let i = 1; i <= 60; i++) {
       const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i);
-      const wd = d.getDay(), key = this.dayKey(d);
-      if (wd === 0 || wd === 6 || this.hash(key) % 5 === 0) continue;
-      for (let m = 13 * 60; m <= 18 * 60; m += 30) if (this.hash(key + '@' + m) % 4 !== 0) out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).toISOString());
+      const wd = d.getDay() || 7, key = this.dayKey(d);
+      if (this.hash(key) % 5 === 0) continue;
+      const times = sched ? (sched[wd] || []).map((t) => +t.slice(0, 2) * 60 + +t.slice(3)) : (wd >= 6 ? [] : Array.from({ length: 11 }, (_, k) => 13 * 60 + 30 * k));
+      for (const m of times) if (this.hash(key + '@' + m) % 4 !== 0) out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).toISOString());
     }
     return out;
   }

@@ -79,3 +79,21 @@ h3 { margin: 28px 0 12px; font-size: 1rem; }
 .ad-savebar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; padding: 12px 16px; background: var(--ad-card); border-top: 1px solid var(--ad-line); }
 .ad-savebar .ad-note { margin-right: auto; }
 @media (max-width: 600px) { .ad-card { padding: 16px; } .ad-savebar .ad-btn { flex: 1 1 140px; } }
+
+/* расписание записи: сетка «дни × время» (admin/schedule.js) */
+.ad-sched__scroll { overflow-x: auto; margin: 12px 0 0; }
+.ad-sched { border-collapse: separate; border-spacing: 4px; font-size: 0.875rem; }
+.ad-sched th { font-weight: 600; color: var(--ad-muted); }
+.ad-sched__day, .ad-sched__time { all: unset; cursor: pointer; display: block; padding: 4px 6px; border-radius: 6px; text-align: center; white-space: nowrap; }
+.ad-sched__day { min-width: 40px; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.04em; }
+.ad-sched__time { text-align: right; font-variant-numeric: tabular-nums; color: var(--ad-ink); }
+.ad-sched__time span { color: var(--ad-muted); font-weight: 400; }
+.ad-sched__day:hover, .ad-sched__time:hover { background: var(--ad-bg); }
+.ad-sched__day:focus-visible, .ad-sched__time:focus-visible { outline: 2px solid var(--ad-accent); }
+.ad-sched__cell { display: block; cursor: pointer; }
+.ad-sched__cell input { position: absolute; opacity: 0; pointer-events: none; }
+.ad-sched__cell span { display: block; width: 40px; height: 26px; border-radius: 6px; background: var(--ad-bg); border: 1px solid var(--ad-line); transition: background-color 0.15s, border-color 0.15s; }
+.ad-sched__cell:hover span { border-color: var(--ad-accent); }
+.ad-sched__cell input:checked + span { background: var(--ad-accent); border-color: var(--ad-accent); }
+.ad-sched__cell input:focus-visible + span { outline: 2px solid var(--ad-accent); outline-offset: 2px; }
+.ad-sched__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }

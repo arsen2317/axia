@@ -1,6 +1,6 @@
 <?php
 /*
- * Бронирование встреч: свободные слоты по рабочим часам минус занятое время в Яндекс Календаре (CalDAV),
+ * Бронирование встреч: свободные слоты по расписанию из админки минус занятое время в Яндекс Календаре (CalDAV),
  * создание конференции в Яндекс Телемосте, событие в календаре, хранение броней (без персональных данных — только хэши).
  */
 declare(strict_types=1);
@@ -18,28 +18,68 @@ function utc(): DateTimeZone
 
 /* ================= Слоты ================= */
 
-/** Все слоты по правилам (без учёта занятости): [[start DateTimeImmutable, end], …] */
+/* ---- Расписание: в какие дни недели и в какое время можно записаться ----
+   Задаётся в админке (сетка «дни × время начала», хранится в data/settings.php → booking_slots).
+   Пока в админке ничего не сохраняли, расписание берётся из рабочих окон config: booking.hours. */
+
+/** Время начала, которое можно отметить в админке: от booking.grid_from до booking.grid_to с шагом booking.step_min */
+function schedule_grid(): array
+{
+    $dur = max(5, (int)cfg('booking.duration_min', 30));
+    $step = max(5, (int)cfg('booking.step_min', 30));
+    [$fh, $fm] = array_map('intval', explode(':', (string)cfg('booking.grid_from', '08:00')));
+    [$th, $tm] = array_map('intval', explode(':', (string)cfg('booking.grid_to', '21:00')));
+    $out = [];
+    for ($m = $fh * 60 + $fm; $m + $dur <= $th * 60 + $tm; $m += $step) $out[] = sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
+    return $out;
+}
+
+/** Расписание: [1 => ['13:00', '13:30', …], …, 7 => […]] (1 = пн … 7 = вс) */
+function booking_schedule(): array
+{
+    $saved = settings()['booking_slots'] ?? null;
+    $out = [];
+    if (is_array($saved)) {
+        for ($d = 1; $d <= 7; $d++) {
+            $list = array_values(array_filter((array)($saved[$d] ?? $saved[(string)$d] ?? []), fn($t) => is_string($t) && preg_match('/^\d{2}:\d{2}$/', $t)));
+            sort($list);
+            $out[$d] = $list;
+        }
+        return $out;
+    }
+    /* по умолчанию — из рабочих окон конфига */
+    $dur = max(5, (int)cfg('booking.duration_min', 30));
+    $step = max(5, (int)cfg('booking.step_min', 30));
+    $hours = (array)cfg('booking.hours', []);
+    for ($d = 1; $d <= 7; $d++) {
+        $out[$d] = [];
+        foreach ((array)($hours[$d] ?? []) as $win) {
+            [$a, $b] = $win;
+            [$ah, $am] = array_map('intval', explode(':', $a));
+            [$bh, $bm] = array_map('intval', explode(':', $b));
+            for ($m = $ah * 60 + $am; $m + $dur <= $bh * 60 + $bm; $m += $step) $out[$d][] = sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
+        }
+    }
+    return $out;
+}
+
+/** Все слоты по расписанию (без учёта занятости календаря): [[start DateTimeImmutable, end], …] */
 function rule_slots(?DateTimeImmutable $now = null): array
 {
     $now = $now ?? new DateTimeImmutable('now', tz());
     $dur = max(5, (int)cfg('booking.duration_min', 30));
-    $step = max(5, (int)cfg('booking.step_min', 30));
     $earliest = $now->modify('+' . (int)cfg('booking.min_notice_hours', 12) . ' hours');
-    $hours = (array)cfg('booking.hours', []);
+    $sched = booking_schedule();
     $holidays = array_flip((array)cfg('booking.holidays', []));
     $out = [];
     $day = $now->setTime(0, 0);
     for ($i = 0; $i <= (int)cfg('booking.horizon_days', 60); $i++, $day = $day->modify('+1 day')) {
         if (isset($holidays[$day->format('Y-m-d')])) continue;
-        foreach ((array)($hours[(int)$day->format('N')] ?? []) as $win) {
-            [$a, $b] = $win;
-            [$ah, $am] = array_map('intval', explode(':', $a));
-            [$bh, $bm] = array_map('intval', explode(':', $b));
-            $winEnd = $day->setTime($bh, $bm);
-            for ($s = $day->setTime($ah, $am); $s->modify("+$dur minutes") <= $winEnd; $s = $s->modify("+$step minutes")) {
-                if ($s < $earliest) continue;
-                $out[] = [$s, $s->modify("+$dur minutes")];
-            }
+        foreach ($sched[(int)$day->format('N')] ?? [] as $t) {
+            [$h, $m] = array_map('intval', explode(':', $t));
+            $s = $day->setTime($h, $m);
+            if ($s < $earliest) continue;
+            $out[] = [$s, $s->modify("+$dur minutes")];
         }
     }
     return $out;

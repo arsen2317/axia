@@ -127,6 +127,7 @@
         var next = all.filter(function (x) { return x.id !== a.id; }); next.push(a);
         return save(KEY_ART, next) ? resolve({ ok: true, article: a }) : reject(new Error('Не хватило места в браузере'));
       }
+      if (action === 'schedule') { var s2 = load(KEY_SET, {}); s2.schedule = body.slots; save(KEY_SET, s2); return resolve({ ok: true, slots: body.slots }); }
       if (action === 'cancel') return resolve({ ok: true });
       reject(new Error('Неизвестное действие'));
     });
@@ -202,6 +203,17 @@
     });
   }
 
+  /* расписание записи (как config booking.hours по умолчанию: пн–пт 13:00–18:30, встреча 30 мин) */
+  function demoGrid() { var out = []; for (var m = 8 * 60; m + 30 <= 21 * 60; m += 30) out.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0')); return out; }
+  function demoSchedule() {
+    var s = load(KEY_SET, {}).schedule;
+    if (s) return s;
+    var def = {}, day = [];
+    for (var m = 13 * 60; m + 30 <= 18 * 60 + 30; m += 30) day.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'));
+    for (var d = 1; d <= 7; d++) def[d] = d <= 5 ? day.slice() : [];
+    return def;
+  }
+
   function renderDashboard() {
     var on = load(KEY_SET, {}).bookingEnabled !== false;
     var list = articles(), t = today();
@@ -212,6 +224,8 @@
       + '<section class="ad-card"><h2>Запись на встречи</h2><label class="ad-switch"><input type="checkbox" id="booking-toggle"' + (on ? ' checked' : '') + '><span class="ad-switch__track" aria-hidden="true"></span>'
       + '<span id="booking-label">' + (on ? 'Включена — на сайте календарь со слотами' : 'Выключена — на сайте вместо календаря форма обратной связи') + '</span></label>'
       + '<p class="ad-hint">Подключения: <span class="ad-pill">Почта (SMTP): тестовый режим</span> <span class="ad-pill">SmartCaptcha: тестовый режим</span> <span class="ad-pill">Яндекс Телемост: тестовый режим</span> <span class="ad-pill">Яндекс Календарь: тестовый режим</span></p>'
+      + '<h3>Расписание</h3><p class="ad-hint">Отметьте дни и время, когда можно записаться. Отмеченный слот появится на сайте, только если в Яндекс Календаре в это время ничего нет; неотмеченный не появится никогда. Встреча — 30 мин, время — московское. Клик по дню или времени отмечает или снимает всю колонку или строку. В демо расписание влияет на календарь главной в этом же браузере.</p>'
+      + '<div id="schedule" data-grid="' + esc(JSON.stringify(demoGrid())) + '" data-slots="' + esc(JSON.stringify(demoSchedule())) + '" data-duration="30"></div>'
       + '<h3>Ближайшие встречи</h3><p class="ad-hint">В демо-режиме встреч нет. На настоящем сайте здесь список записей с кнопкой «Отменить».</p></section>'
       + '<section class="ad-card"><div class="ad-card__head"><h2>Статьи</h2><a class="ad-btn ad-btn--primary" href="/admin/edit.php">Новая статья</a></div>'
       + (list.length ? '<ul class="ad-list">' + list.map(function (a) {
@@ -223,6 +237,7 @@
           + '<button class="ad-btn ad-btn--small ad-btn--danger" type="button" data-delete="' + esc(a.id) + '">Удалить</button></span></li>';
       }).join('') + '</ul>' : '<p class="ad-hint">Статей пока нет.</p>') + '</section>';
 
+    var sc = document.createElement('script'); sc.src = '/admin/schedule.js'; document.body.appendChild(sc);
     var tg = document.getElementById('booking-toggle');
     tg.addEventListener('change', function () {
       adminApi('booking', { enabled: tg.checked }).then(function (d) {

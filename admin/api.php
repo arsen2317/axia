@@ -17,6 +17,21 @@ switch ($action) {
         save_settings(['booking_enabled' => !empty($d['enabled'])]);
         json_out(['ok' => true, 'enabled' => settings()['booking_enabled']]);
 
+    case 'schedule':
+        $d = json_body();
+        $grid = array_flip(schedule_grid());
+        $in = (array)($d['slots'] ?? []);
+        $out = [];
+        for ($day = 1; $day <= 7; $day++) {
+            $list = [];
+            foreach ((array)($in[$day] ?? $in[(string)$day] ?? []) as $t) if (is_string($t) && isset($grid[$t])) $list[$t] = true;
+            $list = array_keys($list);
+            sort($list);
+            $out[(string)$day] = $list;
+        }
+        save_settings(['booking_slots' => $out]);
+        json_out(['ok' => true, 'slots' => booking_schedule()]);
+
     case 'cancel':
         $d = json_body();
         $b = cancel_booking((string)($d['id'] ?? ''), 'администратор');

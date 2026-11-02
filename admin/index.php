@@ -5,6 +5,7 @@ require __DIR__ . '/../lib/bootstrap.php';
 require __DIR__ . '/../lib/admin.php';
 require __DIR__ . '/../lib/booking.php';
 require __DIR__ . '/../lib/articles.php';
+require __DIR__ . '/../lib/consent.php';
 
 admin_session();
 $error = null;
@@ -66,6 +67,9 @@ admin_head('Панель');
 <p class="ad-hint">Ваш IP, как его видит сервер: <b><?= h(client_ip()) ?></b><?= filter_var(client_ip(), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false ? ' — внутренний адрес: включите trust_proxy в настройках, иначе лимиты работают на всех посетителей сразу' : '' ?></p>
 <p class="ad-hint">Подключения: <?php foreach ($checks as $k => $v): ?><span class="ad-pill <?= $v ? 'is-on' : '' ?>"><?= h($k) ?>: <?= $v ? 'настроено' : 'тестовый режим' ?></span> <?php endforeach; ?></p>
 
+<h3>Расписание</h3>
+<p class="ad-hint">Отметьте дни и время, когда можно записаться. Отмеченный слот появится на сайте, только если в Яндекс Календаре в это время ничего нет; неотмеченный не появится никогда. Встреча — <?= (int)cfg('booking.duration_min', 30) ?> мин, время — <?= h((string)cfg('timezone')) === 'Europe/Moscow' ? 'московское' : h((string)cfg('timezone')) ?>. Клик по дню или времени отмечает или снимает всю колонку или строку.</p>
+<div id="schedule" data-grid="<?= h(json_encode(schedule_grid())) ?>" data-slots="<?= h(json_encode(booking_schedule())) ?>" data-duration="<?= (int)cfg('booking.duration_min', 30) ?>"></div>
 <h3>Ближайшие встречи</h3>
 <?php if (!$upcoming): ?>
 <p class="ad-hint">Пока нет. Контакты клиентов — в событиях Яндекс Календаря и в письмах на <?= h((string)cfg('mail.to')) ?>.</p>
@@ -110,4 +114,5 @@ admin_head('Панель');
 </section>
 </main>
 <script src="/admin/admin.js"></script>
+<script src="/admin/schedule.js"></script>
 </body></html>

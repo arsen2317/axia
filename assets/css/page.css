@@ -145,7 +145,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .sol__title {
   position: absolute; left: var(--gutter); right: var(--gutter);
   bottom: calc(100% - var(--sol-cy, 60vh) + var(--sol-d) / 2 + 3.5rem);
-  margin: 0; text-align: left;
+  margin: 0; text-align: center;
   font-family: var(--font-display); font-weight: 700; font-size: 4.5rem; line-height: 0.95;
 }
 .axia .sol__track {
@@ -527,7 +527,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .dirs__tail { display: none; }
 .axia .dv__title {
   position: absolute; left: var(--gutter); right: var(--gutter); top: 9.5rem; z-index: 2;
-  margin: 0; text-align: left;
+  margin: 0; text-align: center;
   font-family: var(--font-display); font-weight: 700; font-size: 4.5rem; line-height: 0.95; letter-spacing: 0;
   text-box: trim-both ex alphabetic;
 }
@@ -1165,7 +1165,7 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia .cal--form .cal__head { flex-direction: column; align-items: flex-start; }
 /* «ключевая команда»: на десктопе — в две строки, на планшете и мобильном перенос по ширине */
 .axia .tm__br { display: inline; }   /* «ключевая / команда» — всегда в две строки */
-/* НАПРАВЛЕНИЯ, карточки: текст по левому краю (как заголовок раздела); на десктопе название всегда в две строки (перенос — <br class="dv__br">
+/* НАПРАВЛЕНИЯ, карточки: текст по левому краю (заголовок раздела — по центру); на десктопе название всегда в две строки (перенос — <br class="dv__br">
    в разметке, на второй строке не меньше двух слов), кегль уменьшается на узких экранах, чтобы строки не переносились */
 .axia .dv__name, .axia .dv__desc { text-align: left; }
 @container axia (width > 66rem) {
