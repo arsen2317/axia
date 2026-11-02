@@ -10,16 +10,7 @@ body.pg { background: var(--bg); }
 .pg-title { margin: 0 0 48px; font-family: var(--font-display); font-weight: 700; font-size: clamp(3rem, 8vw, 4.5rem); line-height: 0.95; }
 .pg-empty { color: var(--muted); font-size: 1.125rem; }
 
-/* список новостей */
-.news-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 24px; }
-.news-item__link { display: flex; flex-direction: column; height: 100%; text-decoration: none; background: var(--card); border-radius: 12px; overflow: hidden; transition: background-color 0.2s; }
-.news-item__link:hover { background: #3a58aa; }
-.news-item__cover { display: block; aspect-ratio: 16 / 10; min-height: 0; overflow: hidden; background: var(--bg-deep); }
-.news-item__cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.news-item__body { display: flex; flex-direction: column; gap: 8px; padding: 20px; }
-.news-item__date { color: var(--muted); font-size: 0.875rem; }
-.news-item__title { font-weight: 700; font-size: 1.25rem; line-height: 1.25; }
-.news-item__desc { color: var(--muted); font-size: 0.9375rem; line-height: 1.4; }
+/* список новостей — те же карточки, что в блоке «Новости» на главной (классы news__*, стили — в page.css) */
 
 /* статья и документы */
 .art, .doc { max-width: 46rem; margin: 0 auto; }

@@ -13,15 +13,15 @@ page_open('Новости — аксиа', 'Новости и публикаци
 <?php if (!$list): ?>
 <p class="pg-empty">Здесь скоро появятся публикации.</p>
 <?php else: ?>
-<ul class="news-list">
+<ul class="news__list">
 <?php foreach ($list as $a): ?>
-<li class="news-item">
-<a class="news-item__link" href="/news/<?= h($a['slug']) ?>">
-<span class="news-item__cover"><?php if ($a['cover']): ?><img src="<?= h($a['cover']) ?>" alt="<?= h($a['cover_alt']) ?>" loading="lazy" decoding="async"><?php endif; ?></span>
-<span class="news-item__body">
-<time class="news-item__date" datetime="<?= h($a['published_at']) ?>"><?= h(ru_date($a['published_at'])) ?></time>
-<span class="news-item__title"><?= h($a['title']) ?></span>
-<?php if ($a['description'] !== ''): ?><span class="news-item__desc"><?= h($a['description']) ?></span><?php endif; ?>
+<li class="news__item">
+<a class="news__link" href="/news/<?= h($a['slug']) ?>">
+<span class="news__cover"><?php if ($a['cover']): ?><img src="<?= h($a['cover']) ?>" alt="<?= h($a['cover_alt']) ?>" loading="lazy" decoding="async"><?php endif; ?></span>
+<span class="news__body">
+<time class="news__date" datetime="<?= h($a['published_at']) ?>"><?= h(ru_date($a['published_at'])) ?></time>
+<span class="news__name"><?= h($a['title']) ?></span>
+<?php if ($a['description'] !== ''): ?><span class="news__desc"><?= h($a['description']) ?></span><?php endif; ?>
 </span>
 </a>
 </li>

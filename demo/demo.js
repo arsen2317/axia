@@ -150,10 +150,10 @@
 
   if (page === 'news') {
     var list = published();
-    root.innerHTML = '<div class="pg-head"><h1 class="pg-title">новости</h1><a class="pg-back" href="/"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4"></path></svg>вернуться на главную</a></div>' + (list.length ? '<ul class="news-list">' + list.map(function (a) {
-      return '<li class="news-item"><a class="news-item__link" href="/news/' + esc(a.slug) + '"><span class="news-item__cover">' + (a.cover ? '<img src="' + esc(a.cover) + '" alt="' + esc(a.cover_alt) + '" loading="lazy">' : '') + '</span>'
-        + '<span class="news-item__body"><time class="news-item__date" datetime="' + esc(a.published_at) + '">' + esc(ruDate(a.published_at)) + '</time><span class="news-item__title">' + esc(a.title) + '</span>'
-        + (a.description ? '<span class="news-item__desc">' + esc(a.description) + '</span>' : '') + '</span></a></li>';
+    root.innerHTML = '<div class="pg-head"><h1 class="pg-title">новости</h1><a class="pg-back" href="/"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4"></path></svg>вернуться на главную</a></div>' + (list.length ? '<ul class="news__list">' + list.map(function (a) {
+      return '<li class="news__item"><a class="news__link" href="/news/' + esc(a.slug) + '"><span class="news__cover">' + (a.cover ? '<img src="' + esc(a.cover) + '" alt="' + esc(a.cover_alt) + '" loading="lazy">' : '') + '</span>'
+        + '<span class="news__body"><time class="news__date" datetime="' + esc(a.published_at) + '">' + esc(ruDate(a.published_at)) + '</time><span class="news__name">' + esc(a.title) + '</span>'
+        + (a.description ? '<span class="news__desc">' + esc(a.description) + '</span>' : '') + '</span></a></li>';
     }).join('') + '</ul>' : '<p class="pg-empty">Здесь скоро появятся публикации.</p>');
   }
 
