@@ -1295,3 +1295,5 @@ html { -webkit-tap-highlight-color: transparent; }
 @container axia (width > 66rem) { .axia .dv__card { padding-top: calc(2rem - 6px); } }
 @container axia (40rem < width <= 66rem) { .axia .dv__card { padding-top: calc(2.5rem - 6px); } }
 @container axia (max-width: 40rem) { .axia .dv__card { padding-top: calc(1.75rem - 6px); } }
+/* НАПРАВЛЕНИЯ, стрелка во второй иллюстрации: линия и кончик одного цвета (тёмно-синий — кончик выходит за диски на светлую карточку) */
+.axia .dv__art #dvp-arrowFade stop { stop-color: #2C4595; }
