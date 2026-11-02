@@ -1274,13 +1274,13 @@ html { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ===== НАПРАВЛЕНИЯ: СВЕТЛЫЕ КАРТОЧКИ =====
-   Карточки — цвета фона «Команды» (белые), название и описание — тёмно-синие.
+   Карточки — того же цвета, что заголовок «направления» (--ink, #e8e6e0), название и описание — тёмно-синие.
    Иллюстрации нарисованы светло-лавандовыми градиентами под тёмный фон; на светлом их цвета сдвинуты темнее
    (та же гамма, на 1–2 ступени насыщеннее), чтобы объём и свет читались так же */
-.axia .dv-p { fill: #ffffff; }
+.axia .dv-p { fill: var(--ink, #e8e6e0); }
 .axia .dv__name { color: #1e2f63; }
 .axia .dv__desc { color: rgba(30, 47, 99, 0.82); }
-@container axia (max-width: 66rem) { .axia .dv__card { background: #ffffff; } }
+@container axia (max-width: 66rem) { .axia .dv__card { background: var(--ink, #e8e6e0); } }
 .axia .dv__art stop[stop-color="#DADFFA"], .axia .dv__art stop[stop-color="#DBE0FA"],
 .axia .dv__art stop[stop-color="#D8DDFA"], .axia .dv__art stop[stop-color="#D5DBFA"] { stop-color: #A3B3F3; }
 .axia .dv__art stop[stop-color="#C2CBF7"], .axia .dv__art stop[stop-color="#C2CBF8"], .axia .dv__art stop[stop-color="#C8D0FA"],
