@@ -268,6 +268,7 @@
       <stop offset="1" stop-color="#DADFFA" stop-opacity="0"/>
     </linearGradient>
     <polygon id="dvl-diamond" points="0,-82 140,0 0,82 -140,0"/>
+    <clipPath id="dvl-clip"><use href="#dvl-diamond"/></clipPath>
   </defs>
   <g class="dvl-p dvl-p1"><g transform="translate(204 240)">
     <use href="#dvl-diamond" fill="url(#dvl-plate)"/>
@@ -284,7 +285,11 @@
   <g class="dvl-p dvl-p4"><g transform="translate(204 150)">
     <use href="#dvl-diamond" fill="url(#dvl-plate)"/>
     <use href="#dvl-diamond" fill="none" stroke="url(#dvl-rim)" stroke-width="3" stroke-linejoin="round"/>
-    <polygon points="0,-46 92,8 0,62 -92,8" fill="url(#dvl-inner)" fill-opacity="0.85"/>
+    <!-- сквозь верхнюю пластину просвечивает второй слой: тот же ромб на шаг ниже (30), обрезанный по верхней пластине -->
+    <g clip-path="url(#dvl-clip)">
+      <use href="#dvl-diamond" transform="translate(0 30)" fill="url(#dvl-inner)" fill-opacity="0.85"/>
+      <use href="#dvl-diamond" transform="translate(0 30)" fill="none" stroke="url(#dvl-rim)" stroke-width="2" stroke-linejoin="round" stroke-opacity="0.6"/>
+    </g>
   </g></g>
   <g stroke-width="3" stroke-linecap="butt">
     <line class="dvl-b" pathLength="1" x1="176" y1="112" x2="176" y2="340" stroke="url(#dvl-beamL)"/>
