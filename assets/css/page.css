@@ -1336,3 +1336,15 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia .dv__card--0 { --dv-art-y: 40%; }
 .axia .dv__card--1 { --dv-art-y: 32%; }
 .axia .dv__card--2 { --dv-art-y: 36%; }
+
+/* ===== НАПРАВЛЕНИЯ, ВЕРСИЯ 4: ТЁМНЫЕ КАРТОЧКИ =====
+   (версия 3 — светлые карточки с крупными иллюстрациями — коммит afa913d)
+   Всё как в версии 3, но карточки тёмно-синие (как в версии 2), текст светлый (размер прежний),
+   иллюстрации — та же форма и тот же свет, гамма сдвинута светлее и ярче, чтобы читаться на тёмном */
+.axia .dv-p { fill: #1c2a6c; }
+.axia .dv__name { color: #e8e6e0; }
+.axia .dv__desc { color: rgba(232, 230, 224, 0.82); }
+@container axia (max-width: 66rem) { .axia .dv__card { background: #1c2a6c; } }
+.axia .dv__art { --dv-w: #E6ECFE; --dv-l: #A6BAF6; --dv-m: #6787EE; --dv-v: #3B5FE6; --dv-p: #B9C9F8; }
+.axia #dvp-arrowFade stop { stop-color: var(--dv-l); }        /* стрелка — светлая, на тёмном фоне */
+.axia .dv__art [stroke="#DADFFA"] { stroke: var(--dv-l); }
