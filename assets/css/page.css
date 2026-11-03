@@ -1330,3 +1330,9 @@ html { -webkit-tap-highlight-color: transparent; }
 @container axia (width > 66rem) { .axia .dv__card { padding-top: calc(2rem - 6px); } }
 @container axia (40rem < width <= 66rem) { .axia .dv__card { padding-top: calc(2.5rem - 6px); } }
 @container axia (max-width: 40rem) { .axia .dv__card { padding-top: calc(1.75rem - 6px); } }
+/* НАПРАВЛЕНИЯ: иллюстрации — крупно и внизу, срезаны краем карточки (размер и положение — как в версии 2, коммит 04b67c1) */
+@container axia (max-width: 66rem) { .axia .dv__card { overflow: hidden; } }
+.axia .dv__ill .dv__art { transform: translateY(var(--dv-art-y, 30%)) scale(var(--dv-art-k, 2)); transform-origin: 50% 50%; }
+.axia .dv__card--0 { --dv-art-y: 40%; }
+.axia .dv__card--1 { --dv-art-y: 32%; }
+.axia .dv__card--2 { --dv-art-y: 36%; }
