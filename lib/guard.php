@@ -9,7 +9,7 @@ function rate_ok(string $key, int $limit, int $windowSec, bool $consume = true):
 {
     $dir = DATA . '/ratelimit';
     ensure_dir($dir);
-    $file = $dir . '/' . hash('sha256', $key . secret()) . '.json';
+    $file = $dir . '/' . hash('sha256', $key . secret()) . '.php';
     return with_lock('rl-' . substr(md5($key), 0, 8), function () use ($file, $limit, $windowSec, $consume) {
         $now = time();
         $hits = array_values(array_filter(read_json($file, []), fn($t) => is_int($t) && $t > $now - $windowSec));
@@ -31,7 +31,7 @@ function rate_or_fail(string $key, int $limit, int $windowSec, string $msg = 'С
 function rate_gc(): void
 {
     if (random_int(1, 50) !== 1) return;
-    foreach (glob(DATA . '/ratelimit/*.json') ?: [] as $f) if (filemtime($f) < time() - 3 * 86400) @unlink($f);
+    foreach (glob(DATA . '/ratelimit/*.{json,php}', GLOB_BRACE) ?: [] as $f) if (filemtime($f) < time() - 3 * 86400) @unlink($f);
 }
 
 function captcha_enabled(): bool

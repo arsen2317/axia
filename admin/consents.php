@@ -22,7 +22,7 @@ foreach ($rows as $r) {
     foreach (array_keys($cols) as $k) {
         $v = (string)($r[$k] ?? '');
         if ($k === 'form') $v = $forms[$v] ?? $v;
-        if ($v !== '' && strpbrk($v[0], '=+-@') !== false) $v = "'" . $v;   /* защита от формул в Excel */
+        if (preg_match('/^[\s\x{00A0}]*[=+\-@\t\r]/u', $v)) $v = "'" . $v;   /* защита от формул в Excel (в т. ч. после пробелов и табуляции) */
         $line[] = $v;
     }
     fputcsv($out, $line, ';', '"', '');

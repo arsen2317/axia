@@ -15,6 +15,7 @@ RewriteEngine On
 RewriteRule ^(config|lib|data|tools|demo)(/|$) - [F,L]
 RewriteRule (^|/)\.(?!well-known/) - [F,L]
 RewriteRule ^(README\.md|vercel\.json|composer\.(json|lock))$ - [F,L]
+RewriteRule \.(md|log|bak|swp|orig|sql|sh|ini|dist|lock|tmp)$ - [F,L,NC]
 
 # красивые адреса
 RewriteRule ^news/?$ news.php [L]

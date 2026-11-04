@@ -69,7 +69,7 @@
     s = esc(s);
     s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     s = s.replace(/(^|[^*\w])\*(?!\s)(.+?)(?<!\s)\*(?![*\w])/g, '$1<em>$2</em>');
-    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/[^\s)]*|mailto:[^\s)]+)\)/g, function (m, t, u) {
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/(?![\/\x5c])[^\s)]*|mailto:[^\s)]+)\)/g, function (m, t, u) {
       return '<a href="' + u + '"' + (u.indexOf('http') === 0 ? ' target="_blank" rel="noopener"' : '') + '>' + t + '</a>';
     });
     return s.replace(/\n/g, '<br>');

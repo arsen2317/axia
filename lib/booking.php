@@ -372,7 +372,10 @@ function telemost_delete(string $id): void
 
 function ics_escape(string $s): string
 {
-    return str_replace(["\\", ";", ",", "\r\n", "\n"], ["\\\\", "\\;", "\\,", "\\n", "\\n"], $s);
+    /* любой перевод строки (\r\n, \r, \n, U+2028/2029) — только как экранированный \n: иначе в событие можно вписать свои строки */
+    $s = str_replace(["\r\n", "\r", "\u{2028}", "\u{2029}"], "\n", $s);
+    $s = preg_replace('/[\x00-\x08\x0B-\x1F\x7F]/', '', $s) ?? '';
+    return str_replace(["\\", ";", ",", "\n"], ["\\\\", "\\;", "\\,", "\\n"], $s);
 }
 
 function ics_fold(string $line): string

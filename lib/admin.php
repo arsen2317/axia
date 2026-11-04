@@ -21,6 +21,9 @@ function admin_session(): void
     session_save_path(DATA . '/sessions');
     ini_set('session.gc_maxlifetime', '43200');
     ini_set('session.use_strict_mode', '1');
+    /* сессии лежат в своей папке, системная очистка её не видит — включаем сборку мусора PHP */
+    ini_set('session.gc_probability', '1');
+    ini_set('session.gc_divisor', '100');
     session_start();
     header('X-Robots-Tag: noindex, nofollow');
     security_headers(true);
@@ -45,14 +48,13 @@ function admin_login(string $login, string $password): ?string
 {
     admin_session();
     $ip = rl_ip();
-    if (!rate_ok('admin:login:' . $ip, 5, 900, false) || !rate_ok('admin:login:all', 100, 900, false)) return 'Слишком много попыток. Подождите 15 минут.';
+    /* попытку записываем сразу, под блокировкой: параллельные запросы не могут проверить больше 5 паролей */
+    if (!rate_ok('admin:login:' . $ip, 5, 900) || !rate_ok('admin:login:all', 100, 900)) return 'Слишком много попыток. Подождите 15 минут.';
     /* пароль проверяем всегда, даже при неверном логине — чтобы по времени ответа нельзя было угадать логин */
     $hash = admin_configured() ? (string)cfg('admin.password_hash') : password_hash(random_bytes(8), PASSWORD_DEFAULT);
     $passOk = password_verify(mb_substr($password, 0, 200), $hash);
     $ok = admin_configured() && hash_equals((string)cfg('admin.login'), $login) && $passOk;
     if (!$ok) {
-        rate_ok('admin:login:' . $ip, PHP_INT_MAX, 900);
-        rate_ok('admin:login:all', PHP_INT_MAX, 900);
         usleep(random_int(300000, 700000));
         return 'Неверный логин или пароль';
     }

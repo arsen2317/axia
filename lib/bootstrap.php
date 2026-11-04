@@ -203,6 +203,8 @@ function str_field(array $d, string $k, int $max, bool $required = false, bool $
 {
     $v = isset($d[$k]) && is_scalar($d[$k]) ? trim((string)$d[$k]) : '';
     if (!mb_check_encoding($v, 'UTF-8')) fail('Неверная кодировка', 422);
+    /* переводы строк приводим к \n: одиночный \r некоторые программы считают концом строки (инъекция в .ics и письма) */
+    $v = str_replace(["\r\n", "\r"], "\n", $v);
     $v = preg_replace($multiline ? '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u' : '/[\x00-\x1F\x7F\x{2028}\x{2029}]/u', $multiline ? '' : ' ', $v) ?? '';
     $v = trim($v);
     if ($required && $v === '') fail('Заполните обязательные поля', 422, ['field' => $k]);
