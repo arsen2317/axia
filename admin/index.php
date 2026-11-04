@@ -5,6 +5,7 @@ require __DIR__ . '/../lib/bootstrap.php';
 require __DIR__ . '/../lib/admin.php';
 require __DIR__ . '/../lib/booking.php';
 require __DIR__ . '/../lib/articles.php';
+require __DIR__ . '/../lib/consent.php';
 
 admin_session();
 $error = null;
@@ -41,6 +42,7 @@ $now = time();
 $upcoming = array_values(array_filter(bookings(), fn($b) => ($b['status'] ?? '') === 'active' && $b['end'] > $now));
 usort($upcoming, fn($a, $b) => $a['start'] <=> $b['start']);
 $articles = articles_all();
+$consentN = count(consent_all());
 $checks = [
     'Почта (SMTP)' => cfg('mail.smtp_user') !== '' && cfg('mail.smtp_pass') !== '',
     'SmartCaptcha' => captcha_enabled(),
@@ -65,6 +67,9 @@ admin_head('Панель');
 <p class="ad-hint">Ваш IP, как его видит сервер: <b><?= h(client_ip()) ?></b><?= filter_var(client_ip(), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false ? ' — внутренний адрес: включите trust_proxy в настройках, иначе лимиты работают на всех посетителей сразу' : '' ?></p>
 <p class="ad-hint">Подключения: <?php foreach ($checks as $k => $v): ?><span class="ad-pill <?= $v ? 'is-on' : '' ?>"><?= h($k) ?>: <?= $v ? 'настроено' : 'тестовый режим' ?></span> <?php endforeach; ?></p>
 
+<h3>Расписание</h3>
+<p class="ad-hint">Отметьте дни и время, когда можно записаться. Отмеченный слот появится на сайте, только если в Яндекс Календаре в это время ничего нет; неотмеченный не появится никогда. Встреча — <?= (int)cfg('booking.duration_min', 30) ?> мин, время — <?= h((string)cfg('timezone')) === 'Europe/Moscow' ? 'московское' : h((string)cfg('timezone')) ?>. Клик по дню или времени отмечает или снимает всю колонку или строку.</p>
+<div id="schedule" data-grid="<?= h(json_encode(schedule_grid())) ?>" data-slots="<?= h(json_encode(booking_schedule())) ?>" data-duration="<?= (int)cfg('booking.duration_min', 30) ?>"></div>
 <h3>Ближайшие встречи</h3>
 <?php if (!$upcoming): ?>
 <p class="ad-hint">Пока нет. Контакты клиентов — в событиях Яндекс Календаря и в письмах на <?= h((string)cfg('mail.to')) ?>.</p>
@@ -82,7 +87,17 @@ admin_head('Панель');
 </section>
 
 <section class="ad-card">
+<div class="ad-card__head"><h2>Согласия на обработку персональных данных</h2><?php if ($consentN): ?><a class="ad-btn" href="/admin/consents.php?t=<?= h(csrf_token()) ?>">Скачать CSV</a><?php endif; ?></div>
+<p class="ad-hint"><?= $consentN ? 'В журнале записей: <b>' . $consentN . '</b>.' : 'Пока записей нет.' ?> Каждая отправка формы «напишите нам» и запись на встречу сохраняет, кто, когда, с какого IP и с какой редакцией политики согласился. Файлы журнала — в <code>data/consents/</code>.</p>
+</section>
+<section class="ad-card">
 <div class="ad-card__head"><h2>Статьи</h2><a class="ad-btn ad-btn--primary" href="/admin/edit.php">Новая статья</a></div>
+<label class="ad-switch">
+<input type="checkbox" id="news-toggle" <?= $s['news_enabled'] ? 'checked' : '' ?>>
+<span class="ad-switch__track" aria-hidden="true"></span>
+<span id="news-label"><?= $s['news_enabled'] ? 'Новости на сайте показываются: блок на главной, пункты в меню и подвале' : 'Новости скрыты: на главной нет блока, в меню и подвале нет пункта «новости»' ?></span>
+</label>
+<p class="ad-hint">Отдельная страница /news и сами статьи остаются доступны по прямой ссылке. Пока нет ни одной опубликованной статьи, блок не показывается в любом случае.</p>
 <?php if (!$articles): ?>
 <p class="ad-hint">Статей пока нет.</p>
 <?php else: ?>
@@ -105,4 +120,5 @@ admin_head('Панель');
 </section>
 </main>
 <script src="/admin/admin.js"></script>
+<script src="/admin/schedule.js"></script>
 </body></html>

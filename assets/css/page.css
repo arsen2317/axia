@@ -211,16 +211,21 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 }
 @container axia (max-width: 40rem) {
   .axia .sol { --sol-d: calc(100cqw - 4rem); --sol-step: calc(var(--sol-d) + 1rem); }
-  .axia .sol__title { font-size: 3rem; bottom: calc(100% - var(--sol-cy, 60vh) + var(--sol-d) / 2 + var(--sol-d) * 0.1 + 2.5rem); }
+  .axia .sol__title { font-size: min(3rem, 10cqw); bottom: calc(100% - var(--sol-cy, 60vh) + var(--sol-d) / 2 + var(--sol-d) * 0.1 + 2.5rem); }   /* «к нам приходят?» помещается в строку */
 }
 /* «Решения» стоят между «Подходом» и «Командой»: сетка следующих секций сдвинута ещё на экран (фон «Решений» закреплён и занимает ровно экран) */
 .axia .team::before {
   background-position-y: calc(var(--pat-phase, 0px) - 400vh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
   background-position-y: calc(var(--pat-phase, 0px) - 400dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
 }
-.axia .meet::before {
+/* «Новости» — сразу после «Команды»: сетка продолжается без шва; «Обсудить задачу» сдвинута ещё на высоту «Новостей» */
+.axia .news::before {
   background-position-y: calc(var(--pat-phase, 0px) - 400vh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
   background-position-y: calc(var(--pat-phase, 0px) - 400dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
+}
+.axia .meet::before {
+  background-position-y: calc(var(--pat-phase, 0px) - 400vh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 400dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
 }
 /* КОМАНДА: невидимая метка вокруг заголовка, фото и подписей — по ней меню «команда» центрирует блок на экране */
 .axia .team__anchor {
@@ -518,7 +523,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .who__text { font-size: 0.875rem; line-height: 1.4; }
 }
 /* всё ниже «Кто мы» берёт фазу сетки --pat-dn (её считает скрипт): сетка продолжается без шва */
-.axia .dirs, .axia .appr-gap, .axia .appr, .axia .sol, .axia .team, .axia .meet { --pat-phase: var(--pat-dn, 0px); }
+.axia .dirs, .axia .appr-gap, .axia .appr, .axia .sol, .axia .team, .axia .news, .axia .meet { --pat-phase: var(--pat-dn, 0px); }
 /* ---------- НАПРАВЛЕНИЯ: знак → карточки ----------
    Анимация проигрывается сама (не от скролла), поэтому секция — один экран, без закрепления.
    Сетка следующих секций от этого не сдвигается: закреплённый фон и раньше занимал ровно экран.
@@ -864,11 +869,11 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .foot__wl2 { clip-path: inset(0 44.88% 0 29.04%); transition-delay: 0.17s; }
 .axia .foot__wl3 { clip-path: inset(0 28.7% 0 55.12%); transition-delay: 0.29s; }
 .axia .foot__wl4 { clip-path: inset(0 0 0 71.3%); transition-delay: 0.41s; }
-/* десктоп (по макету): подвал ≈ 39% ширины по высоте, верх «ξ» на 11% ширины ниже края подвала,
+/* десктоп (по макету): подвал ≈ 39% ширины по высоте, верх «ξ» на 8% ширины ниже края подвала,
    низ букв срезан нижним краем */
 @container axia (width > 66rem) {
   .axia .foot { min-height: 38.9cqw; align-content: start; }
-  .axia .foot__word { top: 11.15cqw; }
+  .axia .foot__word { top: 8cqw; }   /* по правкам «αξία» чуть выше (было 11.15cqw) */
 }
 @media (prefers-reduced-motion: reduce) { .axia .foot__word { transform: none; transition: none; } }
 /* ===== ПЛАНШЕТ (правки) ===== */
@@ -927,14 +932,13 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   }
 }
 /* ===== О НАС (по черновику, без «αξία» на фоне) =====
-   Секция закреплена: высота = экран + S (S кратно высоте плитки паттерна — сетка дальше без шва).
-   Слева — заголовок, справа — два абзаца сменяют друг друга по фейду (--ab-f 0 → 1 ставит скрипт по прокрутке). */
-.axia .ab { position: relative; height: var(--who-h, 250vh); }
-/* фон-сетка и экран с текстом — два отдельных закреплённых слоя: сетка (z 0) под «заглушкой низа экрана» (z 1),
-   текст (z 2) — над ней */
-.axia .ab__pin { position: sticky; top: 0; z-index: 2; height: 100vh; height: 100dvh; margin-top: -100vh; margin-top: -100dvh; }
+   Один экран без закрепления (высоту --who-h ставит скрипт: экран или сколько нужно тексту).
+   Слева — заголовок, справа — три абзаца сразу, без смены по фейду. */
+.axia .ab { position: relative; height: var(--who-h, 100vh); }
+/* фон-сетка (z 0) и текст (z 2) — отдельные слои; между ними «заглушка низа экрана» (z 1) */
+.axia .ab__pin { position: absolute; inset: 0; z-index: 2; }
 .axia .ab__bg {
-  position: sticky; top: 0; z-index: 0; height: 100vh; height: 100dvh;
+  position: absolute; inset: 0; z-index: 0;
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
   background-position-y: calc(var(--pat-phase, 0px) - 100vh);
   background-position-y: calc(var(--pat-phase, 0px) - 100dvh);
@@ -950,21 +954,18 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   font-family: var(--font-display); font-weight: 700; letter-spacing: 0;
   font-size: clamp(2.25rem, 4cqw, 3.75rem); line-height: 1.08; color: #e8e6e0;
 }
-.axia .ab__side { grid-column: 3 / 5; display: grid; }
+.axia .ab__side { grid-column: 3 / 5; display: flex; flex-direction: column; gap: 1em; }
 .axia .ab__text {
-  grid-area: 1 / 1; margin: 0;
+  margin: 0;
   font-size: clamp(1.125rem, 2.33cqw, 2rem); line-height: 1.22; color: #e8e6e0;
-  will-change: opacity, transform;
 }
-/* по очереди: первый гаснет (первая половина), затем проявляется второй — без наложения текстов */
-.axia .ab__text--1 { opacity: max(0, 1 - 2 * var(--ab-f, 0)); transform: translate3d(0, calc(var(--ab-f, 0) * -1rem), 0); }
-.axia .ab__text--2 { opacity: max(0, 2 * var(--ab-f, 0) - 1); transform: translate3d(0, calc((1 - var(--ab-f, 0)) * 1rem), 0); }
-/* десктоп: заголовок слева мельче — больше воздуха между ним и текстом справа */
+/* десктоп: по сетке — заголовок занимает левую половину (с отступом до центральной вертикали),
+   три абзаца начинаются ровно от центральной вертикали */
 @container axia (width > 66rem) {
-  .axia .ab__title { font-size: clamp(1.875rem, 3.1cqw, 3rem); padding-right: 5cqw; }
-  .axia .ab__text { font-size: clamp(1rem, 1.75cqw, 1.625rem); line-height: 1.32; }   /* правый текст — мельче */
-  /* блок — по центру места ПОД шапкой (под меню), а не всего экрана: визуальный центр чуть ниже середины */
-  .axia .ab__content { align-content: center; padding-top: 5.5rem; padding-bottom: 0; }   /* заголовок не доходит до правого текста: зазор ≈ 5% ширины + промежуток сетки */
+  .axia .ab__content { align-content: center; padding-top: 5.5rem; padding-bottom: 0; }
+  .axia .ab__title { grid-column: 1 / 3; font-size: clamp(1.875rem, 3.1cqw, 3rem); padding-right: 4cqw; }
+  .axia .ab__side { grid-column: 3 / 5; margin-left: calc(var(--col-gap) / -2); font-size: clamp(1rem, 1.6cqw, 1.5rem); }   /* текст — ровно от центральной линии сетки */
+  .axia .ab__text { font-size: 1em; line-height: 1.32; }
 }
 /* планшет и мобильный: заголовок сверху во всю ширину, абзацы под ним */
 @container axia (max-width: 66rem) {
@@ -985,14 +986,10 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .dv__ill { order: 3; flex: none; height: 50%; margin: auto 0 0; align-items: center; }
 }
 @container axia (40rem < width <= 66rem) { .axia .dv__card { padding: 1rem; } .axia .dv__ill { height: 42%; } }
-/* «О НАС», ПЛАНШЕТ И МОБИЛЬНЫЙ: без закрепления и смены абзацев — оба абзаца сразу, друг под другом
-   (планшет — один экран, мобильный — сколько нужно тексту) */
+/* «О НАС», ПЛАНШЕТ И МОБИЛЬНЫЙ: блок — по центру экрана по вертикали (одинаковые поля сверху и снизу — под шапку
+   и кнопку «обсудить задачу»); мобильный — сколько нужно тексту */
 @container axia (max-width: 66rem) {
-  .axia .ab__bg { position: absolute; inset: 0; height: auto; }
-  .axia .ab__pin { position: absolute; inset: 0; height: auto; margin: 0; }
-  .axia .ab__side { display: flex; flex-direction: column; gap: 1.25rem; }
-  .axia .ab__text--1, .axia .ab__text--2 { opacity: 1; transform: none; }
-  /* блок — по центру экрана по вертикали (одинаковые поля сверху и снизу — под шапку и кнопку «обсудить задачу») */
+  .axia .ab__side { gap: 1.25rem; }
   .axia .ab__content { justify-content: center; padding-top: 6rem; padding-bottom: 6rem; }
 }
 /* НАПРАВЛЕНИЯ, десктоп: иллюстрации крупнее */
@@ -1082,6 +1079,14 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
      секция — сколько нужно (сетка дальше сдвигается на лишнюю высоту, см. --appr-extra) */
   .axia .dirs { height: auto; }
   .axia .dirs__bg { position: absolute; inset: 0; height: auto; }
+  /* сетка ниже шва (середина последней карточки) сдвинута на --dirs-shift — как у «Решений» и всего, что ниже
+     (сдвиг считает скрипт, чтобы круги «Решений» легли на круги сетки при постоянном зазоре между блоками) */
+  .axia .dirs__bg::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; top: var(--dirs-seam, 100%);
+    background: inherit;
+    background-position-y: calc(var(--pat-phase, 0px) - 100vh - var(--dirs-seam, 0px) + var(--dirs-shift, 0px));
+    background-position-y: calc(var(--pat-phase, 0px) - 100dvh - var(--dirs-seam, 0px) + var(--dirs-shift, 0px));
+  }
   .axia .dirs__sticky { position: relative; height: auto; margin-top: 0; overflow: visible; padding: 6.25rem var(--gutter) 3rem; }
   .axia .dv__svg { display: none; }
   .axia .dv__title { position: relative; top: auto; left: auto; right: auto; margin: 0 0 2rem; }
@@ -1166,9 +1171,180 @@ html { -webkit-tap-highlight-color: transparent; }
 .axia .cal--form .cal__head { flex-direction: column; align-items: flex-start; }
 /* «ключевая команда»: на десктопе — в две строки, на планшете и мобильном перенос по ширине */
 .axia .tm__br { display: inline; }   /* «ключевая / команда» — всегда в две строки */
-/* НАПРАВЛЕНИЯ, карточки: текст по центру; на десктопе название всегда в две строки (перенос — <br class="dv__br">
+/* НАПРАВЛЕНИЯ, карточки: текст по левому краю (заголовок раздела — по центру); на десктопе название всегда в две строки (перенос — <br class="dv__br">
    в разметке, на второй строке не меньше двух слов), кегль уменьшается на узких экранах, чтобы строки не переносились */
-.axia .dv__name, .axia .dv__desc { text-align: center; }
+.axia .dv__name, .axia .dv__desc { text-align: left; }
 @container axia (width > 66rem) {
   .axia .dv__name { white-space: nowrap; font-size: min(1.5rem, 1.75cqw); }
 }
+
+/* ссылка в тексте о команде (книги Андрея) */
+.axia .tm__link { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; text-decoration-color: currentColor; transition: opacity 0.2s ease; }
+@media (hover: hover) { .axia .tm__link:hover { opacity: 0.7; } }
+
+/* ПЛАШКА О COOKIE (assets/js/cookies.js): слева внизу на десктопе; на планшете и мобильном — над кнопкой «обсудить задачу» */
+.cookie {
+  position: fixed; z-index: 1000; left: 2.5rem; bottom: 2rem;
+  box-sizing: border-box; width: min(38rem, calc(100vw - 2rem));
+  display: flex; align-items: center; gap: 1.25rem;
+  padding: 1rem 1rem 1rem 1.25rem; border-radius: 0.75rem;
+  background: #1e2f63; color: #e8e6e0; border: 1px solid rgba(232, 230, 224, 0.14);
+  box-shadow: 0 0.75rem 2.5rem rgba(10, 18, 45, 0.35);
+  font-family: 'Golos Text', system-ui, sans-serif; font-size: 0.875rem; line-height: 1.35;
+  opacity: 0; transform: translateY(1rem); transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.cookie.is-on { opacity: 1; transform: none; }
+.cookie__text { margin: 0; flex: 1 1 auto; }
+.cookie__link { color: inherit; text-decoration: underline; text-underline-offset: 0.15em; text-decoration-color: rgba(232, 230, 224, 0.5); }
+.cookie__link:hover { text-decoration-color: currentColor; }
+.cookie__btn {
+  flex: none; cursor: pointer; border: 0; border-radius: 0.5rem; padding: 0.625rem 1.125rem;
+  background: #e8e6e0; color: #1e2f63; font: inherit; font-weight: 600; transition: background-color 0.2s ease;
+}
+.cookie__btn:hover { background: #ffffff; }
+.cookie__actions { flex: none; display: flex; gap: 0.5rem; }
+/* «Отклонить» — равноценная кнопка, только контурная (выбор не навязывается) */
+.cookie__btn--ghost { background: transparent; color: #e8e6e0; box-shadow: inset 0 0 0 1px rgba(232, 230, 224, 0.45); }
+.cookie__btn--ghost:hover { background: rgba(232, 230, 224, 0.12); }
+.cookie__btn:focus-visible, .cookie__link:focus-visible { outline: 2px solid #e8e6e0; outline-offset: 2px; }
+@media (max-width: 1056px) {
+  .cookie { left: 50%; bottom: 6.25rem; transform: translate(-50%, 1rem); }
+  .cookie.is-on { transform: translate(-50%, 0); }
+}
+@media (max-width: 640px) {
+  .cookie { bottom: 5.25rem; flex-direction: column; align-items: stretch; gap: 0.75rem; padding: 1rem; }
+  .cookie__actions { width: 100%; }
+  .cookie__btn { flex: 1 1 0; }
+}
+@media (prefers-reduced-motion: reduce) { .cookie { transition: none; } }
+
+/* ===== НОВОСТИ (главная): заголовок, ссылка на все новости, три последние статьи =====
+   Между «Командой» и «Обсудить задачу», на той же сетке (фон — ::before, фазу считает скрипт через --team-h).
+   Карточки — того же тёмно-синего цвета, что карточки «Направлений» */
+.axia .news { position: relative; padding: 7.5rem var(--gutter) 6rem; }
+/* фон (сетка) — под «заглушкой низа экрана», как у «Обсудить задачу»; заголовок и карточки — над ней */
+.axia .news__head, .axia .news__list { position: relative; z-index: 2; }
+.axia .news::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background-color: var(--bg); background-image: url("../img/pattern.svg"); background-size: 100% auto; background-repeat: repeat-y;
+  background-position-x: center;
+}
+@media (orientation: portrait) { .axia .news::before { background-image: url("../img/pattern-portrait.svg"); } }
+.axia .news__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; margin: 0 0 3rem; }
+.axia .news__title { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 4.5rem; line-height: 0.95; letter-spacing: 0; color: #e8e6e0; }
+.axia .news__all {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0;
+  font-size: 1.0625rem; color: #e8e6e0; text-decoration: underline; text-underline-offset: 0.2em;
+  text-decoration-color: rgba(232, 230, 224, 0.45); transition: text-decoration-color 0.2s ease;
+}
+.axia .news__all svg { width: 1rem; height: 1rem; flex: none; transition: transform 0.2s ease; }
+@media (hover: hover) { .axia .news__all:hover { text-decoration-color: currentColor; } .axia .news__all:hover svg { transform: translateX(0.2rem); } }
+.axia .news__all:focus-visible, .axia .news__link:focus-visible { outline: 2px solid #e8e6e0; outline-offset: 3px; border-radius: 0.25rem; }
+.axia .news__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.axia .news__link {
+  display: flex; flex-direction: column; height: 100%; overflow: hidden; border-radius: 0.75rem;
+  background: #1e2f63; color: #e8e6e0; text-decoration: none; transition: background-color 0.2s ease;
+}
+@media (hover: hover) { .axia .news__link:hover { background: #243870; } .axia .news__link:hover .news__cover img { transform: scale(1.03); } }
+.axia .news__cover { display: block; aspect-ratio: 16 / 10; overflow: hidden; background: #253a77; }   /* без обложки — просто тёмный фон */
+.axia .news__cover img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.axia .news__body { display: flex; flex-direction: column; gap: 0.5rem; padding: 1.25rem 1.5rem 1.5rem; }
+.axia .news__date { font-size: 0.875rem; color: rgba(232, 230, 224, 0.65); }
+.axia .news__name { font-size: 1.25rem; font-weight: 700; line-height: 1.25; }
+.axia .news__desc { font-size: 0.9375rem; line-height: 1.4; color: rgba(232, 230, 224, 0.8); }
+@container axia (max-width: 66rem) {
+  .axia .news { padding-top: 6rem; padding-bottom: 4.5rem; }
+  .axia .news__title { font-size: 4rem; }
+  /* планшет: три карточки друг под другом, обложка слева */
+  .axia .news__list { grid-template-columns: minmax(0, 1fr); }
+  .axia .news__link { flex-direction: row; }
+  .axia .news__cover { flex: none; width: 40%; aspect-ratio: 16 / 10; }
+  .axia .news__body { justify-content: center; }
+}
+@container axia (max-width: 40rem) {
+  .axia .news { padding-top: 5rem; padding-bottom: 3.5rem; }
+  .axia .news__head { margin-bottom: 2rem; }
+  .axia .news__title { font-size: 2.75rem; }
+  .axia .news__list { gap: 0.75rem; }
+  .axia .news__link { flex-direction: column; }
+  .axia .news__cover { width: auto; }
+  .axia .news__body { padding: 1rem 1.25rem 1.25rem; }
+}
+/* планшет и мобильный: у верха «Обсудить задачу» сетка не видна — сетка «Новостей» плавно гаснет к низу блока */
+@container axia (max-width: 66rem) {
+  .axia .news::before {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 9rem), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 9rem), transparent);
+  }
+}
+
+/* ===== НАПРАВЛЕНИЯ, ВЕРСИЯ 1: СВЕТЛЫЕ КАРТОЧКИ =====
+   (версия 2 — тёмные карточки с крупными иллюстрациями — коммит 04b67c1)
+   Карточки — светлые, #EFEDF9; название и описание — синие.
+   Иллюстрации нарисованы светло-лавандовыми градиентами под тёмный фон; на светлом их цвета сдвинуты темнее
+   (та же гамма, на 1–2 ступени насыщеннее), чтобы объём и свет читались так же */
+.axia .dv-p { fill: #EFEDF9; }
+.axia .dv__name { color: var(--bg, #2c4595); }   /* название — цвета синего фона сайта */
+.axia .dv__desc { color: rgba(30, 47, 99, 0.82); }
+@container axia (max-width: 66rem) { .axia .dv__card { background: #EFEDF9; } }
+/* иллюстрации: светлый вариант — от почти белого до насыщенного синего (тон — близкий к #2c4595, сайта) */
+.axia .dv__art { --dv-w: #EEF2FE; --dv-l: #A3B7F4; --dv-m: #5A7BE6; --dv-v: #2A4FD4; }
+.axia .dv__art stop[stop-color="#DADFFA"], .axia .dv__art stop[stop-color="#DBE0FA"],
+.axia .dv__art stop[stop-color="#D8DDFA"], .axia .dv__art stop[stop-color="#D5DBFA"] { stop-color: var(--dv-w); }
+.axia .dv__art stop[stop-color="#C2CBF7"], .axia .dv__art stop[stop-color="#C2CBF8"], .axia .dv__art stop[stop-color="#C8D0FA"],
+.axia .dv__art stop[stop-color="#CCD3F8"], .axia .dv__art stop[stop-color="#B9C4F7"] { stop-color: var(--dv-l); }
+.axia .dv__art stop[stop-color="#9DAEF2"], .axia .dv__art stop[stop-color="#94A6F0"],
+.axia .dv__art stop[stop-color="#8A9DEE"], .axia .dv__art stop[stop-color="#8399EE"] { stop-color: var(--dv-m); }
+.axia .dv__art stop[stop-color="#6A82E8"], .axia .dv__art stop[stop-color="#6680E6"],
+.axia .dv__art stop[stop-color="#5F79E6"], .axia .dv__art stop[stop-color="#5D78E6"] { stop-color: var(--dv-v); }
+/* диски и пластины: центр светлый, к краям — насыщенный синий (обратно исходному варианту для тёмного фона) */
+.axia #dvp-disc stop:nth-child(1), .axia #dvl-plate stop:nth-child(1) { stop-color: var(--dv-w); }
+.axia #dvp-disc stop:nth-child(2), .axia #dvl-plate stop:nth-child(2) { stop-color: var(--dv-l); }
+.axia #dvp-disc stop:nth-child(3), .axia #dvl-plate stop:nth-child(3) { stop-color: var(--dv-m); }
+.axia #dvp-disc stop:nth-child(4), .axia #dvl-plate stop:nth-child(4) { stop-color: var(--dv-v); }
+/* октаэдр (по образцу): грани наливаются синим к внутренним рёбрам и к левой вершине; самые светлые места —
+   бледно-голубые (--dv-p), а не белые, чтобы все вершины читались на светлой карточке.
+   Все рёбра — синие, как в исходнике (передние гаснут к краям, задние просвечивают сквозь грани) */
+.axia .dv__art { --dv-p: #CBD6F8; }
+.axia #dvo-gTL stop:nth-child(1) { stop-color: var(--dv-p); }
+.axia #dvo-gTL stop:nth-child(2) { stop-color: var(--dv-m); }
+.axia #dvo-gTL stop:nth-child(3) { stop-color: var(--dv-v); }
+.axia #dvo-gTR stop:nth-child(1) { stop-color: var(--dv-v); }
+.axia #dvo-gTR stop:nth-child(2) { stop-color: var(--dv-l); }
+.axia #dvo-gTR stop:nth-child(3) { stop-color: var(--dv-p); }
+.axia #dvo-gBL stop:nth-child(1) { stop-color: var(--dv-p); }
+.axia #dvo-gBL stop:nth-child(3) { stop-color: var(--dv-v); }
+.axia #dvo-gBR stop:nth-child(2) { stop-color: var(--dv-m); }
+.axia #dvo-gBR stop:nth-child(3) { stop-color: var(--dv-p); }
+/* слои: кромки между пластинами — еле заметные светлые линии */
+.axia #dvl-rim stop { stop-color: var(--dv-l); }
+/* края дисков — насыщенные, без светлой обводки */
+.axia #dvp-rim stop { stop-color: var(--dv-v); }
+/* просвечивание второго слоя на верхней пластине — синим тоном, а не тёмно-серым */
+.axia .dv__art [fill="#1E2F63"] { fill: var(--dv-v); }
+/* стрелка — насыщенная синяя целиком (линия и кончик) */
+.axia #dvp-arrowFade stop { stop-color: var(--dv-v); }
+.axia .dv__art [stroke="#DADFFA"] { stroke: var(--dv-v); }
+/* НАПРАВЛЕНИЯ: верхний отступ карточки на 6px меньше бокового — компенсирует межстрочный зазор над первой строкой названия,
+   чтобы текст визуально стоял на том же расстоянии от края, что и слева */
+@container axia (width > 66rem) { .axia .dv__card { padding-top: calc(2rem - 6px); } }
+@container axia (40rem < width <= 66rem) { .axia .dv__card { padding-top: calc(2.5rem - 6px); } }
+@container axia (max-width: 40rem) { .axia .dv__card { padding-top: calc(1.75rem - 6px); } }
+/* НАПРАВЛЕНИЯ: иллюстрации — крупно и внизу, срезаны краем карточки (размер и положение — как в версии 2, коммит 04b67c1) */
+@container axia (max-width: 66rem) { .axia .dv__card { overflow: hidden; } }
+.axia .dv__ill .dv__art { transform: translateY(var(--dv-art-y, 30%)) scale(var(--dv-art-k, 2)); transform-origin: 50% 50%; }
+.axia .dv__card--0 { --dv-art-y: 40%; }
+.axia .dv__card--1 { --dv-art-y: 32%; }
+.axia .dv__card--2 { --dv-art-y: 36%; }
+
+/* ===== НАПРАВЛЕНИЯ, ВЕРСИЯ 4: ТЁМНЫЕ КАРТОЧКИ =====
+   (версия 3 — светлые карточки с крупными иллюстрациями — коммит afa913d)
+   Всё как в версии 3, но карточки тёмно-синие (как в версии 2), текст светлый (размер прежний),
+   иллюстрации — та же форма и тот же свет, гамма сдвинута светлее и ярче, чтобы читаться на тёмном */
+.axia .dv-p { fill: #1c2a6c; }
+.axia .dv__name { color: #e8e6e0; }
+.axia .dv__desc { color: rgba(232, 230, 224, 0.82); }
+@container axia (max-width: 66rem) { .axia .dv__card { background: #1c2a6c; } }
+.axia .dv__art { --dv-w: #E6ECFE; --dv-l: #A6BAF6; --dv-m: #6787EE; --dv-v: #3B5FE6; --dv-p: #B9C9F8; }
+.axia #dvp-arrowFade stop { stop-color: var(--dv-l); }        /* стрелка — светлая, на тёмном фоне */
+.axia .dv__art [stroke="#DADFFA"] { stroke: var(--dv-l); }

@@ -91,15 +91,16 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   bottom: 0;
   width: 98.4%;
   height: auto;
-  /* svg выше видимой части: утапливаем низ букв за край экрана */
-  transform: translate(-50%, 38.2%);
+  /* svg выше видимой части: утапливаем низ букв за край экрана (по правкам — чуть меньше, буквы выше);
+     затем ниже ровно на 3 строки текстовой сетки фона (--hd-row ставит скрипт: 19px на десктопе, 11px на мобильном) */
+  transform: translate(-50%, calc(30% + 3 * var(--hd-row, 0px)));
   pointer-events: none;
   user-select: none;
 }
 @media (orientation: portrait) {
   .hero { background-image: url("../img/pattern-portrait.svg"); }
   /* буквы чуть подняты: низ обрезается меньше, чем на десктопе; по бокам чуть шире экрана */
-  .hero__word { width: 104.6%; transform: translate(-50%, 28%); }
+  .hero__word { width: 104.6%; transform: translate(-50%, calc(28% + 3 * var(--hd-row, 0px))); }
 }
 
 /* ---------- ФОН: паттерн рисуется в WebGL (мерцание по сетке + отклик на курсор) ----------
@@ -212,15 +213,16 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 @media (hover: hover) { .nav:hover .nav__icon { color: var(--ink); } }
 .nav.is-open .nav__icon, .nav:has(:focus-visible) .nav__icon { color: var(--ink); }
 
-/* планшет и мобильный: простой бургер из двух полосок, по тапу превращается в крестик */
+/* планшет и мобильный: бургер из трёх полосок (как на десктопе), по тапу превращается в крестик */
 .nav__icon--touch { display: none; }
 .nav__icon--touch rect {
   transform-box: view-box;
   transform-origin: 10px 10px;
-  transition: transform 0.35s cubic-bezier(.65, 0, .35, 1);
+  transition: transform 0.35s cubic-bezier(.65, 0, .35, 1), opacity 0.2s ease;
 }
-.nav.is-open .nav__icon--touch rect:nth-of-type(1) { transform: rotate(45deg) translateY(3.5px); }
-.nav.is-open .nav__icon--touch rect:nth-of-type(2) { transform: rotate(-45deg) translateY(-3.5px); }
+.nav.is-open .nav__icon--touch rect:nth-of-type(1) { transform: rotate(45deg) translateY(6.5px); }
+.nav.is-open .nav__icon--touch rect:nth-of-type(2) { opacity: 0; transform: scaleX(0.2); }
+.nav.is-open .nav__icon--touch rect:nth-of-type(3) { transform: rotate(-45deg) translateY(-6.5px); }
 
 
 
@@ -668,8 +670,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   height: 100vh; height: 100dvh;
   margin-inline: calc(-1 * var(--gutter));
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
-  background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px) - var(--team-h, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px) - var(--team-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
 }
 @media (orientation: portrait) { .meet::before { background-image: url("../img/pattern-portrait.svg"); } }
 

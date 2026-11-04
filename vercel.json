@@ -1,5 +1,8 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/consent", "destination": "/privacy", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/news", "destination": "/demo/news" },
     { "source": "/news/", "destination": "/demo/news" },

@@ -3,7 +3,7 @@
  * Пересобирает статические страницы с общей шапкой и подвалом (lib/partials/*.html):
  *   php tools/build-pages.php
  * Содержимое страницы (всё внутри <main>…</main>) берётся из самого файла, поэтому текст политики и согласия
- * правится прямо в privacy.html / consent.html, а этот скрипт нужен после изменений шапки или подвала.
+ * правится прямо в privacy.html, а этот скрипт нужен после изменений шапки или подвала.
  */
 declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
@@ -17,7 +17,6 @@ $demoHead = '<meta name="robots" content="noindex">' . "\n" . '<link rel="styles
 
 $pages = [
     'privacy.html' => ['Политика обработки персональных данных — аксиа', 'Как ООО «Аксиа Консалтинг» обрабатывает и защищает персональные данные пользователей сайта', 'Документы', $csp, '', ''],
-    'consent.html' => ['Согласие на обработку персональных данных — аксиа', 'Согласие на обработку персональных данных пользователей сайта axiagroup.ru', 'Документы', $csp, '', ''],
     /* демо-режим для Vercel (см. demo/demo.js) */
     'demo/news.html' => ['Новости — аксиа', '', 'Новости', $demoHead, ' data-demo="news"', '<script src="/demo/demo.js"></script>' . "\n"],
     'demo/article.html' => ['Статья — аксиа', '', 'Новости', $demoHead, ' data-demo="article"', '<script src="/demo/demo.js"></script>' . "\n"],

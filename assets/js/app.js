@@ -29,6 +29,16 @@ class Page extends DCLogic {
     this.setApprSection = (el) => { this.apprSec = el; if (el) this.updateAppr(); };
     this.solSec = null;
     this.setSol = (el) => { this.solSec = el; if (el) this.updateSol(); };
+    /* НОВОСТИ: блок появляется после загрузки статей — пересчитываем сетку (высота блока сдвигает фон «Обсудить задачу»)
+       и, если пришли по ссылке /#news с другой страницы, докручиваем к нему */
+    this.setNews = (el) => {
+      if (!el || el === this.newsSec) { this.newsSec = el; return; }
+      this.newsSec = el;
+      requestAnimationFrame(() => {
+        this.onScroll && this.onScroll();
+        if (location.hash === '#news' && !this.newsJumped) { this.newsJumped = true; el.scrollIntoView({ block: 'start' }); }
+      });
+    };
     this.wordsPanel = null;
     this.setWordsPanel = (el) => {
       if (el === this.wordsPanel) return;
@@ -38,7 +48,7 @@ class Page extends DCLogic {
     };
     this.setSection = (el) => { this.sec = el; if (el) { this.updateDirs(); this.updateDv(); } };
     this.whoSec = null;
-    this.setWho = (el) => { this.whoSec = el; if (el) { this.updateWho(); this.updateAb(); } };
+    this.setWho = (el) => { this.whoSec = el; if (el) { this.updateWho(); } };
     this.root = null;
     this.setRoot = (el) => { this.root = el; };
     this.fieldCanvas = null;
@@ -65,7 +75,7 @@ class Page extends DCLogic {
       if (!this.snapAnim) this.snapT = setTimeout(() => this.snapWho(), 220);
       if (this.ticking) return;
       this.ticking = true;
-      requestAnimationFrame(() => { this.ticking = false; this.updateLabel(); this.updateDirs(); this.updateDv(); this.updateWho(); this.updateAb(); this.updateTmPages(); this.updateAppr(); this.updateSol(); });
+      requestAnimationFrame(() => { this.ticking = false; this.updateLabel(); this.updateDirs(); this.updateDv(); this.updateWho(); this.updateTmPages(); this.updateAppr(); this.updateSol(); });
     };
     this.updateLabel = () => {
       /* ищем секции по всему документу: ref корневого элемента в редакторе может не приходить */
@@ -454,7 +464,7 @@ void main(){
      до момента, когда центр круга дошёл до центра свободной области экрана. Скролл страницы не меняется */
   /* ДОВОДЧИК ЭКРАНОВ: прокрутка обычная; когда остановились (≈0,15 с без движения), страница плавно доезжает
      до ближайшего экрана с учётом направления: прокрутили вниз дальше 15% экрана от экрана — едем к следующему,
-     меньше — возвращаемся. Экраны: hero, «о нас» (1-й и 2-й абзац), «направления», «решения», «команда»,
+     меньше — возвращаемся. Экраны: hero, «о нас», «направления», «решения», «команда»,
      «обсудить задачу». Внутри «решений», высокой «команды» и «обсудить задачу» с подвалом — без доводки.
      Любое касание колеса / пальца / клавиш прерывает доводку. Десктоп и планшет; на мобильном — без доводки. */
   startPaging() {
@@ -489,6 +499,8 @@ void main(){
       }
       const team = q('.team');
       if (team) { const t = at(team); pts.push(t); if (team.offsetHeight > vh + 4) { pts.push(t + team.offsetHeight - vh); free.push([t, t + team.offsetHeight - vh]); } }
+      const news = q('.news');
+      if (news) { const t = at(news); pts.push(t); free.push([t, t + news.offsetHeight]); }   /* внутри «Новостей» — без доводки */
       const meet = q('.meet');
       if (meet) { const t = at(meet); pts.push(t); free.push([t, max + 1]); }
       const P = [...new Set(pts.filter((v) => v != null).map((v) => Math.min(Math.max(v, 0), max)))].sort((a, b) => a - b);
@@ -551,15 +563,6 @@ void main(){
       win.removeEventListener('wheel', onInput); win.removeEventListener('mousedown', onInput); win.removeEventListener('keydown', onInput);
       win.removeEventListener('touchstart', onTouchStart); win.removeEventListener('touchend', onTouchEnd);
     };
-  }
-  /* «О НАС»: смена абзацев справа по фейду — от прогресса закреплённой секции */
-  updateAb() {
-    const sec = this.whoSec; if (!sec || !sec.classList.contains('ab')) return;
-    const vh = (sec.ownerDocument.defaultView || window).innerHeight;
-    const r = sec.getBoundingClientRect(), S = Math.max(1, sec.offsetHeight - vh);
-    const p = Math.min(Math.max(-r.top / S, 0), 1);
-    const t = Math.min(Math.max((p - 0.3) / 0.4, 0), 1);
-    sec.style.setProperty('--ab-f', (t * t * (3 - 2 * t)).toFixed(3));
   }
   updateWho() {
     const sec = this.whoSec; if (!sec) return;
@@ -704,9 +707,14 @@ void main(){
     if (n !== this.state.tmPageN) upd.tmPageN = n;
     if ((this.state.tmPage || 0) > n - 1) upd.tmPage = n - 1;
     if (Object.keys(upd).length) this.setState(upd);
+    /* анимация текста — только при листании страниц внутри карточки. При смене участника карточка и так проявляется
+       сама (CSS), а анимация описания в тот же кадр, когда карточка становится видимой, в Safari иногда оставляла
+       описание пустым до следующего клика */
+    const cards2 = tm.querySelectorAll('.tm__card');
+    cards2.forEach((c) => { const f = c.querySelector('.tm__flow'); if (f && f.getAnimations) f.getAnimations().forEach((a) => a.cancel()); });
     if (anim) {
-      const card = tm.querySelectorAll('.tm__card')[cur], flow = card && card.querySelector('.tm__flow');
-      if (flow && flow.animate) flow.animate([{ opacity: 0, transform: 'translateX(0.75rem)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'ease' });
+      const card = cards2[cur], flow = card && card.querySelector('.tm__flow');
+      if (flow && flow.animate) flow.animate([{ opacity: 0, transform: 'translateX(0.75rem)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'ease', fill: 'none' });
     }
   }
   /* класс абзаца описания: на какой странице он (карта — из updateTmPages; до замера: основное / подробнее) */
@@ -806,20 +814,20 @@ void main(){
         cy -= vh;                                       /* центр круга «О нас» от верха секции */
         for (let i = 0; i < 20 && cy < bh / 2 + 2 * px; i++) cy += P2;   /* текст не заходит выше начала секции */
         let hs;
-        /* «О НАС» закреплена: высота = экран + S, S кратно высоте плитки паттерна (сетка дальше без шва) */
-        const tileH = portrait ? 690 * W / 768 : 566 * W / 1200;
-        const S = Math.max(1, Math.round((1.5 * vh) / tileH)) * tileH;
-        if (W <= 1056) {
-          /* планшет и мобильный: не закрепляется — оба абзаца сразу; высота — экран или сколько нужно тексту */
+        {
+          /* не закрепляется — все абзацы сразу; высота — экран или сколько нужно тексту
+             (десктоп: заголовок и текст в две колонки — считаем по самой высокой) */
           const abc = root.querySelector('.ab__content');
           let need = vh;
           if (abc) {
             const cs = getComputedStyle(abc), kids = Array.from(abc.children);
-            need = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0)
-              + kids.reduce((a, k) => a + k.offsetHeight, 0) + (parseFloat(cs.rowGap) || 0) * Math.max(0, kids.length - 1);
+            const pads = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+            need = cs.display === 'grid'
+              ? pads + Math.max(0, ...kids.map((k) => k.offsetHeight)) + 4 * px
+              : pads + kids.reduce((a, k) => a + k.offsetHeight, 0) + (parseFloat(cs.rowGap) || 0) * Math.max(0, kids.length - 1);
           }
           hs = Math.max(vh, Math.ceil(need));
-        } else hs = vh + S;
+        }
         D = H - hs;
         this.patPhase = H; this.patDn = D;
         this.whoCy = cy; this.whoR = rr; this.whoT = (top0 + bot0) / 2;
@@ -866,7 +874,7 @@ void main(){
         /* «Подхода» нет: в формулах сетки ниже его экран (vh) больше не участвует — компенсируем отрицательной «лишней высотой» */
         /* мобильный: «Направления» выше экрана (карточки друг под другом) — сетка следующих секций сдвигается на эту разницу */
         const dirsEl = root.querySelector('#directions');
-        const apprExtra = -vh + (W <= 1056 && dirsEl ? Math.max(0, dirsEl.offsetHeight - vh) : 0);
+        let apprExtra = -vh + (W <= 1056 && dirsEl ? Math.max(0, dirsEl.offsetHeight - vh) : 0);
         root.style.setProperty('--appr-extra', apprExtra.toFixed(1) + 'px');
         /* «Решения» (между «Подходом» и «Командой»): центр ряда кругов — на горизонтальной линии сетки.
            Фон «Решений» закреплён и показывает сетку со сдвигом 3vh + gap + apprExtra − phase */
@@ -911,26 +919,29 @@ void main(){
           if (W <= 1056 && d) {
             const sbg = sol.querySelector('.sol__bg'), trk = sol.querySelector('.sol__track');
             if (sbg && trk && ttl) {
-              const tile = portrait ? 690 * W / 768 : 566 * W / 1200, c0 = portrait ? 235 * W / 768 : 259 * W / 1200;
+              const tile = portrait ? 690 * W / 768 : 566 * W / 1200, c0g = portrait ? 235 * W / 768 : 259 * W / 1200;
               const bpy = parseFloat(getComputedStyle(sbg).backgroundPositionY) || 0;
-              let c = ((bpy + c0) % tile + tile) % tile;
-              if (true) {
-                /* планшет и мобильный: круг сетки — первый, над которым помещается заголовок; заголовок ставим прямо над кругом
-                   (не заголовок диктует круг, а круг — заголовок), без пустого шага сетки между ними */
-                const tH = ttl.offsetHeight, head = 6.25 * px, gapT = 2.5 * px, over = d * 0.09;
-                while (c - 0.41 * d - over - gapT - tH < head) c += tile;
-                const tTop = c - 0.41 * d - over - gapT - tH;
-                sol.style.setProperty('--sol-pt', tTop.toFixed(1) + 'px');
-                sol.style.setProperty('--sol-mt', (c - d / 2 - tTop - tH).toFixed(1) + 'px');
-              } else {
-                sol.style.removeProperty('--sol-pt');
-                const tBot = ttl.offsetTop + ttl.offsetHeight;
-                const minTop = tBot + 1.5 * px + d * 0.09;              /* номер выступает над кругом */
-                while (c - d / 2 < minTop) c += tile;
-                sol.style.setProperty('--sol-mt', (c - d / 2 - tBot).toFixed(1) + 'px');
+              const c0 = ((bpy + c0g) % tile + tile) % tile;     /* центр круга сетки (без сдвига) от верха секции */
+              /* планшет и мобильный: отступ от «Направлений» до заголовка всегда один и тот же, первый круг — прямо под
+                 заголовком. Чтобы круг лёг на круг фоновой сетки, сдвигаем саму сетку (а не контент — иначе зазор между
+                 блоками «прыгал» бы на высоту плитки): сетка «Решений» и всего, что ниже, опускается на shift, а шов
+                 спрятан за последней карточкой «Направлений» (там сетку видно только в узких полях) */
+              const tH = ttl.offsetHeight, head = 6.25 * px, gapT = 2.5 * px, over = d * 0.09;
+              const tTop = head, c = tTop + tH + gapT + over + 0.41 * d;
+              const shift = ((c - c0) % tile + tile) % tile;
+              sol.style.setProperty('--sol-pt', tTop.toFixed(1) + 'px');
+              sol.style.setProperty('--sol-mt', (c - d / 2 - tTop - tH).toFixed(1) + 'px');
+              apprExtra -= shift;
+              root.style.setProperty('--appr-extra', apprExtra.toFixed(1) + 'px');
+              root.style.setProperty('--dirs-shift', shift.toFixed(1) + 'px');
+              const cards = dirsEl ? dirsEl.querySelectorAll('.dv__card') : [];
+              const last = cards.length ? cards[cards.length - 1] : null;
+              if (last) {
+                const lr = last.getBoundingClientRect(), dr = dirsEl.getBoundingClientRect();
+                root.style.setProperty('--dirs-seam', (lr.top - dr.top + lr.height / 2).toFixed(1) + 'px');
               }
             }
-          } else sol.style.removeProperty('--sol-mt');
+          } else { sol.style.removeProperty('--sol-mt'); root.style.setProperty('--dirs-shift', '0px'); }
           if (d && this.solFitKey !== d) { this.solFitKey = d; this.fitSolText(sol, d); }
         }
         const C0 = 4 * vh - ph + gap + apprExtra;        /* координата сетки у верхнего края секции (+ экран «Решений») */
@@ -940,6 +951,9 @@ void main(){
         team.style.setProperty('--team-step', (portrait ? 2 * P : P).toFixed(1) + 'px');   /* крупные фото — через две линии сетки */
         /* высота «Команды» — чтобы сетка следующего блока продолжилась без шва */
         root.style.setProperty('--team-h', team.offsetHeight + 'px');
+        /* «Новости» между «Командой» и «Обсудить задачу»: их высота сдвигает сетку «Обсудить задачу» и подвала */
+        const newsEl = root.querySelector('.news'), newsH = newsEl ? newsEl.offsetHeight : 0;
+        root.style.setProperty('--news-h', newsH + 'px');
         /* КОМАНДА, десктоп: список участников прижат к низу; если там он налезает на пиджак на фото
            (широкий и невысокий экран) — поднимаем его под заголовок */
         {
@@ -959,7 +973,7 @@ void main(){
         /* ПОДВАЛ: низ «Обсудить задачу» — на ближайшей горизонтальной линии сетки, в подвале сетка продолжается.
            Фон «Обсудить задачу» (закреплённый слой) начинается с фазы bpy; его высоту добираем до линии (--meet-cut) */
         {
-          const bpy = ph - 4 * vh - gap - apprExtra - team.offsetHeight;
+          const bpy = ph - 4 * vh - gap - apprExtra - team.offsetHeight - newsH;
           let cut = (bpy + y0 - vh) % P; if (cut < 0) cut += P;
           if (cut > P - 0.5) cut = 0;
           root.style.setProperty('--meet-cut', cut.toFixed(1) + 'px');
@@ -1361,13 +1375,41 @@ void main(){
     const d = sel ? this.keyDate(sel) : this.today;
     this.setState({ selKey: sel, calY: d.getFullYear(), calM: d.getMonth() });
   }
+  /* демо на Vercel: три последние статьи из демо-админки (этот браузер) или примеры, если админку ещё не открывали;
+     блок скрыт, если новости выключены в демо-админке */
+  demoNews() {
+    let set = {}, arts = null;
+    try { set = JSON.parse(localStorage.getItem('axia-demo-settings')) || {}; } catch (e) { set = {}; }
+    if (set.newsEnabled === false) return [];
+    try { arts = JSON.parse(localStorage.getItem('axia-demo-articles')); } catch (e) { arts = null; }
+    const d0 = new Date(), ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const ago = (n) => { const d = new Date(d0); d.setDate(d.getDate() - n); return ymd(d); };
+    if (!Array.isArray(arts)) arts = [
+      { slug: 'kak-tsennosti-stanovyatsya-strategiey', title: 'Как ценности становятся стратегией', status: 'published', published_at: ago(2), cover: '', description: 'Пример статьи: почему корпоративные ценности работают только тогда, когда из них вырастают решения и правила.' },
+      { slug: 'otchet-ob-ustoychivom-razvitii', title: 'Отчёт об устойчивом развитии: с чего начать', status: 'published', published_at: ago(9), cover: '', description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.' },
+      { slug: 'sotsialnye-programmy-dlya-territoriy', title: 'Социальные программы для территорий', status: 'published', published_at: ago(20), cover: '', description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.' }
+    ];
+    const today = ymd(d0);
+    return arts.filter((a) => a.status === 'published' && a.published_at <= today)
+      .sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(0, 3)
+      .map((a) => ({ title: a.title, description: a.description || '', date: a.published_at, dateLabel: this.ruDate(a.published_at), cover: String(a.cover || '').indexOf('/demo/img/') === 0 ? '' : (a.cover || ''), url: '/news/' + a.slug }));
+  }
+  ruDate(ymd) {
+    const m = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const [y, mo, d] = ymd.split('-').map(Number);
+    return d + ' ' + m[mo - 1] + ' ' + y;
+  }
+  /* демо: расписание из демо-админки (этот браузер) или пн–пт 13:00–18:00; часть слотов «занята» — как будто в календаре */
   demoSlots() {
+    let sched = null;
+    try { sched = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).schedule || null; } catch (e) { sched = null; }
     const out = [];
     for (let i = 1; i <= 60; i++) {
       const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i);
-      const wd = d.getDay(), key = this.dayKey(d);
-      if (wd === 0 || wd === 6 || this.hash(key) % 5 === 0) continue;
-      for (let m = 13 * 60; m <= 18 * 60; m += 30) if (this.hash(key + '@' + m) % 4 !== 0) out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).toISOString());
+      const wd = d.getDay() || 7, key = this.dayKey(d);
+      if (this.hash(key) % 5 === 0) continue;
+      const times = sched ? (sched[wd] || []).map((t) => +t.slice(0, 2) * 60 + +t.slice(3)) : (wd >= 6 ? [] : Array.from({ length: 11 }, (_, k) => 13 * 60 + 30 * k));
+      for (const m of times) if (this.hash(key + '@' + m) % 4 !== 0) out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).toISOString());
     }
     return out;
   }
@@ -1384,11 +1426,13 @@ void main(){
         let on = true; try { on = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).bookingEnabled !== false; } catch (e) { on = true; }
         this.setState({ bookingOn: on });
         this.setSlots(this.demoSlots());
+        this.setState({ news: this.demoNews() });
         return;
       }
       this.captchaKey = st.captchaSiteKey || '';
       this.durationMin = st.durationMin || 30;
       this.setState({ bookingOn: !!st.bookingEnabled });
+      if (st.newsVisible) this.api('/api/articles.php?limit=3').then((d) => { if (d && d.ok) this.setState({ news: d.articles || [] }); });
       if (st.bookingEnabled) return this.loadSlots();
     });
   }
@@ -1544,6 +1588,8 @@ void main(){
       /* мобильный (≤ 640px): сетка мельче, слово ярче, фон из фраз почти не виден */
       mob = hero.clientWidth <= 640;
       fs = mob ? 8 : 12;
+      /* высота строки текстовой сетки — по ней CSS опускает «αξία» на целое число строк (--hd-row) */
+      hero.style.setProperty('--hd-row', Math.round(fs * (mob ? 1.35 : 1.6)) + 'px');
       aField = mob ? 0.025 : 0.045;   /* фон из фраз (было 0.015 / 0.035) */ aWord = mob ? 0.45 : 0.3; aFlash = Math.min(aWord * 1.9, 0.85);
       cField = 'rgba(232,230,224,' + aField + ')';
       cWord = 'rgba(232,230,224,' + aWord + ')';
@@ -1859,13 +1905,16 @@ void main(){
       tmPrev: () => { if (this.state.tmPage > 0) { this.setState({ tmPage: this.state.tmPage - 1 }); this.tmPagesSoon(true); } },
       tmNext: () => { if ((this.state.tmPage || 0) < (this.state.tmPageN || 2) - 1) { this.setState({ tmPage: (this.state.tmPage || 0) + 1 }); this.tmPagesSoon(true); } },
       tmQ0_0: this.tmQ(0, 0, 2), tmQ0_1: this.tmQ(0, 1, 2), tmQ0_2: this.tmQ(0, 2, 2), tmQ0_3: this.tmQ(0, 3, 2), tmQ0_4: this.tmQ(0, 4, 2), tmQ1_0: this.tmQ(1, 0, 2), tmQ1_1: this.tmQ(1, 1, 2), tmQ1_2: this.tmQ(1, 2, 2), tmQ1_3: this.tmQ(1, 3, 2), tmQ1_4: this.tmQ(1, 4, 2), tmQ2_0: this.tmQ(2, 0, 2), tmQ2_1: this.tmQ(2, 1, 2), tmQ2_2: this.tmQ(2, 2, 2), tmQ2_3: this.tmQ(2, 3, 2),
-      tmP0: 'tm__photo' + (this.state.tm === 0 ? ' is-active' : ''), tmC0: 'tm__card' + (this.state.tm === 0 ? ' is-active' : ''), tmH0: this.state.tm === 0 ? 'false' : 'true', tmT0: 'tm__thumb' + (this.state.tm === 0 ? ' is-active' : ''), tmS0: this.state.tm === 0 ? 'true' : 'false', tmPick0: () => { if (this.state.tm !== 0) { this.setState({ tm: 0, tmPage: 0 }); this.tmPagesSoon(true); } },
-      tmP1: 'tm__photo' + (this.state.tm === 1 ? ' is-active' : ''), tmC1: 'tm__card' + (this.state.tm === 1 ? ' is-active' : ''), tmH1: this.state.tm === 1 ? 'false' : 'true', tmT1: 'tm__thumb' + (this.state.tm === 1 ? ' is-active' : ''), tmS1: this.state.tm === 1 ? 'true' : 'false', tmPick1: () => { if (this.state.tm !== 1) { this.setState({ tm: 1, tmPage: 0 }); this.tmPagesSoon(true); } },
-      tmP2: 'tm__photo' + (this.state.tm === 2 ? ' is-active' : ''), tmC2: 'tm__card' + (this.state.tm === 2 ? ' is-active' : ''), tmH2: this.state.tm === 2 ? 'false' : 'true', tmT2: 'tm__thumb' + (this.state.tm === 2 ? ' is-active' : ''), tmS2: this.state.tm === 2 ? 'true' : 'false', tmPick2: () => { if (this.state.tm !== 2) { this.setState({ tm: 2, tmPage: 0 }); this.tmPagesSoon(true); } },
+      tmP0: 'tm__photo' + (this.state.tm === 0 ? ' is-active' : ''), tmC0: 'tm__card' + (this.state.tm === 0 ? ' is-active' : ''), tmH0: this.state.tm === 0 ? 'false' : 'true', tmT0: 'tm__thumb' + (this.state.tm === 0 ? ' is-active' : ''), tmS0: this.state.tm === 0 ? 'true' : 'false', tmPick0: () => { if (this.state.tm !== 0) { this.setState({ tm: 0, tmPage: 0 }); this.tmPagesSoon(false); } },
+      tmP1: 'tm__photo' + (this.state.tm === 1 ? ' is-active' : ''), tmC1: 'tm__card' + (this.state.tm === 1 ? ' is-active' : ''), tmH1: this.state.tm === 1 ? 'false' : 'true', tmT1: 'tm__thumb' + (this.state.tm === 1 ? ' is-active' : ''), tmS1: this.state.tm === 1 ? 'true' : 'false', tmPick1: () => { if (this.state.tm !== 1) { this.setState({ tm: 1, tmPage: 0 }); this.tmPagesSoon(false); } },
+      tmP2: 'tm__photo' + (this.state.tm === 2 ? ' is-active' : ''), tmC2: 'tm__card' + (this.state.tm === 2 ? ' is-active' : ''), tmH2: this.state.tm === 2 ? 'false' : 'true', tmT2: 'tm__thumb' + (this.state.tm === 2 ? ' is-active' : ''), tmS2: this.state.tm === 2 ? 'true' : 'false', tmPick2: () => { if (this.state.tm !== 2) { this.setState({ tm: 2, tmPage: 0 }); this.tmPagesSoon(false); } },
       setSection: this.setSection,
       setWho: this.setWho,
       setApprSection: this.setApprSection,
       setSol: this.setSol,
+      setNews: this.setNews,
+      newsOn: (this.state.news || []).length > 0,
+      news: this.state.news || [],
       solI0: 'sol__item' + (this.state.solOpen === 0 ? ' is-open' : '') + (this.state.solLive === 0 ? ' is-live' : ''), solE0: this.state.solOpen === 0 ? 'true' : 'false',
       solT0: (e) => this.solToggle(0, e), solK0: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.solToggle(0, e); } },
       solI1: 'sol__item' + (this.state.solOpen === 1 ? ' is-open' : '') + (this.state.solLive === 1 ? ' is-live' : ''), solE1: this.state.solOpen === 1 ? 'true' : 'false',

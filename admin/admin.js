@@ -3,6 +3,8 @@
   'use strict';
   var main = document.querySelector('[data-csrf]');
   var csrf = main ? main.getAttribute('data-csrf') : '';
+  var NEWS_ON = 'Новости на сайте показываются: блок на главной, пункты в меню и подвале';
+  var NEWS_OFF = 'Новости скрыты: на главной нет блока, в меню и подвале нет пункта «новости»';
 
   window.adminApi = function (action, body, isForm) {
     var opts = { method: 'POST', headers: { 'X-CSRF': csrf }, credentials: 'same-origin' };
@@ -24,6 +26,16 @@
       label.textContent = d.enabled ? 'Включена — на сайте календарь со слотами' : 'Выключена — на сайте вместо календаря форма обратной связи';
     }).catch(function (e) { toggle.checked = !toggle.checked; alert(e.message); })
       .then(function () { toggle.disabled = false; });
+  });
+
+  var newsToggle = document.getElementById('news-toggle');
+  if (newsToggle) newsToggle.addEventListener('change', function () {
+    var label = document.getElementById('news-label');
+    newsToggle.disabled = true;
+    adminApi('news', { enabled: newsToggle.checked }).then(function (d) {
+      label.textContent = d.enabled ? NEWS_ON : NEWS_OFF;
+    }).catch(function (e) { newsToggle.checked = !newsToggle.checked; alert(e.message); })
+      .then(function () { newsToggle.disabled = false; });
   });
 
   document.addEventListener('click', function (e) {

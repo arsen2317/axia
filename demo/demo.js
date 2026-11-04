@@ -21,21 +21,20 @@
     return [
       { id: rid(), slug: 'kak-tsennosti-stanovyatsya-strategiey', title: 'Как ценности становятся стратегией', status: 'published', published_at: daysAgo(2),
         description: 'Пример статьи: почему корпоративные ценности работают только тогда, когда из них вырастают решения и правила.',
-        author: 'Ксения Лопаткина', cover: '/demo/img/cover-1.jpg', cover_alt: '',
+        author: 'Ксения Лопаткина', cover: '', cover_alt: '',
         blocks: [
           { type: 'text', text: 'Это **демонстрационная статья**: так будет выглядеть публикация на сайте. Текст, подзаголовки, цитаты и картинки добавляются в админке.\n\nВторой абзац — чтобы было видно расстояние между абзацами и длину строки.' },
           { type: 'heading', text: 'Подзаголовок внутри статьи' },
           { type: 'text', text: 'Абзац с [ссылкой](https://axiagroup.ru) и *курсивом*. Обычный текст статьи идёт колонкой удобной для чтения ширины.' },
-          { type: 'image', url: '/demo/img/cover-2.jpg', caption: 'Подпись к иллюстрации — необязательна' },
           { type: 'quote', text: 'Ценности — не слова на стене, а то, как принимаются решения.' },
           { type: 'text', text: 'Заключительный абзац статьи.' }
         ], created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
       { id: rid(), slug: 'otchet-ob-ustoychivom-razvitii', title: 'Отчёт об устойчивом развитии: с чего начать', status: 'published', published_at: daysAgo(9),
         description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.',
-        author: '', cover: '/demo/img/cover-2.jpg', cover_alt: '',
+        author: '', cover: '', cover_alt: '',
         blocks: [{ type: 'text', text: 'Текст второй демонстрационной статьи.' }], created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
       { id: rid(), slug: 'sotsialnye-programmy-dlya-territoriy', title: 'Социальные программы для территорий', status: 'published', published_at: daysAgo(20),
-        description: 'Третья демонстрационная статья — без обложки, чтобы было видно, как выглядит карточка без картинки.',
+        description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.',
         author: '', cover: '', cover_alt: '',
         blocks: [{ type: 'text', text: 'Текст третьей демонстрационной статьи.' }], created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
       { id: rid(), slug: 'chernovik', title: 'Черновик (не виден на сайте)', status: 'draft', published_at: today(),
@@ -46,6 +45,14 @@
   function articles() {
     var a = load(KEY_ART, null);
     if (!Array.isArray(a)) { a = seed(); save(KEY_ART, a); }
+    /* демо-статьи из прошлых версий: убираем примерные картинки (/demo/img/ больше нет) */
+    var fixed = false;
+    a.forEach(function (x) {
+      if (String(x.cover || '').indexOf('/demo/img/') === 0) { x.cover = ''; fixed = true; }
+      var bl = (x.blocks || []).filter(function (b) { return !(b.type === 'image' && String(b.url || '').indexOf('/demo/img/') === 0); });
+      if (bl.length !== (x.blocks || []).length) { x.blocks = bl; fixed = true; }
+    });
+    if (fixed) save(KEY_ART, a);
     return a.slice().sort(function (x, y) { return (y.published_at || '').localeCompare(x.published_at || ''); });
   }
   function published() { var t = today(); return articles().filter(function (a) { return a.status === 'published' && a.published_at <= t; }); }
@@ -127,6 +134,8 @@
         var next = all.filter(function (x) { return x.id !== a.id; }); next.push(a);
         return save(KEY_ART, next) ? resolve({ ok: true, article: a }) : reject(new Error('Не хватило места в браузере'));
       }
+      if (action === 'news') { var s3 = load(KEY_SET, {}); s3.newsEnabled = !!body.enabled; save(KEY_SET, s3); return resolve({ ok: true, enabled: s3.newsEnabled }); }
+      if (action === 'schedule') { var s2 = load(KEY_SET, {}); s2.schedule = body.slots; save(KEY_SET, s2); return resolve({ ok: true, slots: body.slots }); }
       if (action === 'cancel') return resolve({ ok: true });
       reject(new Error('Неизвестное действие'));
     });
@@ -138,25 +147,17 @@
   var page = document.body.getAttribute('data-demo');
 
   /* полоска «демо-режим» — в начале содержимого страницы (под шапкой) */
-  function banner(text) {
-    setTimeout(function () {
-      var b = document.createElement('p'); b.className = 'demo-banner'; b.innerHTML = text;
-      root.insertBefore(b, root.firstChild);
-    }, 0);
-  }
 
   if (page === 'news') {
-    banner('Демо-режим: статьи хранятся в вашем браузере. Добавить или изменить — в <a href="/admin/">админке</a>.');
     var list = published();
-    root.innerHTML = '<h1 class="pg-title">новости</h1>' + (list.length ? '<ul class="news-list">' + list.map(function (a) {
-      return '<li class="news-item"><a class="news-item__link" href="/news/' + esc(a.slug) + '"><span class="news-item__cover">' + (a.cover ? '<img src="' + esc(a.cover) + '" alt="' + esc(a.cover_alt) + '" loading="lazy">' : '') + '</span>'
-        + '<span class="news-item__body"><time class="news-item__date" datetime="' + esc(a.published_at) + '">' + esc(ruDate(a.published_at)) + '</time><span class="news-item__title">' + esc(a.title) + '</span>'
-        + (a.description ? '<span class="news-item__desc">' + esc(a.description) + '</span>' : '') + '</span></a></li>';
+    root.innerHTML = '<div class="pg-head"><h1 class="pg-title">новости</h1><a class="pg-back" href="/"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4"></path></svg>вернуться на главную</a></div>' + (list.length ? '<ul class="news__list">' + list.map(function (a) {
+      return '<li class="news__item"><a class="news__link" href="/news/' + esc(a.slug) + '"><span class="news__cover">' + (a.cover ? '<img src="' + esc(a.cover) + '" alt="' + esc(a.cover_alt) + '" loading="lazy">' : '') + '</span>'
+        + '<span class="news__body"><time class="news__date" datetime="' + esc(a.published_at) + '">' + esc(ruDate(a.published_at)) + '</time><span class="news__name">' + esc(a.title) + '</span>'
+        + (a.description ? '<span class="news__desc">' + esc(a.description) + '</span>' : '') + '</span></a></li>';
     }).join('') + '</ul>' : '<p class="pg-empty">Здесь скоро появятся публикации.</p>');
   }
 
   if (page === 'article') {
-    banner('Демо-режим: статья хранится в вашем браузере. <a href="/admin/">Админка</a>');
     var slug = decodeURIComponent(location.pathname.replace(/^\/news\//, '').replace(/\/$/, ''));
     var art = null; published().forEach(function (a) { if (a.slug === slug) art = a; });
     if (!art) {
@@ -202,8 +203,22 @@
     });
   }
 
+  /* расписание записи (как config booking.hours по умолчанию: пн–пт 13:00–18:30, встреча 30 мин) */
+  function demoGrid() { var out = []; for (var m = 8 * 60; m + 30 <= 21 * 60; m += 30) out.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0')); return out; }
+  function demoSchedule() {
+    var s = load(KEY_SET, {}).schedule;
+    if (s) return s;
+    var def = {}, day = [];
+    for (var m = 13 * 60; m + 30 <= 18 * 60 + 30; m += 30) day.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'));
+    for (var d = 1; d <= 7; d++) def[d] = d <= 5 ? day.slice() : [];
+    return def;
+  }
+
+  var NEWS_ON = 'Новости на сайте показываются: блок на главной, пункты в меню и подвале';
+  var NEWS_OFF = 'Новости скрыты: на главной нет блока, в меню и подвале нет пункта «новости»';
   function renderDashboard() {
     var on = load(KEY_SET, {}).bookingEnabled !== false;
+    var newsOn = load(KEY_SET, {}).newsEnabled !== false;
     var list = articles(), t = today();
     document.body.insertAdjacentHTML('afterbegin', '<header class="ad-top"><a class="ad-logo" href="/admin/">аксиа · админка <span class="ad-pill">демо</span></a>'
       + '<nav class="ad-top__nav"><a href="/" target="_blank" rel="noopener">сайт ↗</a><a href="/news" target="_blank" rel="noopener">новости ↗</a><a href="#" data-logout>выйти</a></nav></header>');
@@ -212,8 +227,12 @@
       + '<section class="ad-card"><h2>Запись на встречи</h2><label class="ad-switch"><input type="checkbox" id="booking-toggle"' + (on ? ' checked' : '') + '><span class="ad-switch__track" aria-hidden="true"></span>'
       + '<span id="booking-label">' + (on ? 'Включена — на сайте календарь со слотами' : 'Выключена — на сайте вместо календаря форма обратной связи') + '</span></label>'
       + '<p class="ad-hint">Подключения: <span class="ad-pill">Почта (SMTP): тестовый режим</span> <span class="ad-pill">SmartCaptcha: тестовый режим</span> <span class="ad-pill">Яндекс Телемост: тестовый режим</span> <span class="ad-pill">Яндекс Календарь: тестовый режим</span></p>'
+      + '<h3>Расписание</h3><p class="ad-hint">Отметьте дни и время, когда можно записаться. Отмеченный слот появится на сайте, только если в Яндекс Календаре в это время ничего нет; неотмеченный не появится никогда. Встреча — 30 мин, время — московское. Клик по дню или времени отмечает или снимает всю колонку или строку. В демо расписание влияет на календарь главной в этом же браузере.</p>'
+      + '<div id="schedule" data-grid="' + esc(JSON.stringify(demoGrid())) + '" data-slots="' + esc(JSON.stringify(demoSchedule())) + '" data-duration="30"></div>'
       + '<h3>Ближайшие встречи</h3><p class="ad-hint">В демо-режиме встреч нет. На настоящем сайте здесь список записей с кнопкой «Отменить».</p></section>'
       + '<section class="ad-card"><div class="ad-card__head"><h2>Статьи</h2><a class="ad-btn ad-btn--primary" href="/admin/edit.php">Новая статья</a></div>'
+      + '<label class="ad-switch"><input type="checkbox" id="news-toggle"' + (newsOn ? ' checked' : '') + '><span class="ad-switch__track" aria-hidden="true"></span><span id="news-label">' + (newsOn ? NEWS_ON : NEWS_OFF) + '</span></label>'
+      + '<p class="ad-hint">Отдельная страница /news и сами статьи остаются доступны по прямой ссылке. Пока нет ни одной опубликованной статьи, блок не показывается в любом случае. В демо переключатель влияет на сайт в этом же браузере.</p>'
       + (list.length ? '<ul class="ad-list">' + list.map(function (a) {
         var st = a.status === 'published' ? (a.published_at > t ? 'запланирована на ' : 'опубликована ') + ruDate(a.published_at) : 'черновик';
         return '<li class="ad-list__row"><span class="ad-list__main">' + (a.cover ? '<img class="ad-thumb" src="' + esc(a.cover) + '" alt="">' : '<span class="ad-thumb"></span>')
@@ -223,6 +242,11 @@
           + '<button class="ad-btn ad-btn--small ad-btn--danger" type="button" data-delete="' + esc(a.id) + '">Удалить</button></span></li>';
       }).join('') + '</ul>' : '<p class="ad-hint">Статей пока нет.</p>') + '</section>';
 
+    var sc = document.createElement('script'); sc.src = '/admin/schedule.js'; document.body.appendChild(sc);
+    var nt = document.getElementById('news-toggle');
+    nt.addEventListener('change', function () {
+      adminApi('news', { enabled: nt.checked }).then(function (d) { document.getElementById('news-label').textContent = d.enabled ? NEWS_ON : NEWS_OFF; });
+    });
     var tg = document.getElementById('booking-toggle');
     tg.addEventListener('change', function () {
       adminApi('booking', { enabled: tg.checked }).then(function (d) {
