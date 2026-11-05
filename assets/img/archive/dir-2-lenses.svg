@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="dv__art" viewBox="0 0 408 398" width="408" height="398" aria-hidden="true" focusable="false">
+  <!-- Прежняя иллюстрация направления «Ответственное ведение бизнеса» (линзы со стрелкой), до замены на «рост» (колонки).
+       Вернуть: заменить этим <svg> (без этого блока <style> и комментария) svg во второй карточке направлений (класс dv__card с модификатором 1) в index.html —
+       стили и анимации линз (классы dvp-*, градиенты #dvp-*) остались в assets/css/page.css.
+       Блок <style> ниже — только чтобы файл открывался отдельно в цветах сайта (тёмная карточка, версия 4). -->
+  <style>
+    svg { background: #1c2a6c; }
+    #dvp-disc stop:nth-child(1) { stop-color: #E6ECFE; } #dvp-disc stop:nth-child(2) { stop-color: #A6BAF6; }
+    #dvp-disc stop:nth-child(3) { stop-color: #6787EE; } #dvp-disc stop:nth-child(4) { stop-color: #3B5FE6; }
+    #dvp-rim stop { stop-color: #3B5FE6; } #dvp-arrowFade stop { stop-color: #A6BAF6; } [stroke="#DADFFA"] { stroke: #A6BAF6; }
+  </style>
+
+  <defs>
+    <radialGradient id="dvp-disc" cx="0.66" cy="0.5" r="0.72" fx="0.7" fy="0.5">
+      <stop offset="0" stop-color="#6A82E8"/>
+      <stop offset="0.35" stop-color="#94A6F0"/>
+      <stop offset="0.75" stop-color="#C2CBF7"/>
+      <stop offset="1" stop-color="#D5DBFA"/>
+    </radialGradient>
+    <linearGradient id="dvp-rim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#DADFFA" stop-opacity="1"/>
+      <stop offset="0.45" stop-color="#DADFFA" stop-opacity="0.6"/>
+      <stop offset="0.85" stop-color="#DADFFA" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="dvp-arrowFade" x1="50" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#DADFFA" stop-opacity="0"/>
+      <stop offset="1" stop-color="#DADFFA" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <g class="dvp-l dvp-l1">
+    <ellipse cx="128" cy="199" rx="34" ry="80" fill="url(#dvp-disc)"/>
+    <ellipse cx="128" cy="199" rx="34" ry="80" fill="none" stroke="url(#dvp-rim)" stroke-width="3"/>
+  </g>
+  <g class="dvp-l dvp-l2">
+    <ellipse cx="170" cy="199" rx="40" ry="104" fill="url(#dvp-disc)" fill-opacity="0.9"/>
+    <ellipse cx="170" cy="199" rx="40" ry="104" fill="none" stroke="url(#dvp-rim)" stroke-width="3"/>
+  </g>
+  <g class="dvp-l dvp-l3">
+    <ellipse cx="218" cy="199" rx="46" ry="132" fill="url(#dvp-disc)" fill-opacity="0.9"/>
+    <ellipse cx="218" cy="199" rx="46" ry="132" fill="none" stroke="url(#dvp-rim)" stroke-width="3"/>
+  </g>
+  <g stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line class="dvp-line" pathLength="1" x1="50" y1="199" x2="308" y2="199" stroke="url(#dvp-arrowFade)"/>
+    <polyline class="dvp-head" points="292,183 308,199 292,215" stroke="#DADFFA"/>
+  </g>
+</svg>

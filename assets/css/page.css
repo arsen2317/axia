@@ -629,6 +629,9 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
    а не на начале колонки (они расходятся на несколько пикселей); 0.01em — левый отступ буквы «α» */
 @container axia (width > 66rem) {
   .axia .intro__title { margin-left: calc(1.375cqw - 1.375rem - 0.01em); }
+  /* «аксиа» с описанием — по центру между низом меню и верхом «αξία» (середину считает скрипт: --intro-c на hero) */
+  .axia .hero { --intro-c: 13.5rem; }
+  .axia .intro { position: absolute; left: 0; right: 0; top: var(--intro-c); transform: translateY(-50%); padding-top: 0; }
 }
 /* КОМАНДА, десктоп (обновлённый макет): белый фон; под заголовком — список участников (аватар, имя, должность),
    выбранный отмечен точкой слева; справа — имя, должность, описание в два абзаца и «Подробнее о команде» внизу колонки */
@@ -845,6 +848,12 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .dv__card:hover .dvp-l3 { animation-delay: 0.1s; }
   .axia .dv__card:hover .dvp-line { stroke-dasharray: 1; animation: dv-draw 0.8s ease-out 0.15s both; }
   .axia .dv__card:hover .dvp-head { animation: dvp-head 0.3s ease-out 0.8s both; }
+  /* 2. рост (заменил линзы): колонки по очереди чуть оседают и вырастают, стрелка прорисовывается снизу вверх */
+  .axia .dv__card:hover .dvb-bar { animation: dvb-grow 0.9s cubic-bezier(.4, 0, .2, 1) both; }
+  .axia .dv__card:hover .dvb-bar2 { animation-delay: 0.08s; }
+  .axia .dv__card:hover .dvb-bar3 { animation-delay: 0.16s; }
+  .axia .dv__card:hover .dvb-line { stroke-dasharray: 1; animation: dv-draw 0.8s ease-out 0.2s both; }
+  .axia .dv__card:hover .dvb-head { animation: dvb-head 0.3s ease-out 0.85s both; }
   /* 3. слои: пластины оседают вниз и снова поднимаются, вертикальные лучи прорисовываются */
   .axia .dv__card:hover .dvl-p { animation: dvl-squash 1s cubic-bezier(.4, 0, .2, 1) both; }
   .axia .dv__card:hover .dvl-p2 { --dy: 4px; --up: -1px; }
@@ -858,6 +867,9 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 @keyframes dv-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes dv-draw-up { from { stroke-dashoffset: -1; } to { stroke-dashoffset: 0; } }
 @keyframes dvp-head { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+.axia .dvb-bar { transform-origin: 50% 100%; }   /* колонки растут от пластины */
+@keyframes dvb-grow { 0% { transform: none; } 35% { transform: scaleY(0.86); } 75% { transform: scaleY(1.03); } 100% { transform: none; } }
+@keyframes dvb-head { from { opacity: 0; transform: translate(-5px, 3px); } to { opacity: 1; transform: none; } }
 @keyframes dvl-squash { 0% { transform: none; } 40% { transform: translateY(var(--dy, 0px)); } 75% { transform: translateY(var(--up, 0px)); } 100% { transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .axia .dv__card:hover .dv__art *, .axia .dv__card:hover .dvo-fig { animation: none !important; transform: none !important; }
@@ -895,6 +907,11 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .dv__card .dvp-l3 { animation-delay: 0.3s; }
   .axia .dv__card .dvp-line { stroke-dasharray: 1; animation: dv-draw 0.8s ease-out 0.35s both; animation-play-state: var(--dv-play, paused); }
   .axia .dv__card .dvp-head { animation: dvp-head 0.3s ease-out 1s both; animation-play-state: var(--dv-play, paused); }
+  .axia .dv__card .dvb-bar { animation: dvb-grow 0.9s cubic-bezier(.4, 0, .2, 1) 0.2s both; animation-play-state: var(--dv-play, paused); }
+  .axia .dv__card .dvb-bar2 { animation-delay: 0.28s; }
+  .axia .dv__card .dvb-bar3 { animation-delay: 0.36s; }
+  .axia .dv__card .dvb-line { stroke-dasharray: 1; animation: dv-draw 0.8s ease-out 0.4s both; animation-play-state: var(--dv-play, paused); }
+  .axia .dv__card .dvb-head { animation: dvb-head 0.3s ease-out 1.05s both; animation-play-state: var(--dv-play, paused); }
   .axia .dv__card .dvl-p { animation: dvl-squash 1s cubic-bezier(.4, 0, .2, 1) 0.2s both; animation-play-state: var(--dv-play, paused); }
   .axia .dv__card .dvl-p2 { --dy: 4px; --up: -1px; }
   .axia .dv__card .dvl-p3 { --dy: 9px; --up: -2px; }
@@ -1111,6 +1128,11 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .dv__card .dvp-l3 { animation-delay: 0.3s; }
   .axia .dv__card .dvp-line { stroke-dasharray: 1; animation: dv-draw 0.8s ease-out 0.35s both; }
   .axia .dv__card .dvp-head { animation: dvp-head 0.3s ease-out 1s both; }
+  .axia .dv__card .dvb-bar { animation: dvb-grow 0.9s cubic-bezier(.4, 0, .2, 1) 0.2s both; }
+  .axia .dv__card .dvb-bar2 { animation-delay: 0.28s; }
+  .axia .dv__card .dvb-bar3 { animation-delay: 0.36s; }
+  .axia .dv__card .dvb-line { stroke-dasharray: 1; animation: dv-draw 0.8s ease-out 0.4s both; }
+  .axia .dv__card .dvb-head { animation: dvb-head 0.3s ease-out 1.05s both; }
   .axia .dv__card .dvl-p { animation: dvl-squash 1s cubic-bezier(.4, 0, .2, 1) 0.2s both; }
   .axia .dv__card .dvl-p2 { --dy: 4px; --up: -1px; }
   .axia .dv__card .dvl-p3 { --dy: 9px; --up: -2px; }
@@ -1334,7 +1356,7 @@ html { -webkit-tap-highlight-color: transparent; }
 @container axia (max-width: 66rem) { .axia .dv__card { overflow: hidden; } }
 .axia .dv__ill .dv__art { transform: translateY(var(--dv-art-y, 30%)) scale(var(--dv-art-k, 2)); transform-origin: 50% 50%; }
 .axia .dv__card--0 { --dv-art-y: 40%; }
-.axia .dv__card--1 { --dv-art-y: 32%; }
+.axia .dv__card--1 { --dv-art-y: 25.5%; }   /* «рост»: верх стрелки — на уровне верха алмаза и слоёв (у линз было 32%) */
 .axia .dv__card--2 { --dv-art-y: 36%; }
 
 /* ===== НАПРАВЛЕНИЯ, ВЕРСИЯ 4: ТЁМНЫЕ КАРТОЧКИ =====
@@ -1347,4 +1369,12 @@ html { -webkit-tap-highlight-color: transparent; }
 @container axia (max-width: 66rem) { .axia .dv__card { background: #1c2a6c; } }
 .axia .dv__art { --dv-w: #E6ECFE; --dv-l: #A6BAF6; --dv-m: #6787EE; --dv-v: #3B5FE6; --dv-p: #B9C9F8; }
 .axia #dvp-arrowFade stop { stop-color: var(--dv-l); }        /* стрелка — светлая, на тёмном фоне */
+/* «рост» (колонки на пластине): заливка как у линз и слоёв — середина светлая, к краям насыщенный синий;
+   кромки — светлые, как между слоями; стрелка — светлая, как у линз */
+.axia #dvb-bar stop:nth-child(1), .axia #dvb-plate stop:nth-child(1) { stop-color: var(--dv-w); }
+.axia #dvb-bar stop:nth-child(2), .axia #dvb-plate stop:nth-child(2) { stop-color: var(--dv-l); }
+.axia #dvb-bar stop:nth-child(3), .axia #dvb-plate stop:nth-child(3) { stop-color: var(--dv-m); }
+.axia #dvb-bar stop:nth-child(4), .axia #dvb-plate stop:nth-child(4) { stop-color: var(--dv-v); }
+.axia #dvb-rim stop { stop-color: var(--dv-l); }
+.axia #dvb-arrowFade stop { stop-color: var(--dv-l); }
 .axia .dv__art [stroke="#DADFFA"] { stroke: var(--dv-l); }

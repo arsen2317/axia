@@ -17,7 +17,7 @@ function cfg(?string $path = null, $default = null)
         $local = is_file(ROOT . '/config/config.local.php') ? require ROOT . '/config/config.local.php' : [];
         $c = array_replace_recursive($base, is_array($local) ? $local : []);
         /* рабочие часы и праздники заменяются целиком, а не сливаются по ключам */
-        if (isset($local['booking']['hours'])) $c['booking']['hours'] = $local['booking']['hours'];
+        if (isset($local['booking']) && array_key_exists('hours', (array)$local['booking'])) $c['booking']['hours'] = $local['booking']['hours'];
         if (isset($local['booking']['holidays'])) $c['booking']['holidays'] = $local['booking']['holidays'];
     }
     if ($path === null) return $c;
@@ -203,6 +203,8 @@ function str_field(array $d, string $k, int $max, bool $required = false, bool $
 {
     $v = isset($d[$k]) && is_scalar($d[$k]) ? trim((string)$d[$k]) : '';
     if (!mb_check_encoding($v, 'UTF-8')) fail('Неверная кодировка', 422);
+    /* переводы строк приводим к \n: одиночный \r некоторые программы считают концом строки (инъекция в .ics и письма) */
+    $v = str_replace(["\r\n", "\r"], "\n", $v);
     $v = preg_replace($multiline ? '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u' : '/[\x00-\x1F\x7F\x{2028}\x{2029}]/u', $multiline ? '' : ' ', $v) ?? '';
     $v = trim($v);
     if ($required && $v === '') fail('Заполните обязательные поля', 422, ['field' => $k]);

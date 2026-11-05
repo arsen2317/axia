@@ -18,74 +18,152 @@ function utc(): DateTimeZone
 
 /* ================= Слоты ================= */
 
-/* ---- Расписание: в какие дни недели и в какое время можно записаться ----
-   Задаётся в админке (сетка «дни × время начала», хранится в data/settings.php → booking_slots).
-   Пока в админке ничего не сохраняли, расписание берётся из рабочих окон config: booking.hours. */
+/* ---- Параметры записи ----
+   Меняются в админке (блок «Запись на встречи», хранятся в data/settings.php → booking). Пока в админке их ни разу
+   не сохраняли, действуют значения из config: booking.*. Ключи и допустимые значения — в booking_normalize(). */
 
-/** Время начала, которое можно отметить в админке: от booking.grid_from до booking.grid_to с шагом booking.step_min */
-function schedule_grid(): array
+const BOOKING_STEPS = [5, 10, 15, 20, 30, 60];
+
+/** Действующие параметры записи: конфиг, поверх него — сохранённое в админке */
+function booking_cfg(): array
 {
-    $dur = max(5, (int)cfg('booking.duration_min', 30));
-    $step = max(5, (int)cfg('booking.step_min', 30));
-    [$fh, $fm] = array_map('intval', explode(':', (string)cfg('booking.grid_from', '08:00')));
-    [$th, $tm] = array_map('intval', explode(':', (string)cfg('booking.grid_to', '21:00')));
-    $out = [];
-    for ($m = $fh * 60 + $fm; $m + $dur <= $th * 60 + $tm; $m += $step) $out[] = sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
-    return $out;
+    static $memo = null;
+    if ($memo !== null) return $memo;
+    $c = (array)cfg('booking', []);
+    $def = [
+        'duration_min' => (int)($c['duration_min'] ?? 30),
+        'step_min' => (int)($c['step_min'] ?? 15),
+        'buffer_min' => (int)($c['buffer_min'] ?? 15),
+        'min_notice_hours' => (int)($c['min_notice_hours'] ?? 24),
+        'horizon_days' => (int)($c['horizon_days'] ?? 14),
+        'max_per_day' => (int)($c['max_per_day'] ?? 3),
+        'date_from' => (string)($c['date_from'] ?? ''),
+        'date_to' => (string)($c['date_to'] ?? ''),
+        'windows' => (array)($c['hours'] ?? []),
+        'holidays' => (array)($c['holidays'] ?? []),
+    ];
+    $saved = settings()['booking'] ?? null;
+    [$norm] = booking_normalize(is_array($saved) ? $saved + $def : $def);
+    return $memo = $norm ?? booking_normalize($def)[0] ?? $def;
 }
 
-/** Расписание: [1 => ['13:00', '13:30', …], …, 7 => […]] (1 = пн … 7 = вс) */
-function booking_schedule(): array
+function bk(string $key)
 {
-    $saved = settings()['booking_slots'] ?? null;
-    $out = [];
-    if (is_array($saved)) {
-        for ($d = 1; $d <= 7; $d++) {
-            $list = array_values(array_filter((array)($saved[$d] ?? $saved[(string)$d] ?? []), fn($t) => is_string($t) && preg_match('/^\d{2}:\d{2}$/', $t)));
-            sort($list);
-            $out[$d] = $list;
-        }
-        return $out;
+    return booking_cfg()[$key] ?? null;
+}
+
+function hm_to_min(string $t): ?int
+{
+    if (!preg_match('/^([01]\d|2[0-3]):([0-5]\d)$/', $t, $m) && $t !== '24:00') return null;
+    return $t === '24:00' ? 1440 : (int)$m[1] * 60 + (int)$m[2];
+}
+
+function min_to_hm(int $m): string
+{
+    return sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
+}
+
+function valid_ymd(string $s): bool
+{
+    $d = DateTimeImmutable::createFromFormat('!Y-m-d', $s);
+    return $d !== false && $d->format('Y-m-d') === $s;
+}
+
+/** Проверка параметров из админки: [нормализованные параметры, null] или [null, текст ошибки] */
+function booking_normalize(array $in): array
+{
+    $int = function (string $k, int $min, int $max, string $label) use ($in) {
+        $v = $in[$k] ?? null;
+        if (!is_numeric($v) || (int)$v != $v || (int)$v < $min || (int)$v > $max) throw new InvalidArgumentException("$label: число от $min до $max");
+        return (int)$v;
+    };
+    try {
+        $out = [
+            'duration_min' => $int('duration_min', 10, 240, 'Длительность звонка'),
+            'step_min' => $int('step_min', 5, 60, 'Шаг времени начала'),
+            'buffer_min' => $int('buffer_min', 0, 240, 'Перерыв между звонками'),
+            'min_notice_hours' => $int('min_notice_hours', 0, 720, 'Минимальный срок записи'),
+            'horizon_days' => $int('horizon_days', 1, 365, 'Горизонт записи'),
+            'max_per_day' => $int('max_per_day', 0, 50, 'Звонков в день'),
+        ];
+    } catch (InvalidArgumentException $e) {
+        return [null, $e->getMessage()];
     }
-    /* по умолчанию — из рабочих окон конфига */
-    $dur = max(5, (int)cfg('booking.duration_min', 30));
-    $step = max(5, (int)cfg('booking.step_min', 30));
-    $hours = (array)cfg('booking.hours', []);
+    if (!in_array($out['step_min'], BOOKING_STEPS, true)) return [null, 'Шаг времени начала: ' . implode(', ', BOOKING_STEPS) . ' минут'];
+    if ($out['duration_min'] % 5) return [null, 'Длительность звонка должна быть кратна 5 минутам'];
+    if ($out['buffer_min'] % 5) return [null, 'Перерыв между звонками должен быть кратен 5 минутам'];
+
+    foreach (['date_from', 'date_to'] as $k) {
+        $v = trim((string)($in[$k] ?? ''));
+        if ($v !== '' && !valid_ymd($v)) return [null, 'Неверная дата периода записи'];
+        $out[$k] = $v;
+    }
+    if ($out['date_from'] !== '' && $out['date_to'] !== '' && $out['date_from'] > $out['date_to']) return [null, 'Период записи: дата начала позже даты окончания'];
+
+    $win = (array)($in['windows'] ?? []);
+    $out['windows'] = [];
+    $names = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'];
     for ($d = 1; $d <= 7; $d++) {
-        $out[$d] = [];
-        foreach ((array)($hours[$d] ?? []) as $win) {
-            [$a, $b] = $win;
-            [$ah, $am] = array_map('intval', explode(':', $a));
-            [$bh, $bm] = array_map('intval', explode(':', $b));
-            for ($m = $ah * 60 + $am; $m + $dur <= $bh * 60 + $bm; $m += $step) $out[$d][] = sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
+        $list = [];
+        foreach ((array)($win[$d] ?? $win[(string)$d] ?? []) as $w) {
+            if (!is_array($w) || count($w) !== 2) return [null, 'Неверный интервал: ' . $names[$d - 1]];
+            [$a, $b] = array_values($w);
+            $am = is_string($a) ? hm_to_min($a) : null;
+            $bm = is_string($b) ? hm_to_min($b) : null;
+            if ($am === null || $bm === null) return [null, 'Время в формате ЧЧ:ММ: ' . $names[$d - 1]];
+            if ($am % 5 || $bm % 5) return [null, 'Время интервала должно быть кратно 5 минутам: ' . $names[$d - 1]];
+            if ($bm - $am < $out['duration_min']) return [null, mb_strtoupper(mb_substr($names[$d - 1], 0, 1)) . mb_substr($names[$d - 1], 1) . ', ' . $a . '–' . $b . ': интервал короче звонка'];
+            $list[] = [$am, $bm];
         }
+        if (count($list) > 8) return [null, 'Не больше 8 интервалов в день'];
+        usort($list, fn($x, $y) => $x[0] <=> $y[0]);
+        for ($i = 1; $i < count($list); $i++) if ($list[$i][0] < $list[$i - 1][1]) return [null, 'Интервалы пересекаются: ' . $names[$d - 1]];
+        $out['windows'][(string)$d] = array_map(fn($x) => [min_to_hm($x[0]), min_to_hm($x[1])], $list);
     }
-    return $out;
+
+    $hol = [];
+    foreach ((array)($in['holidays'] ?? []) as $v) {
+        $v = trim((string)$v);
+        if ($v === '') continue;
+        if (!valid_ymd($v)) return [null, 'Неверная дата в списке дней без записи'];
+        $hol[$v] = true;
+    }
+    if (count($hol) > 366) return [null, 'Слишком много дней без записи'];
+    $hol = array_keys($hol);
+    sort($hol);
+    $out['holidays'] = $hol;
+    return [$out, null];
 }
 
-/** Все слоты по расписанию (без учёта занятости календаря): [[start DateTimeImmutable, end], …] */
+/** Все слоты по расписанию (без учёта занятости календаря и броней): [[start DateTimeImmutable, end], …] */
 function rule_slots(?DateTimeImmutable $now = null): array
 {
+    $c = booking_cfg();
     $now = $now ?? new DateTimeImmutable('now', tz());
-    $dur = max(5, (int)cfg('booking.duration_min', 30));
-    $earliest = $now->modify('+' . (int)cfg('booking.min_notice_hours', 12) . ' hours');
-    $sched = booking_schedule();
-    $holidays = array_flip((array)cfg('booking.holidays', []));
+    $dur = $c['duration_min'];
+    $earliest = $now->modify('+' . $c['min_notice_hours'] . ' hours');
+    $holidays = array_flip($c['holidays']);
     $out = [];
     $day = $now->setTime(0, 0);
-    for ($i = 0; $i <= (int)cfg('booking.horizon_days', 60); $i++, $day = $day->modify('+1 day')) {
-        if (isset($holidays[$day->format('Y-m-d')])) continue;
-        foreach ($sched[(int)$day->format('N')] ?? [] as $t) {
-            [$h, $m] = array_map('intval', explode(':', $t));
-            $s = $day->setTime($h, $m);
-            if ($s < $earliest) continue;
-            $out[] = [$s, $s->modify("+$dur minutes")];
+    for ($i = 0; $i <= $c['horizon_days']; $i++, $day = $day->modify('+1 day')) {
+        $ymd = $day->format('Y-m-d');
+        if (isset($holidays[$ymd])) continue;
+        if ($c['date_from'] !== '' && $ymd < $c['date_from']) continue;
+        if ($c['date_to'] !== '' && $ymd > $c['date_to']) continue;
+        foreach ($c['windows'][$day->format('N')] ?? [] as [$a, $b]) {
+            $bm = hm_to_min($b);
+            for ($m = hm_to_min($a); $m + $dur <= $bm; $m += $c['step_min']) {
+                $s = $day->setTime(intdiv($m, 60), $m % 60);
+                if ($s < $earliest) continue;   /* горизонт — целыми днями: сегодня + horizon_days */
+                $out[] = [$s, $s->modify("+$dur minutes")];
+            }
         }
     }
     return $out;
 }
 
-/** Свободные слоты: правила минус занятость календаря и уже созданные брони */
+/** Свободные слоты: правила минус занятость календаря и уже созданные брони (с перерывом между звонками),
+    минус дни, где уже набрано максимальное число звонков */
 function free_slots(bool $fresh = false): array
 {
     $slots = rule_slots();
@@ -93,8 +171,16 @@ function free_slots(bool $fresh = false): array
     $from = $slots[0][0];
     $to = end($slots)[1];
     $busy = array_merge(calendar_busy($from, $to, $fresh), bookings_busy());
-    $buf = (int)cfg('booking.buffer_min', 0) * 60;
-    return array_values(array_filter($slots, function ($s) use ($busy, $buf) {
+    $buf = bk('buffer_min') * 60;
+    $max = bk('max_per_day');
+    $perDay = [];
+    foreach (bookings_busy() as [$s]) {
+        $k = (new DateTimeImmutable('@' . $s))->setTimezone(tz())->format('Y-m-d');
+        $perDay[$k] = ($perDay[$k] ?? 0) + 1;
+    }
+    return array_values(array_filter($slots, function ($s) use ($busy, $buf, $max, $perDay) {
+        if ($max > 0 && ($perDay[$s[0]->format('Y-m-d')] ?? 0) >= $max) return false;
+        /* слот вместе с перерывом до и после не должен задевать занятое время */
         $a = $s[0]->getTimestamp() - $buf;
         $b = $s[1]->getTimestamp() + $buf;
         foreach ($busy as [$x, $y]) if ($x < $b && $y > $a) return false;
@@ -372,7 +458,10 @@ function telemost_delete(string $id): void
 
 function ics_escape(string $s): string
 {
-    return str_replace(["\\", ";", ",", "\r\n", "\n"], ["\\\\", "\\;", "\\,", "\\n", "\\n"], $s);
+    /* любой перевод строки (\r\n, \r, \n, U+2028/2029) — только как экранированный \n: иначе в событие можно вписать свои строки */
+    $s = str_replace(["\r\n", "\r", "\u{2028}", "\u{2029}"], "\n", $s);
+    $s = preg_replace('/[\x00-\x08\x0B-\x1F\x7F]/', '', $s) ?? '';
+    return str_replace(["\\", ";", ",", "\n"], ["\\\\", "\\;", "\\,", "\\n"], $s);
 }
 
 function ics_fold(string $line): string

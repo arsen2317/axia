@@ -125,6 +125,7 @@ class Page extends DCLogic {
       /* «αξία» растворяется по мере скролла: к моменту, когда «Направления» закрепятся, её уже не видно */
       const hero = doc.getElementById('top');
       const word = hero && hero.querySelector('.hero__word');
+      this.placeIntro();
       if (word) {
         const hr = hero.getBoundingClientRect();
         const k = Math.min(Math.max(-hr.top / (hr.height * 0.85), 0), 1);
@@ -195,6 +196,20 @@ class Page extends DCLogic {
       requestAnimationFrame(() => requestAnimationFrame(go));
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(go);
     }
+  }
+  /* HERO, десктоп: «аксиа» с описанием — по центру между низом меню и верхом «αξία».
+     Середину считаем в пикселях от верха hero и отдаём в CSS (--intro-c); у svg «αξία» верх букв = верх картинки */
+  placeIntro() {
+    const doc = (this.root && this.root.ownerDocument) || document;
+    const hero = doc.getElementById('top'), word = hero && hero.querySelector('.hero__word'), slot = doc.querySelector('.header .nav-slot');
+    if (!word || !slot) return;
+    if (!this.introLoad && !word.complete) { this.introLoad = true; word.addEventListener('load', () => this.placeIntro(), { once: true }); }
+    /* «αξία» нарисована буквами текстовой сетки (hd-field) — берём верх её первой строки; без сетки — верх картинки */
+    const hr = hero.getBoundingClientRect(), mb = slot.getBoundingClientRect().bottom;
+    const wt = this.wordInkTop != null && hero.querySelector('.hd-field') ? this.wordInkTop : word.getBoundingClientRect().top - hr.top;
+    if (!(wt > mb)) return;
+    const c = Math.round((mb + wt) / 2) + 'px';
+    if (hero.style.getPropertyValue('--intro-c') !== c) hero.style.setProperty('--intro-c', c);
   }
   componentWillUnmount() {
     if (this.pagingStop) this.pagingStop();
@@ -1399,17 +1414,31 @@ void main(){
     const [y, mo, d] = ymd.split('-').map(Number);
     return d + ' ' + m[mo - 1] + ' ' + y;
   }
-  /* демо: расписание из демо-админки (этот браузер) или пн–пт 13:00–18:00; часть слотов «занята» — как будто в календаре */
+  /* демо: параметры записи из демо-админки (этот браузер) или те же, что в config/config.example.php.
+     Часть времени «занята» — как будто в календаре; перерыв и лимит в день считаются так же, как на сервере (free_slots) */
   demoSlots() {
-    let sched = null;
-    try { sched = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).schedule || null; } catch (e) { sched = null; }
+    let b = null;
+    try { b = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).booking || null; } catch (e) { b = null; }
+    if (!b || !b.windows) b = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 14, max_per_day: 3,
+      date_from: '2026-11-16', date_to: '2026-11-30', windows: { 2: [['11:00', '13:00']], 4: [['15:00', '17:00']], 5: [['13:00', '15:00']] }, holidays: [] };
+    const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3), dur = +b.duration_min, buf = +b.buffer_min;
+    const earliest = Date.now() + b.min_notice_hours * 3600e3;
+    const ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const out = [];
-    for (let i = 1; i <= 60; i++) {
-      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i);
-      const wd = d.getDay() || 7, key = this.dayKey(d);
-      if (this.hash(key) % 5 === 0) continue;
-      const times = sched ? (sched[wd] || []).map((t) => +t.slice(0, 2) * 60 + +t.slice(3)) : (wd >= 6 ? [] : Array.from({ length: 11 }, (_, k) => 13 * 60 + 30 * k));
-      for (const m of times) if (this.hash(key + '@' + m) % 4 !== 0) out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).toISOString());
+    for (let i = 0; i <= b.horizon_days; i++) {
+      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i), day = ymd(d), key = this.dayKey(d);
+      if ((b.holidays || []).indexOf(day) >= 0 || (b.date_from && day < b.date_from) || (b.date_to && day > b.date_to)) continue;
+      const starts = [];
+      for (const [a, z] of (b.windows[d.getDay() || 7] || [])) for (let m = toMin(a); m + dur <= toMin(z); m += +b.step_min) starts.push(m);
+      /* «занятые» звонки: первый вариант начала в половине дней */
+      const busy = starts.length && this.hash(key) % 2 ? [starts[0]] : [];
+      if (b.max_per_day > 0 && busy.length >= b.max_per_day) continue;
+      for (const m of starts) {
+        const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).getTime();
+        if (t < earliest) continue;
+        if (busy.some((x) => x - buf < m + dur && x + dur + buf > m)) continue;
+        out.push(new Date(t).toISOString());
+      }
     }
     return out;
   }
@@ -1622,6 +1651,9 @@ void main(){
           for (let i = 0; i < cols * rows; i++) if (d[i * 4 + 3] > mxA) mxA = d[i * 4 + 3];
           const th = Math.max(1, mxA * 0.5);
           for (let i = 0; i < cols * rows; i++) inside[i] = d[i * 4 + 3] >= th ? 1 : 0;
+          /* верх первой строки букв «αξία» (верх прописных IBM Plex ≈ 0.35 кегля над серединой строки) — для placeIntro */
+          const r0 = inside.indexOf(1);
+          this.wordInkTop = r0 >= 0 ? Math.floor(r0 / cols) * ch + ch / 2 - fs * 0.35 : null;
         } catch (e) { /* маска недоступна — только поле текста */ }
       }
 
@@ -1774,7 +1806,7 @@ void main(){
     let raf = 0;
     const rebuild = () => {
       win.cancelAnimationFrame(raf);
-      raf = win.requestAnimationFrame(() => { if (build()) { startTicker(); if (P.on) flush(); } });
+      raf = win.requestAnimationFrame(() => { if (build()) { startTicker(); if (P.on) flush(); } this.placeIntro(); });   /* --hd-row сдвигает «αξία» — пересчитываем место «аксиа» */
     };
     const ro = new ResizeObserver(rebuild);
     ro.observe(hero);
