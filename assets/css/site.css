@@ -31,6 +31,9 @@
 
 html { font-size: 16px; }
 html, body { margin: 0; height: 100%; background: var(--bg); }
+/* страницу нельзя «оттянуть» за верхний и нижний край (резинка при прокрутке тачпадом и на телефоне):
+   иначе над светлой статьёй виден синий фон, а на главной — пустота над hero */
+html, body { overscroll-behavior-y: none; }
 
 .axia {
   container: axia / inline-size;
