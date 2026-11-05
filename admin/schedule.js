@@ -1,59 +1,151 @@
-/* Админка: расписание записи — сетка «дни недели × время начала встречи».
-   Отмеченный слот доступен для записи на сайте, если в Яндекс Календаре в это время ничего нет;
-   неотмеченный не показывается никогда, даже если календарь свободен.
-   Разметка: <div id="schedule" data-grid='["08:00",…]' data-slots='{"1":["13:00",…],…}' data-duration="30"></div>.
-   Сохраняет через adminApi('schedule', { slots }) — на хостинге это /admin/api.php, в демо — localStorage. */
+/* Админка: параметры записи на встречи и расписание.
+   Длительность, шаг времени начала, перерыв между звонками, за сколько часов можно записаться, на сколько дней вперёд,
+   максимум звонков в день, период записи, интервалы по дням недели и дни без записи.
+   Разметка: <div id="schedule" data-settings='{"duration_min":30,…,"windows":{"2":[["11:00","13:00"]]},…}'></div>.
+   Сохраняет через adminApi('booking_settings', { settings }) — на хостинге это /admin/api.php, в демо — localStorage.
+   Те же проверки, что здесь, сервер повторяет в booking_normalize() (lib/booking.php). */
 (function () {
   'use strict';
-  var DAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
+  var DAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+  var STEPS = [5, 10, 15, 20, 30, 60];
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function toMin(t) { var m = /^(\d{2}):(\d{2})$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null; }
+  function toHm(m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+  function plural(n, a, b, c) { var k = n % 10, h = n % 100; return n + ' ' + (k === 1 && h !== 11 ? a : k >= 2 && k <= 4 && (h < 12 || h > 14) ? b : c); }
 
   window.adminSchedule = function (box) {
     if (!box || box.getAttribute('data-ready')) return;
     box.setAttribute('data-ready', '1');
-    var grid = JSON.parse(box.getAttribute('data-grid') || '[]');
-    var slots = JSON.parse(box.getAttribute('data-slots') || '{}');
-    var dur = +box.getAttribute('data-duration') || 30;
-    var on = {};
-    for (var d = 1; d <= 7; d++) (slots[d] || []).forEach(function (t) { on[d + '@' + t] = true; });
+    var s = JSON.parse(box.getAttribute('data-settings') || '{}');
+    var windows = {};
+    for (var d = 1; d <= 7; d++) windows[d] = ((s.windows || {})[d] || []).map(function (w) { return [w[0], w[1]]; });
+    var holidays = (s.holidays || []).slice();
 
-    var end = function (t) { var m = +t.slice(0, 2) * 60 + +t.slice(3) + dur; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
-    var h = '<div class="ad-sched__scroll"><table class="ad-sched"><thead><tr><th></th>';
-    DAYS.forEach(function (n, i) { h += '<th><button type="button" class="ad-sched__day" data-day="' + (i + 1) + '" title="Отметить или снять весь день">' + n + '</button></th>'; });
-    h += '</tr></thead><tbody>';
-    grid.forEach(function (t) {
-      h += '<tr><th><button type="button" class="ad-sched__time" data-time="' + t + '" title="Отметить или снять это время во все дни">' + t + '<span>–' + end(t) + '</span></button></th>';
-      for (var d = 1; d <= 7; d++) {
-        h += '<td><label class="ad-sched__cell"><input type="checkbox" data-d="' + d + '" data-t="' + t + '"' + (on[d + '@' + t] ? ' checked' : '') + ' aria-label="' + DAYS[d - 1] + ' ' + t + '"><span></span></label></td>';
-      }
-      h += '</tr>';
-    });
-    h += '</tbody></table></div>'
-      + '<div class="ad-sched__bar"><button type="button" class="ad-btn ad-btn--primary" data-save disabled>Сохранить расписание</button><span class="ad-hint" data-status></span></div>';
-    box.innerHTML = h;
+    var save, status;
+    var dirty = function () { save.disabled = false; status.textContent = 'Есть несохранённые изменения'; render(); };
 
-    var save = box.querySelector('[data-save]'), status = box.querySelector('[data-status]');
-    var boxes = function (sel) { return Array.prototype.slice.call(box.querySelectorAll(sel)); };
-    var dirty = function () { save.disabled = false; status.textContent = 'Есть несохранённые изменения'; };
-    var toggleAll = function (list) {
-      var all = list.every(function (c) { return c.checked; });
-      list.forEach(function (c) { c.checked = !all; });
-      dirty();
+    /* ---- числовые параметры ---- */
+    var params = el('div', 'ad-bk__params');
+    var num = function (key, label, hint, min, max, stepAttr) {
+      var f = el('label', 'ad-field');
+      f.appendChild(el('span', '', label));
+      var i = el('input'); i.type = 'number'; i.min = min; i.max = max; i.step = stepAttr || 1; i.value = s[key]; i.required = true;
+      i.addEventListener('input', function () { s[key] = i.value === '' ? '' : +i.value; dirty(); });
+      f.appendChild(i);
+      if (hint) f.appendChild(el('small', 'ad-hint', hint));
+      params.appendChild(f);
     };
-    box.addEventListener('change', function (e) { if (e.target.matches('input[type=checkbox]')) dirty(); });
-    box.addEventListener('click', function (e) {
-      var day = e.target.closest('[data-day]'), time = e.target.closest('[data-time]');
-      if (day) toggleAll(boxes('input[data-d="' + day.getAttribute('data-day') + '"]'));
-      if (time) toggleAll(boxes('input[data-t="' + time.getAttribute('data-time') + '"]'));
-      if (e.target.closest('[data-save]')) {
-        var out = {};
-        for (var d = 1; d <= 7; d++) out[d] = [];
-        boxes('input[data-d]').forEach(function (c) { if (c.checked) out[c.getAttribute('data-d')].push(c.getAttribute('data-t')); });
-        save.disabled = true; status.textContent = 'Сохраняем…';
-        window.adminApi('schedule', { slots: out }).then(function () {
-          var n = boxes('input[data-d]:checked').length;
-          status.textContent = 'Сохранено. Слотов в неделю: ' + n + (n ? '' : ' — запись на сайте будет недоступна');
-        }).catch(function (er) { save.disabled = false; status.textContent = er.message || 'Не удалось сохранить'; });
-      }
+    num('duration_min', 'Длительность звонка, мин', '', 10, 240, 5);
+    (function () {
+      var f = el('label', 'ad-field'); f.appendChild(el('span', '', 'Шаг времени начала, мин'));
+      var sel = el('select');
+      STEPS.forEach(function (v) { var o = el('option', '', String(v)); o.value = v; if (v === +s.step_min) o.selected = true; sel.appendChild(o); });
+      sel.addEventListener('change', function () { s.step_min = +sel.value; dirty(); });
+      f.appendChild(sel); f.appendChild(el('small', 'ad-hint', 'например, 15 — начало в 12:00, 12:15, 12:30…')); params.appendChild(f);
+    })();
+    num('buffer_min', 'Перерыв между звонками, мин', 'до и после занятого времени', 0, 240, 5);
+    num('min_notice_hours', 'Записаться не позже чем за, ч', 'до начала звонка', 0, 720);
+    num('horizon_days', 'Запись вперёд, дней', '14 — на 2 недели вперёд', 1, 365);
+    num('max_per_day', 'Звонков в день, не больше', '0 — без ограничения', 0, 50);
+    box.appendChild(params);
+
+    /* ---- период ---- */
+    var period = el('div', 'ad-bk__period');
+    period.appendChild(el('h4', '', 'Период записи'));
+    var prow = el('div', 'ad-row');
+    ['date_from', 'date_to'].forEach(function (k, n) {
+      var f = el('label', 'ad-field'); f.appendChild(el('span', '', n ? 'по (включительно)' : 'с'));
+      var i = el('input'); i.type = 'date'; i.value = s[k] || '';
+      i.addEventListener('change', function () { s[k] = i.value; dirty(); });
+      f.appendChild(i); prow.appendChild(f);
+    });
+    period.appendChild(prow);
+    period.appendChild(el('p', 'ad-hint', 'Пустое поле — без ограничения. Запись всё равно открыта не дальше, чем на «запись вперёд» дней от сегодняшнего.'));
+    box.appendChild(period);
+
+    /* ---- дни недели ---- */
+    box.appendChild(el('h4', '', 'Дни и часы'));
+    box.appendChild(el('p', 'ad-hint', 'Интервал — время, в которое должен уложиться звонок целиком: при интервале 11:00–13:00 и звонке 30 мин последний звонок начинается в 12:30.'));
+    var week = el('div', 'ad-bk__week');
+    box.appendChild(week);
+
+    /* ---- дни без записи ---- */
+    box.appendChild(el('h4', '', 'Дни без записи'));
+    box.appendChild(el('p', 'ad-hint', 'Праздники, отпуск — в эти даты запись закрыта, даже если день есть в расписании.'));
+    var hol = el('div', 'ad-bk__hol');
+    box.appendChild(hol);
+
+    var bar = el('div', 'ad-sched__bar');
+    save = el('button', 'ad-btn ad-btn--primary', 'Сохранить'); save.type = 'button'; save.disabled = true;
+    status = el('span', 'ad-hint'); status.setAttribute('role', 'status');
+    bar.appendChild(save); bar.appendChild(status);
+    box.appendChild(bar);
+
+    function render() {
+      week.textContent = '';
+      var dur = +s.duration_min || 0, step = +s.step_min || 15, total = 0;
+      for (var d = 1; d <= 7; d++) (function (d) {
+        var row = el('div', 'ad-bk__day' + (windows[d].length ? ' is-on' : ''));
+        row.appendChild(el('span', 'ad-bk__name', DAYS[d - 1]));
+        var list = el('div', 'ad-bk__wins');
+        var starts = [];
+        windows[d].forEach(function (w, n) {
+          var item = el('span', 'ad-bk__win');
+          [0, 1].forEach(function (k) {
+            var i = el('input'); i.type = 'time'; i.step = 300; i.value = w[k]; i.required = true;
+            i.setAttribute('aria-label', DAYS[d - 1] + (k ? ', до' : ', с'));
+            i.addEventListener('change', function () { w[k] = i.value; dirty(); });
+            item.appendChild(i);
+            if (!k) item.appendChild(el('span', '', '–'));
+          });
+          var rm = el('button', 'ad-btn ad-btn--small ad-btn--danger', '×'); rm.type = 'button'; rm.title = 'Убрать интервал';
+          rm.addEventListener('click', function () { windows[d].splice(n, 1); dirty(); });
+          item.appendChild(rm);
+          list.appendChild(item);
+          var a = toMin(w[0]), b = toMin(w[1]);
+          if (a != null && b != null && dur > 0) for (var m = a; m + dur <= b; m += step) starts.push(toHm(m));
+        });
+        var add = el('button', 'ad-btn ad-btn--small', windows[d].length ? '+ интервал' : '+ добавить время'); add.type = 'button';
+        add.addEventListener('click', function () {
+          var last = windows[d][windows[d].length - 1], a = last ? Math.min(toMin(last[1]) + 60, 22 * 60) : 11 * 60;
+          windows[d].push([toHm(a), toHm(Math.min(a + 120, 23 * 60 + 55))]); dirty();
+        });
+        list.appendChild(add);
+        row.appendChild(list);
+        total += starts.length;
+        row.appendChild(el('span', 'ad-bk__preview ad-hint', starts.length ? 'начало: ' + starts.join(', ') : 'нет записи'));
+        week.appendChild(row);
+      })(d);
+
+      hol.textContent = '';
+      holidays.forEach(function (v, n) {
+        var item = el('span', 'ad-bk__win');
+        var i = el('input'); i.type = 'date'; i.value = v;
+        i.addEventListener('change', function () { holidays[n] = i.value; dirty(); });
+        var rm = el('button', 'ad-btn ad-btn--small ad-btn--danger', '×'); rm.type = 'button'; rm.title = 'Убрать дату';
+        rm.addEventListener('click', function () { holidays.splice(n, 1); dirty(); });
+        item.appendChild(i); item.appendChild(rm); hol.appendChild(item);
+      });
+      var addH = el('button', 'ad-btn ad-btn--small', '+ дата'); addH.type = 'button';
+      addH.addEventListener('click', function () { holidays.push(''); dirty(); });
+      hol.appendChild(addH);
+      box.setAttribute('data-total', total);
+    }
+    render();
+
+    save.addEventListener('click', function () {
+      var out = Object.assign({}, s, { windows: {}, holidays: holidays.filter(Boolean) });
+      for (var d = 1; d <= 7; d++) out.windows[d] = windows[d];
+      save.disabled = true; status.textContent = 'Сохраняем…';
+      window.adminApi('booking_settings', { settings: out }).then(function (r) {
+        s = r.settings;
+        for (var d = 1; d <= 7; d++) windows[d] = (s.windows[d] || []).map(function (w) { return [w[0], w[1]]; });
+        holidays = s.holidays.slice();
+        render();
+        var n = +box.getAttribute('data-total');
+        status.textContent = n ? 'Сохранено. Вариантов начала в неделю: ' + n : 'Сохранено. В расписании нет ни одного дня — запись на сайте будет недоступна';
+      }).catch(function (er) { save.disabled = false; status.textContent = er.message || 'Не удалось сохранить'; });
     });
     window.addEventListener('beforeunload', function (e) { if (!save.disabled) { e.preventDefault(); e.returnValue = ''; } });
   };

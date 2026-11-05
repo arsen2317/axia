@@ -80,20 +80,20 @@ h3 { margin: 28px 0 12px; font-size: 1rem; }
 .ad-savebar .ad-note { margin-right: auto; }
 @media (max-width: 600px) { .ad-card { padding: 16px; } .ad-savebar .ad-btn { flex: 1 1 140px; } }
 
-/* расписание записи: сетка «дни × время» (admin/schedule.js) */
-.ad-sched__scroll { overflow-x: auto; margin: 12px 0 0; }
-.ad-sched { border-collapse: separate; border-spacing: 4px; font-size: 0.875rem; }
-.ad-sched th { font-weight: 600; color: var(--ad-muted); }
-.ad-sched__day, .ad-sched__time { all: unset; cursor: pointer; display: block; padding: 4px 6px; border-radius: 6px; text-align: center; white-space: nowrap; }
-.ad-sched__day { min-width: 40px; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.04em; }
-.ad-sched__time { text-align: right; font-variant-numeric: tabular-nums; color: var(--ad-ink); }
-.ad-sched__time span { color: var(--ad-muted); font-weight: 400; }
-.ad-sched__day:hover, .ad-sched__time:hover { background: var(--ad-bg); }
-.ad-sched__day:focus-visible, .ad-sched__time:focus-visible { outline: 2px solid var(--ad-accent); }
-.ad-sched__cell { display: block; cursor: pointer; }
-.ad-sched__cell input { position: absolute; opacity: 0; pointer-events: none; }
-.ad-sched__cell span { display: block; width: 40px; height: 26px; border-radius: 6px; background: var(--ad-bg); border: 1px solid var(--ad-line); transition: background-color 0.15s, border-color 0.15s; }
-.ad-sched__cell:hover span { border-color: var(--ad-accent); }
-.ad-sched__cell input:checked + span { background: var(--ad-accent); border-color: var(--ad-accent); }
-.ad-sched__cell input:focus-visible + span { outline: 2px solid var(--ad-accent); outline-offset: 2px; }
+/* параметры записи и расписание (admin/schedule.js) */
+h4 { margin: 24px 0 8px; font-size: 0.9375rem; }
+.ad-field select { font: inherit; font-size: 1rem; color: var(--ad-ink); width: 100%; padding: 10px 12px; border: 1px solid var(--ad-line); border-radius: 8px; background: #fff; }
+.ad-field small { font-size: 0.8125rem; }
+.ad-bk__params { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 16px; margin-top: 12px; }
+.ad-bk__params .ad-field, .ad-bk__period .ad-field { margin-bottom: 12px; }
+.ad-bk__period .ad-field { flex: 0 1 220px; }
+.ad-bk__week { display: flex; flex-direction: column; border-top: 1px solid var(--ad-line); }
+.ad-bk__day { display: grid; grid-template-columns: 130px 1fr; gap: 6px 16px; padding: 10px 0; border-bottom: 1px solid var(--ad-line); align-items: start; }
+.ad-bk__name { font-weight: 600; padding-top: 6px; color: var(--ad-muted); }
+.ad-bk__day.is-on .ad-bk__name { color: var(--ad-ink); }
+.ad-bk__wins, .ad-bk__hol { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ad-bk__win { display: inline-flex; align-items: center; gap: 6px; }
+.ad-bk__win input { font: inherit; font-size: 0.9375rem; color: var(--ad-ink); padding: 6px 8px; border: 1px solid var(--ad-line); border-radius: 8px; background: #fff; }
+.ad-bk__preview { grid-column: 2; font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) { .ad-bk__day { grid-template-columns: 1fr; } .ad-bk__name { padding-top: 0; } .ad-bk__preview { grid-column: 1; } }
 .ad-sched__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }

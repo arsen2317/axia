@@ -13,6 +13,6 @@ json_out([
     'ok' => true,
     'enabled' => true,
     'timezone' => (string)cfg('timezone'),
-    'durationMin' => (int)cfg('booking.duration_min', 30),
+    'durationMin' => (int)bk('duration_min'),
     'slots' => $slots,
 ]);

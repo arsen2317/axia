@@ -17,7 +17,7 @@ function cfg(?string $path = null, $default = null)
         $local = is_file(ROOT . '/config/config.local.php') ? require ROOT . '/config/config.local.php' : [];
         $c = array_replace_recursive($base, is_array($local) ? $local : []);
         /* рабочие часы и праздники заменяются целиком, а не сливаются по ключам */
-        if (isset($local['booking']['hours'])) $c['booking']['hours'] = $local['booking']['hours'];
+        if (isset($local['booking']) && array_key_exists('hours', (array)$local['booking'])) $c['booking']['hours'] = $local['booking']['hours'];
         if (isset($local['booking']['holidays'])) $c['booking']['holidays'] = $local['booking']['holidays'];
     }
     if ($path === null) return $c;

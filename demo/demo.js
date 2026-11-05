@@ -135,7 +135,12 @@
         return save(KEY_ART, next) ? resolve({ ok: true, article: a }) : reject(new Error('Не хватило места в браузере'));
       }
       if (action === 'news') { var s3 = load(KEY_SET, {}); s3.newsEnabled = !!body.enabled; save(KEY_SET, s3); return resolve({ ok: true, enabled: s3.newsEnabled }); }
-      if (action === 'schedule') { var s2 = load(KEY_SET, {}); s2.schedule = body.slots; save(KEY_SET, s2); return resolve({ ok: true, slots: body.slots }); }
+      if (action === 'booking_settings') {
+        var bs;
+        try { bs = normalizeBooking(body.settings || {}); } catch (e) { return reject(e); }
+        var s2 = load(KEY_SET, {}); s2.booking = bs; delete s2.schedule; save(KEY_SET, s2);
+        return resolve({ ok: true, settings: bs });
+      }
       if (action === 'cancel') return resolve({ ok: true });
       reject(new Error('Неизвестное действие'));
     });
@@ -203,15 +208,37 @@
     });
   }
 
-  /* расписание записи (как config booking.hours по умолчанию: пн–пт 13:00–18:30, встреча 30 мин) */
-  function demoGrid() { var out = []; for (var m = 8 * 60; m + 30 <= 21 * 60; m += 30) out.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0')); return out; }
-  function demoSchedule() {
-    var s = load(KEY_SET, {}).schedule;
-    if (s) return s;
-    var def = {}, day = [];
-    for (var m = 13 * 60; m + 30 <= 18 * 60 + 30; m += 30) day.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'));
-    for (var d = 1; d <= 7; d++) def[d] = d <= 5 ? day.slice() : [];
-    return def;
+  /* параметры записи (как booking в config/config.example.php); проверки — упрощённая копия booking_normalize() */
+  var BOOKING_DEFAULT = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 14, max_per_day: 3,
+    date_from: '2026-11-16', date_to: '2026-11-30', windows: { 2: [['11:00', '13:00']], 4: [['15:00', '17:00']], 5: [['13:00', '15:00']] }, holidays: [] };
+  function demoBooking() { var b = load(KEY_SET, {}).booking; return b && b.windows ? b : BOOKING_DEFAULT; }
+  function normalizeBooking(s) {
+    var lim = { duration_min: [10, 240, 'Длительность звонка'], step_min: [5, 60, 'Шаг времени начала'], buffer_min: [0, 240, 'Перерыв между звонками'],
+      min_notice_hours: [0, 720, 'Минимальный срок записи'], horizon_days: [1, 365, 'Горизонт записи'], max_per_day: [0, 50, 'Звонков в день'] };
+    var out = {};
+    Object.keys(lim).forEach(function (k) {
+      var v = s[k], l = lim[k];
+      if (v === '' || v == null || isNaN(v) || Math.floor(+v) !== +v || +v < l[0] || +v > l[1]) throw new Error(l[2] + ': число от ' + l[0] + ' до ' + l[1]);
+      out[k] = +v;
+    });
+    if ([5, 10, 15, 20, 30, 60].indexOf(out.step_min) < 0) throw new Error('Шаг времени начала: 5, 10, 15, 20, 30, 60 минут');
+    if (out.duration_min % 5 || out.buffer_min % 5) throw new Error('Длительность и перерыв должны быть кратны 5 минутам');
+    out.date_from = s.date_from || ''; out.date_to = s.date_to || '';
+    if (out.date_from && out.date_to && out.date_from > out.date_to) throw new Error('Период записи: дата начала позже даты окончания');
+    var min = function (t) { var m = /^(\d{2}):(\d{2})$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null; };
+    out.windows = {};
+    for (var d = 1; d <= 7; d++) {
+      var list = ((s.windows || {})[d] || []).map(function (w) {
+        var a = min(w[0]), b = min(w[1]);
+        if (a == null || b == null) throw new Error('Время в формате ЧЧ:ММ');
+        if (b - a < out.duration_min) throw new Error(w[0] + '–' + w[1] + ': интервал короче звонка');
+        return [a, b, w[0], w[1]];
+      }).sort(function (x, y) { return x[0] - y[0]; });
+      for (var i = 1; i < list.length; i++) if (list[i][0] < list[i - 1][1]) throw new Error('Интервалы пересекаются');
+      out.windows[d] = list.map(function (x) { return [x[2], x[3]]; });
+    }
+    out.holidays = (s.holidays || []).filter(Boolean).sort();
+    return out;
   }
 
   var NEWS_ON = 'Новости на сайте показываются: блок на главной, пункты в меню и подвале';
@@ -227,8 +254,8 @@
       + '<section class="ad-card"><h2>Запись на встречи</h2><label class="ad-switch"><input type="checkbox" id="booking-toggle"' + (on ? ' checked' : '') + '><span class="ad-switch__track" aria-hidden="true"></span>'
       + '<span id="booking-label">' + (on ? 'Включена — на сайте календарь со слотами' : 'Выключена — на сайте вместо календаря форма обратной связи') + '</span></label>'
       + '<p class="ad-hint">Подключения: <span class="ad-pill">Почта (SMTP): тестовый режим</span> <span class="ad-pill">SmartCaptcha: тестовый режим</span> <span class="ad-pill">Яндекс Телемост: тестовый режим</span> <span class="ad-pill">Яндекс Календарь: тестовый режим</span></p>'
-      + '<h3>Расписание</h3><p class="ad-hint">Отметьте дни и время, когда можно записаться. Отмеченный слот появится на сайте, только если в Яндекс Календаре в это время ничего нет; неотмеченный не появится никогда. Встреча — 30 мин, время — московское. Клик по дню или времени отмечает или снимает всю колонку или строку. В демо расписание влияет на календарь главной в этом же браузере.</p>'
-      + '<div id="schedule" data-grid="' + esc(JSON.stringify(demoGrid())) + '" data-slots="' + esc(JSON.stringify(demoSchedule())) + '" data-duration="30"></div>'
+      + '<h3>Параметры и расписание</h3><p class="ad-hint">Время — московское. Слот появится на сайте, только если он попадает в расписание и период записи, в Яндекс Календаре в это время (с учётом перерыва) ничего нет и в этот день ещё не набрано максимальное число звонков. В демо параметры влияют на календарь главной в этом же браузере, часть слотов показана занятой — как будто в календаре.</p>'
+      + '<div id="schedule" data-settings="' + esc(JSON.stringify(demoBooking())) + '"></div>'
       + '<h3>Ближайшие встречи</h3><p class="ad-hint">В демо-режиме встреч нет. На настоящем сайте здесь список записей с кнопкой «Отменить».</p></section>'
       + '<section class="ad-card"><div class="ad-card__head"><h2>Статьи</h2><a class="ad-btn ad-btn--primary" href="/admin/edit.php">Новая статья</a></div>'
       + '<label class="ad-switch"><input type="checkbox" id="news-toggle"' + (newsOn ? ' checked' : '') + '><span class="ad-switch__track" aria-hidden="true"></span><span id="news-label">' + (newsOn ? NEWS_ON : NEWS_OFF) + '</span></label>'

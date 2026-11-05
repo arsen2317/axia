@@ -22,20 +22,12 @@ switch ($action) {
         save_settings(['news_enabled' => !empty($d['enabled'])]);
         json_out(['ok' => true, 'enabled' => (bool)settings()['news_enabled']]);
 
-    case 'schedule':
+    case 'booking_settings':
         $d = json_body();
-        $grid = array_flip(schedule_grid());
-        $in = (array)($d['slots'] ?? []);
-        $out = [];
-        for ($day = 1; $day <= 7; $day++) {
-            $list = [];
-            foreach ((array)($in[$day] ?? $in[(string)$day] ?? []) as $t) if (is_string($t) && isset($grid[$t])) $list[$t] = true;
-            $list = array_keys($list);
-            sort($list);
-            $out[(string)$day] = $list;
-        }
-        save_settings(['booking_slots' => $out]);
-        json_out(['ok' => true, 'slots' => booking_schedule()]);
+        [$bs, $err] = booking_normalize((array)($d['settings'] ?? []));
+        if ($err) fail($err, 422);
+        save_settings(['booking' => $bs]);
+        json_out(['ok' => true, 'settings' => $bs]);
 
     case 'cancel':
         $d = json_body();
