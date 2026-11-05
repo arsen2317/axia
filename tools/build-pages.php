@@ -16,7 +16,8 @@ $csp = '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'
 $demoHead = '<meta name="robots" content="noindex">' . "\n" . '<link rel="stylesheet" href="/demo/demo.css">' . "\n";
 
 $pages = [
-    'privacy.html' => ['Политика обработки персональных данных — аксиа', 'Как ООО «Аксиа Консалтинг» обрабатывает и защищает персональные данные пользователей сайта', 'Документы', $csp, '', ''],
+    /* data-nav="pinned": меню на десктопе не сжимается при скролле (assets/js/inner.js) */
+    'privacy.html' => ['Политика обработки персональных данных — аксиа', 'Как ООО «Аксиа Консалтинг» обрабатывает и защищает персональные данные пользователей сайта', 'Документы', $csp, ' data-nav="pinned"', ''],
     /* демо-режим для Vercel (см. demo/demo.js) */
     'demo/news.html' => ['Новости — аксиа', '', 'Новости', $demoHead, ' data-demo="news"', '<script src="/demo/demo.js"></script>' . "\n"],
     'demo/article.html' => ['Статья — аксиа', '', 'Новости', $demoHead, ' data-demo="article"', '<script src="/demo/demo.js"></script>' . "\n"],

@@ -3,7 +3,8 @@
    - бургер (и логотип в плашке на планшете и мобильном) открывает список разделов; тап мимо меню или Esc — закрывает;
    - когда страница докручена почти до конца, «αξία» в подвале выезжает снизу;
    - над светлой страницей статьи меню и лого — серые;
-   - если новости выключены в админке, пунктов «новости» в меню и подвале нет. */
+   - если новости выключены в админке, пунктов «новости» в меню и подвале нет;
+   - <body data-nav="pinned"> (политика конфиденциальности): меню на десктопе всегда развёрнуто, при скролле не сжимается. */
 (function () {
   'use strict';
   var root = document.querySelector('.axia');
@@ -38,9 +39,10 @@
   });
 
   var ticking = false;
+  var pinned = document.body.getAttribute('data-nav') === 'pinned';
   function update() {
     ticking = false;
-    var top = window.scrollY < 16;
+    var top = pinned || window.scrollY < 16;
     if (top !== root.classList.contains('is-top')) {
       root.classList.toggle('is-top', top);
       if (!top) setOpen(false);
