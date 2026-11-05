@@ -125,6 +125,7 @@ class Page extends DCLogic {
       /* «αξία» растворяется по мере скролла: к моменту, когда «Направления» закрепятся, её уже не видно */
       const hero = doc.getElementById('top');
       const word = hero && hero.querySelector('.hero__word');
+      this.placeIntro();
       if (word) {
         const hr = hero.getBoundingClientRect();
         const k = Math.min(Math.max(-hr.top / (hr.height * 0.85), 0), 1);
@@ -195,6 +196,20 @@ class Page extends DCLogic {
       requestAnimationFrame(() => requestAnimationFrame(go));
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(go);
     }
+  }
+  /* HERO, десктоп: «аксиа» с описанием — по центру между низом меню и верхом «αξία».
+     Середину считаем в пикселях от верха hero и отдаём в CSS (--intro-c); у svg «αξία» верх букв = верх картинки */
+  placeIntro() {
+    const doc = (this.root && this.root.ownerDocument) || document;
+    const hero = doc.getElementById('top'), word = hero && hero.querySelector('.hero__word'), slot = doc.querySelector('.header .nav-slot');
+    if (!word || !slot) return;
+    if (!this.introLoad && !word.complete) { this.introLoad = true; word.addEventListener('load', () => this.placeIntro(), { once: true }); }
+    /* «αξία» нарисована буквами текстовой сетки (hd-field) — берём верх её первой строки; без сетки — верх картинки */
+    const hr = hero.getBoundingClientRect(), mb = slot.getBoundingClientRect().bottom;
+    const wt = this.wordInkTop != null && hero.querySelector('.hd-field') ? this.wordInkTop : word.getBoundingClientRect().top - hr.top;
+    if (!(wt > mb)) return;
+    const c = Math.round((mb + wt) / 2) + 'px';
+    if (hero.style.getPropertyValue('--intro-c') !== c) hero.style.setProperty('--intro-c', c);
   }
   componentWillUnmount() {
     if (this.pagingStop) this.pagingStop();
@@ -1636,6 +1651,9 @@ void main(){
           for (let i = 0; i < cols * rows; i++) if (d[i * 4 + 3] > mxA) mxA = d[i * 4 + 3];
           const th = Math.max(1, mxA * 0.5);
           for (let i = 0; i < cols * rows; i++) inside[i] = d[i * 4 + 3] >= th ? 1 : 0;
+          /* верх первой строки букв «αξία» (верх прописных IBM Plex ≈ 0.35 кегля над серединой строки) — для placeIntro */
+          const r0 = inside.indexOf(1);
+          this.wordInkTop = r0 >= 0 ? Math.floor(r0 / cols) * ch + ch / 2 - fs * 0.35 : null;
         } catch (e) { /* маска недоступна — только поле текста */ }
       }
 
@@ -1788,7 +1806,7 @@ void main(){
     let raf = 0;
     const rebuild = () => {
       win.cancelAnimationFrame(raf);
-      raf = win.requestAnimationFrame(() => { if (build()) { startTicker(); if (P.on) flush(); } });
+      raf = win.requestAnimationFrame(() => { if (build()) { startTicker(); if (P.on) flush(); } this.placeIntro(); });   /* --hd-row сдвигает «αξία» — пересчитываем место «аксиа» */
     };
     const ro = new ResizeObserver(rebuild);
     ro.observe(hero);
