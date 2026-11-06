@@ -1465,7 +1465,7 @@ void main(){
   demoSlots() {
     let b = null;
     try { b = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).booking || null; } catch (e) { b = null; }
-    if (!b || !b.windows) b = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 30, max_per_day: 3,
+    if (!b || !b.windows) b = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 14, max_per_day: 3,
       date_from: '2026-11-16', date_to: '2026-11-30', windows: { 2: [['11:00', '13:00']], 4: [['15:00', '17:00']], 5: [['13:00', '15:00']] }, holidays: [] };
     const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3), dur = +b.duration_min;
     const earliest = Date.now() + b.min_notice_hours * 3600e3;

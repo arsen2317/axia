@@ -209,7 +209,7 @@
   }
 
   /* параметры записи (как booking в config/config.example.php); проверки — упрощённая копия booking_normalize() */
-  var BOOKING_DEFAULT = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 30, max_per_day: 3,
+  var BOOKING_DEFAULT = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 14, max_per_day: 3,
     date_from: '2026-11-16', date_to: '2026-11-30', windows: { 2: [['11:00', '13:00']], 4: [['15:00', '17:00']], 5: [['13:00', '15:00']] }, holidays: [] };
   function demoBooking() { var b = load(KEY_SET, {}).booking; return b && b.windows ? b : BOOKING_DEFAULT; }
   function normalizeBooking(s) {
