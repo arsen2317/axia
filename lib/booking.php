@@ -507,7 +507,7 @@ function cancel_booking(string $id, string $by): ?array
     require_once ROOT . '/lib/mail.php';
     $when = ru_when((int)$b['start'], (int)$b['end']);
     send_mail((string)cfg('mail.to'), 'Встреча отменена: ' . $when,
-        mail_layout('Встреча отменена', '<p><b>' . h($when) . '</b></p><p>Отменил(а): ' . h($by) . '. Событие удалено из календаря, время снова доступно для записи.</p>'),
+        mail_layout('Встреча отменена', mail_rows(['Когда' => $when, 'Отменил(а)' => $by]) . mail_p('Событие удалено из календаря, время снова доступно для записи.', true)),
         "Встреча отменена\n\n$when\nОтменил(а): $by\n");
     return $b;
 }
