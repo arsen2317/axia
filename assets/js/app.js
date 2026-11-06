@@ -517,10 +517,12 @@ void main(){
      до ближайшего экрана с учётом направления: прокрутили вниз дальше 15% экрана от экрана — едем к следующему,
      меньше — возвращаемся. Экраны: hero, «о нас», «направления», «решения», «команда»,
      «обсудить задачу». Внутри «решений», высокой «команды» и «обсудить задачу» с подвалом — без доводки.
-     Любое касание колеса / пальца / клавиш прерывает доводку. Десктоп и планшет; на мобильном — без доводки. */
+     Любое касание колеса / пальца / клавиш прерывает доводку. Десктоп и планшет; на мобильном — без доводки.
+     Доводка — только после прокрутки самим пользователем (колесо, палец, клавиши прокрутки, полоса прокрутки).
+     Прокрутку, которую делает сама страница (подкрутка к форме записи, переходы из меню), не трогаем. */
   startPaging() {
     const doc = (this.root && this.root.ownerDocument) || document, win = doc.defaultView || window;
-    let anim = null, timer = 0, startY = null, touching = false, selfScroll = false, restY = 0;   /* restY — где страница стояла до жеста */
+    let anim = null, timer = 0, startY = null, touching = false, selfScroll = false, restY = 0, user = false;   /* restY — где страница стояла до жеста; user — прокручивал ли пользователь с прошлой доводки */
     const scroller = () => {
       let sc = doc.querySelector('.ab') || doc.querySelector('section');
       sc = sc && sc.parentElement;
@@ -576,6 +578,8 @@ void main(){
     };
     const settle = () => {
       if (touching || anim) return;
+      if (!user) { startY = null; restY = (scroller() || {}).scrollTop ?? (win.scrollY || doc.documentElement.scrollTop); return; }
+      user = false;
       const g = geo();
       if (g.W <= 1056) { startY = null; return; }   /* планшет и мобильный — без доводчика */
       const y = g.y, dir = Math.sign(y - (startY == null ? restY : startY));
@@ -600,18 +604,28 @@ void main(){
       timer = win.setTimeout(settle, 160);
     };
     const onInput = () => { if (anim) stop(); };
-    const onTouchStart = () => { touching = true; onInput(); };
+    const onWheel = () => { user = true; onInput(); };
+    /* клавиши прокрутки — только не в полях ввода */
+    const SCROLL_KEYS = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'];
+    const onKey = (e) => {
+      onInput();
+      const t = e.target, tag = t && t.tagName;
+      if (SCROLL_KEYS.indexOf(e.key) >= 0 && !(t && (t.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON'))) user = true;
+    };
+    /* нажатие мыши — прокрутка, только если это полоса прокрутки (правее содержимого страницы) */
+    const onDown = (e) => { onInput(); if (e.clientX >= doc.documentElement.clientWidth) user = true; };
+    const onTouchStart = () => { touching = true; user = true; onInput(); };
     const onTouchEnd = () => { touching = false; win.clearTimeout(timer); timer = win.setTimeout(settle, 220); };
     doc.addEventListener('scroll', onScroll, { capture: true, passive: true });
-    win.addEventListener('wheel', onInput, { passive: true });
-    win.addEventListener('mousedown', onInput);
-    win.addEventListener('keydown', onInput);
+    win.addEventListener('wheel', onWheel, { passive: true });
+    win.addEventListener('mousedown', onDown);
+    win.addEventListener('keydown', onKey);
     win.addEventListener('touchstart', onTouchStart, { passive: true });
     win.addEventListener('touchend', onTouchEnd, { passive: true });
     this.pagingStop = () => {
       stop(); win.clearTimeout(timer);
       doc.removeEventListener('scroll', onScroll, { capture: true });
-      win.removeEventListener('wheel', onInput); win.removeEventListener('mousedown', onInput); win.removeEventListener('keydown', onInput);
+      win.removeEventListener('wheel', onWheel); win.removeEventListener('mousedown', onDown); win.removeEventListener('keydown', onKey);
       win.removeEventListener('touchstart', onTouchStart); win.removeEventListener('touchend', onTouchEnd);
     };
   }
