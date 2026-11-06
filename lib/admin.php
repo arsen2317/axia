@@ -99,5 +99,6 @@ function admin_head(string $title): void
     header('Content-Type: text/html; charset=utf-8');
     echo '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
         . '<meta name="robots" content="noindex, nofollow"><title>' . h($title) . ' — админка аксиа</title>'
+        . '<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" href="/favicon.svg" type="image/svg+xml">'
         . '<link rel="stylesheet" href="/assets/css/fonts.css"><link rel="stylesheet" href="/admin/admin.css"></head><body>';
 }

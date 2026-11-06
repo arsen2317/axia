@@ -16,6 +16,7 @@ function page_head_html(string $title, string $description = '', string $navLabe
         . '<meta property="og:title" content="' . $t . '">' . "\n"
         . ($description !== '' ? '<meta property="og:description" content="' . h($description) . '">' . "\n" : '')
         . ($ogImage !== '' ? '<meta property="og:image" content="' . h(site_url($ogImage)) . '">' . "\n" : '')
+        . '<link rel="icon" href="/favicon.ico" sizes="32x32">' . "\n" . '<link rel="icon" href="/favicon.svg" type="image/svg+xml">' . "\n" . '<link rel="apple-touch-icon" href="/apple-touch-icon.png">' . "\n"
         . '<link rel="stylesheet" href="/assets/css/fonts.css">' . "\n"
         . '<link rel="stylesheet" href="/assets/css/site.css">' . "\n"
         . '<link rel="stylesheet" href="/assets/css/page.css">' . "\n"
