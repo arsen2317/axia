@@ -377,11 +377,11 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .header .logo, .axia .nav, .axia .nav__toggle { transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease; }
 /* МЕНЮ, десктоп: на hero — развёрнутая плашка со всеми разделами в строку; с началом скролла плавно
    сжимается к центру до компактного вида (подпись раздела + бургер). Шире, чем колонка меню, — на --nav-x с каждой стороны,
-   но не заходя на логотип и кнопку */
+   но не заходя на логотип и кнопку. Ширина — по числу пунктов: промежуток между ними постоянный */
 .nav__row { display: none; }
 @container axia (width > 66rem) {
   .axia .nav {
-    --nav-x: max(0px, min(7.5rem, (100cqw - 2 * var(--gutter) - 24rem - 3rem) / 2 - 11rem));
+    --nav-x: max(0px, min(var(--nav-fit, 7.5rem), (100cqw - 2 * var(--gutter) - 24rem - 3rem) / 2 - 11rem));   /* --nav-fit — по числу пунктов, считает скрипт */
     left: 0; right: 0;
     transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease,
                 left 0.55s cubic-bezier(.65, 0, .35, 1), right 0.55s cubic-bezier(.65, 0, .35, 1);

@@ -83,6 +83,24 @@ class Page extends DCLogic {
       if (el) this.startGL(el);
     };
   }
+  /* МЕНЮ, десктоп: ширина развёрнутой плашки — по числу пунктов. Промежуток между пунктами постоянный
+     (как при пяти пунктах: 3,8% ширины страницы, не меньше 54 px), поэтому без пункта «новости» плашка уже.
+     Результат — --nav-fit у .nav: сколько добавить с каждой стороны к компактной плашке. Та же функция — в inner.js */
+  updateNavFit() {
+    const doc = (this.root && this.root.ownerDocument) || document;
+    const row = doc.querySelector('.nav__row'), nav = row && row.closest('.nav'), slot = nav && nav.parentElement;
+    if (!row || !slot) return;
+    const items = Array.prototype.filter.call(row.children, (li) => li.offsetWidth > 0);
+    const W = (this.root || doc.documentElement).clientWidth;
+    const key = W + ':' + items.length + ':' + (doc.fonts ? doc.fonts.status : '');
+    if (!items.length || key === this.navFitKey) return;
+    this.navFitKey = key;
+    const cs = getComputedStyle(row);
+    const text = items.reduce((s, li) => s + li.getBoundingClientRect().width, 0);
+    const need = text + Math.max(54, 0.038 * W) * (items.length - 1) + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 2;
+    nav.style.setProperty('--nav-fit', Math.max(0, (need - slot.getBoundingClientRect().width) / 2).toFixed(1) + 'px');
+  }
+  componentDidUpdate() { this.updateNavFit(); }
   /* подпись в плашке меню = секция, которая сейчас на экране (атрибут data-nav-label) */
   componentDidMount() {
     this.ticking = false;
@@ -92,7 +110,7 @@ class Page extends DCLogic {
       if (!this.snapAnim) this.snapT = setTimeout(() => this.snapWho(), 220);
       if (this.ticking) return;
       this.ticking = true;
-      requestAnimationFrame(() => { this.ticking = false; this.updateLabel(); this.updateDirs(); this.updateDv(); this.updateWho(); this.updateTmPages(); this.updateAppr(); this.updateSol(); });
+      requestAnimationFrame(() => { this.ticking = false; this.updateNavFit(); this.updateLabel(); this.updateDirs(); this.updateDv(); this.updateWho(); this.updateTmPages(); this.updateAppr(); this.updateSol(); });
     };
     this.updateLabel = () => {
       /* ищем секции по всему документу: ref корневого элемента в редакторе может не приходить */
@@ -221,7 +239,7 @@ class Page extends DCLogic {
     this.updateDirs();
     this.updateDv();
     this.updateTmPages(true);
-    { const d = (this.root && this.root.ownerDocument) || document; if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => this.updateTmPages(true)); }
+    { const d = (this.root && this.root.ownerDocument) || document; if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => { this.updateTmPages(true); this.navFitKey = null; this.updateNavFit(); }); }
     this.updateWho();
     this.updateAppr();
     this.loadBooking();
