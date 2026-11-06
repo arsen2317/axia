@@ -10,7 +10,7 @@
   var root = document.querySelector('.axia');
   if (!root) return;
   var nav = root.querySelector('.nav'), toggle = root.querySelector('.nav__toggle'), foot = root.querySelector('.foot');
-  var logo = root.querySelector('.header > .logo');
+  var logo = root.querySelector('.header > .logo'), cta = root.querySelector('.header .cta');
 
   function setOpen(open) {
     if (!nav) return;
@@ -60,6 +60,7 @@
       };
       root.classList.toggle('is-light-nav', over(nav));
       root.classList.toggle('is-light-logo', over(logo));
+      root.classList.toggle('is-light-cta', desktop() ? false : over(cta));   /* прозрачная кнопка внизу экрана (планшет, мобильный) */
     }
     if (foot) {
       var fr = foot.getBoundingClientRect(), vh = window.innerHeight;

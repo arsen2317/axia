@@ -350,16 +350,23 @@ html, body { overscroll-behavior-y: none; }
     justify-content: center;
     height: var(--bar-h);
     padding: 0 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    /* прозрачная с размытием — как плашка меню */
+    border: 1px solid var(--glass-edge);
     border-radius: 0.5rem;
-    background: var(--dark);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur));
     color: var(--ink);
     white-space: nowrap;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, color 0.3s ease, border-color 0.3s ease;
   }
-  @media (hover: hover) { .cta:hover { opacity: 1; background: #333333; } }
-  /* нажатие: кнопка темнеет, а не светлеет */
-  .cta:active { color: var(--ink); background: #1c1c1c; }
+  @media (hover: hover) { .cta:hover { opacity: 1; background: rgba(255, 255, 255, 0.16); } }
+  /* нажатие: стекло чуть плотнее */
+  .cta:active { color: var(--ink); background: rgba(255, 255, 255, 0.2); }
+  /* над светлым фоном («Команда», открытый круг «Решений», статья) — как меню над светлым: серое стекло, тёмный текст
+     (класс is-light-cta ставит скрипт по тому, что лежит под самой кнопкой) */
+  .axia.is-light-cta .cta, .axia.is-light-cta .cta:active { color: #595959; background: rgba(238, 238, 238, 0.85); border-color: transparent; }
+  .axia.is-light-sol-cta .cta, .axia.is-light-sol-cta .cta:active { color: #2c4595; }
   .cta::after { display: none; }
 
   .intro {

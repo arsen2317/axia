@@ -135,6 +135,25 @@ class Page extends DCLogic {
         }
       }
       if (light !== !!this.state.light || lightSol !== !!this.state.lightSol) this.setState({ light, lightSol });
+      /* планшет и мобильный: прозрачная кнопка «обсудить задачу» внизу экрана — над чем лежит она сама
+         (белая «Команда» → серое стекло; открытый круг «Решений» → синий текст) */
+      {
+        let cl = false, cls = false;
+        const cta = doc.querySelector('.header .cta'), axc = cta && cta.closest('.axia');
+        if (cta && axc && axc.clientWidth <= 1056) {
+          const kr = cta.getBoundingClientRect(), y = kr.top + kr.height / 2;
+          const tmw = doc.querySelector('#team .tm');
+          if (tmw) { const r = tmw.getBoundingClientRect(); cl = r.top <= y && r.bottom > y; }
+          const card = !cl && doc.querySelector('.sol__item.is-open .sol__card');
+          if (card) {
+            const cr = card.getBoundingClientRect(), cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2, R = cr.width / 2;
+            let n = 0;
+            [0.15, 0.5, 0.85].forEach((f) => { const x = kr.left + kr.width * f; if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < R * R) n++; });
+            cls = n >= 2;
+          }
+        }
+        if (cl !== !!this.state.lightCta || cls !== !!this.state.lightSolCta) this.setState({ lightCta: cl, lightSolCta: cls });
+      }
       /* на hero (пока скролл не начался) меню на десктопе развёрнуто в строку разделов */
       const heroEl = doc.getElementById('top');
       const atTop = heroEl ? heroEl.getBoundingClientRect().top > -16 : true;
@@ -782,12 +801,22 @@ void main(){
       a0 = e * STEP;
     }
     sec.style.setProperty('--fill', (90 + a0).toFixed(2) + 'deg');
+    /* Раскладка ниже (сетка фона, высоты «о нас», зазоры, «Решения», «Команда», подвал) зависит только от размеров
+       экрана и блоков, а не от прокрутки. Пересчитываем её, только когда что-то из этого поменялось: раньше она шла
+       на каждом кадре прокрутки и на телефоне занимала почти весь кадр (меню и анимации запаздывали на секунду) */
+    let relayout = false;
+    {
+      const ax = sec.closest('.axia'), fsd = sec.ownerDocument.fonts;
+      const q = (sel) => { const el = ax && ax.querySelector(sel); return el ? el.offsetHeight : 0; };
+      const key = [win.innerWidth, vh, sec.offsetHeight, q('.ab__title'), q('.ab__side'), q('.who__body'), q('.sol'), q('.team'), q('.news'), q('.meet'), fsd ? fsd.status : ''].join('|');
+      if (key !== this.layoutKey) { this.layoutKey = key; relayout = true; }
+    }
     /* вертикальные экраны: круг ставим туда, где ему место по композиции,
        а фоновую сетку сдвигаем (--pat-phase / uPhase) так, чтобы её горизонтальная линия прошла ровно по верху круга.
        Сдвиг общий для hero и «Направлений», поэтому шва между секциями нет. */
     const sticky = sec.querySelector('.dirs__sticky');
     const root = sec.closest('.axia');
-    if (sticky && root) {
+    if (relayout && sticky && root) {
       const W = win.innerWidth;
       if (win.matchMedia && win.matchMedia('(orientation: portrait)').matches) {
         let target;
@@ -817,7 +846,7 @@ void main(){
       }
     }
     /* зазор перед «Подходом»: чтобы секция начиналась ровно на горизонтальной линии сетки */
-    if (root) {
+    if (relayout && root) {
       const W = win.innerWidth;
       const portrait = win.matchMedia && win.matchMedia('(orientation: portrait)').matches;
       const sc = portrait ? W / 768 : W / 1200, P = (portrait ? 345 : 283) * sc, y0 = (portrait ? 235 : 259) * sc;
@@ -1941,7 +1970,7 @@ void main(){
       glOn,
       fieldOn,
       setField: this.setField,
-      rootClass: (glOn && this.state.glReady ? 'axia axia--gl' : 'axia') + (fieldOn ? ' hd' : '') + (this.state.navLabel === 'Обсудить задачу' ? ' is-contact' : '') + (this.state.light ? ' is-light' : '') + (this.state.lightSol ? ' is-light-sol' : '') + (this.state.top ? ' is-top' : ''),
+      rootClass: (glOn && this.state.glReady ? 'axia axia--gl' : 'axia') + (fieldOn ? ' hd' : '') + (this.state.navLabel === 'Обсудить задачу' ? ' is-contact' : '') + (this.state.light ? ' is-light' : '') + (this.state.lightSol ? ' is-light-sol' : '') + (this.state.lightCta ? ' is-light-cta' : '') + (this.state.lightSolCta ? ' is-light-sol-cta' : '') + (this.state.top ? ' is-top' : ''),
       ...this.meetVals(),
       navLabel: this.state.navLabel,
       /* КОМАНДА: выбранный участник (0 — Ксения, 1 — Андрей, 2 — Диана) */
