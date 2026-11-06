@@ -796,7 +796,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
     border-radius: 50%; background: #e9e6e1;
   }
   .axia .tm__ava img { position: absolute; left: -30%; top: -6%; width: 160%; max-width: none; height: auto; mix-blend-mode: multiply; }
-  .axia .tm__card:nth-child(1) .tm__ava img { top: -12%; }
+  .axia .tm__card:nth-child(1) .tm__ava img { top: -12%; left: -26%; }   /* Ксения: голова на фото левее центра кадра — сдвигаем, чтобы лицо встало по центру круга */
   .axia .tm__desc p.is-hidden { display: block; }
   .axia .tm__desc p.is-first:not(:first-child) { margin-top: 0.67em; }
   .axia .tm__flow .tm__desc { margin-top: 1rem; }
