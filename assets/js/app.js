@@ -1,5 +1,22 @@
 /* аксиа — логика страницы (перенесено из Claude Design как есть).
    Разметка — в index.html, внутри <template id="page">. */
+/* Высота экрана для раскладки — «малая» (svh): на телефонах не меняется, когда при прокрутке прячется и появляется
+   адресная строка браузера (innerHeight и dvh в этот момент меняются, и секции прыгают). На компьютере = innerHeight.
+   Меряем по невидимому элементу высотой 100svh (старые браузеры — 100vh, на iOS это тоже постоянная величина) */
+function stableVh(win) {
+  win = win || window;
+  const doc = win.document;
+  let el = doc.getElementById('axia-svh');
+  if (!el && doc.body) {
+    el = doc.createElement('div');
+    el.id = 'axia-svh';
+    el.setAttribute('aria-hidden', 'true');
+    el.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100vh;visibility:hidden;pointer-events:none';
+    el.style.height = '100svh';
+    doc.body.appendChild(el);
+  }
+  return (el && el.offsetHeight) || win.innerHeight;
+}
 class Page extends DCLogic {
   constructor(props) {
     super(props);
@@ -81,7 +98,7 @@ class Page extends DCLogic {
       /* ищем секции по всему документу: ref корневого элемента в редакторе может не приходить */
       const doc = (this.sec && this.sec.ownerDocument) || (this.root && this.root.ownerDocument) || document;
       const win = doc.defaultView || window;
-      const mid = win.innerHeight / 2;
+      const mid = stableVh(win) / 2;
       let label = 'О нас';
       doc.querySelectorAll('[data-nav-label]').forEach((el) => {
         const r = el.getBoundingClientRect();
@@ -100,7 +117,7 @@ class Page extends DCLogic {
         const its = doc.querySelectorAll('.sol__item'), ax0 = its[0] && its[0].closest('.axia');
         let live = -1;
         if (ax0 && ax0.clientWidth <= 1056) {
-          let best = Infinity; const vh0 = win.innerHeight;
+          let best = Infinity; const vh0 = stableVh(win);
           its.forEach((it, i) => { const r = it.getBoundingClientRect(); if (r.bottom < 0 || r.top > vh0) return; const d0 = Math.abs((r.top + r.bottom) / 2 - vh0 / 2); if (d0 < best) { best = d0; live = i; } });
         }
         if (live !== (this.state.solLive ?? -1)) this.setState({ solLive: live });
@@ -138,14 +155,14 @@ class Page extends DCLogic {
         const dirs = doc.getElementById('directions'), axr = dirs && dirs.closest('.axia');
         if (dirs && axr) {
           const cw = axr.clientWidth, dr = dirs.getBoundingClientRect();
-          if (this.dvPlayed || (false && dr.top < win.innerHeight * 0.35 && dr.bottom > win.innerHeight * 0.5)) this.dvPlayed = true;
+          if (this.dvPlayed || (false && dr.top < stableVh(win) * 0.35 && dr.bottom > stableVh(win) * 0.5)) this.dvPlayed = true;
           axr.style.setProperty('--dv-play', this.dvPlayed ? 'running' : 'paused');
           /* мобильный: карточки друг под другом — анимация карточки проигрывается, когда карточка целиком
              на экране и её центр в средней части экрана; ушла с середины — анимация сбрасывается и при
              возвращении проиграется снова */
           if (cw <= 1056) {
             this.dvOnM = this.dvOnM || [false, false, false];
-            const vhh = win.innerHeight;
+            const vhh = stableVh(win);
             dirs.querySelectorAll('.dv__card').forEach((c, i) => {
               const r = c.getBoundingClientRect(), mid = (r.top + r.bottom) / 2;
               const inC = r.top >= -8 && r.bottom <= vhh + 8 && mid > vhh * 0.3 && mid < vhh * 0.7;
@@ -422,7 +439,7 @@ void main(){
   }
   updateDv() {
     const sec = this.sec; if (!sec) return;
-    const win = sec.ownerDocument.defaultView || window, vh = win.innerHeight;
+    const win = sec.ownerDocument.defaultView || window, vh = stableVh(win);
     const key = vh + 'x' + (sec.querySelector('.dirs__sticky') || {}).clientWidth;
     if (!this.dvGeo || this.dvKey !== key) { this.dvGeo = this.dvLayout(); this.dvKey = key; }
     const g = this.dvGeo; if (!g) return;
@@ -497,7 +514,7 @@ void main(){
     };
     const geo = () => {
       const sc = scroller();
-      const vh = sc ? sc.clientHeight : win.innerHeight, W = sc ? sc.clientWidth : win.innerWidth;
+      const vh = sc ? sc.clientHeight : stableVh(win), W = sc ? sc.clientWidth : win.innerWidth;
       const y = sc ? sc.scrollTop : (win.scrollY || doc.documentElement.scrollTop);
       const max = sc ? sc.scrollHeight - sc.clientHeight : doc.documentElement.scrollHeight - win.innerHeight;
       const top0 = sc ? sc.getBoundingClientRect().top : 0;
@@ -581,7 +598,7 @@ void main(){
   }
   updateWho() {
     const sec = this.whoSec; if (!sec) return;
-    const vh = (sec.ownerDocument.defaultView || window).innerHeight;
+    const vh = stableVh(sec.ownerDocument.defaultView || window);
     const r = sec.getBoundingClientRect();
     const cy = this.whoCy || sec.offsetHeight / 2, R = this.whoR || 0, T = this.whoT || vh / 2;
     const top = r.top + cy - R;                         /* верх круга во вьюпорте */
@@ -598,7 +615,7 @@ void main(){
     return;   /* «о нас» закреплена — доводчик между hero и «о нас» не нужен */
     const sec = this.whoSec; if (!sec) return;
     const doc = sec.ownerDocument, win = doc.defaultView || window;
-    const vh = win.innerHeight;
+    const vh = stableVh(win);
     const r = sec.getBoundingClientRect();
     const dir = this.snapPrev == null ? 0 : Math.sign(this.snapPrev - r.top);   /* 1 — вниз, −1 — вверх */
     this.snapPrev = r.top;
@@ -654,7 +671,7 @@ void main(){
     const root = this.root || document.querySelector('.axia'); if (!root) return;
     const tm = root.querySelector('.tm'); if (!tm) return;
     const win = root.ownerDocument.defaultView || window;
-    const key = win.innerWidth + 'x' + win.innerHeight;
+    const key = win.innerWidth + 'x' + stableVh(win);
     if (!force && key === this.tmPgKey) return;
     this.tmPgKey = key;
     const desktop = root.clientWidth > 1056;
@@ -746,8 +763,8 @@ void main(){
     const N = 3, STEP = 40;                       /* 3 направления, 40° между ромбами */
     const win = sec.ownerDocument.defaultView || window;
     const r = sec.getBoundingClientRect();
-    const span = r.height - win.innerHeight;
-    const vh = win.innerHeight;
+    const span = r.height - stableVh(win);
+    const vh = stableVh(win);
     /* a0 — угол первого ромба (0° = верх круга, по часовой). Заливка всегда заканчивается ровно на нём */
     let e, a0;
     if (r.top > 0) {
@@ -1268,7 +1285,7 @@ void main(){
     const spot = sec.querySelector('.appr__spot');
     if (!spot || !spot.offsetWidth) return null;
     const win = sec.ownerDocument.defaultView || window;
-    const vh = win.innerHeight, r = sec.getBoundingClientRect();
+    const vh = stableVh(win), r = sec.getBoundingClientRect();
     const span = r.height - vh;
     const p = span > 0 ? Math.min(Math.max(-r.top / span, 0), 1) : 0;
     const ss = (x) => { x = Math.min(Math.max(x, 0), 1); return x * x * (3 - 2 * x); };
@@ -1356,7 +1373,7 @@ void main(){
   updateSol() {
     const sec = this.solSec; if (!sec) return;
     const win = sec.ownerDocument.defaultView || window;
-    const r = sec.getBoundingClientRect(), span = r.height - (parseFloat(getComputedStyle(sec).paddingBottom) || 0) - win.innerHeight;   /* без отступа снизу */
+    const r = sec.getBoundingClientRect(), span = r.height - (parseFloat(getComputedStyle(sec).paddingBottom) || 0) - stableVh(win);   /* без отступа снизу */
     const p = span > 0 ? Math.min(Math.max(-r.top / span, 0), 1) : 0;
     sec.style.setProperty('--sol-p', p.toFixed(4));
   }

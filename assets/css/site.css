@@ -57,7 +57,7 @@ html, body { overscroll-behavior-y: none; }
    приглушает фоновую сетку (слой z 1 — над фонами z 0, под контентом z 2), поэтому на стыках секций нет швов */
 .screen-fade {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1;
-  height: 26vh; height: 26dvh;
+  height: 26vh; height: 26svh;
   pointer-events: none;
   background: linear-gradient(to bottom,
     rgba(44, 69, 149, 0) 0%,
@@ -81,7 +81,7 @@ html, body { overscroll-behavior-y: none; }
 .hero {
   position: relative;
   height: 100vh;
-  height: 100dvh; /* на мобильных учитывает панель браузера */
+  height: 100svh; /* svh — постоянная высота: на телефонах не меняется, когда прячется адресная строка (иначе секции ниже прыгают) */
   /* без overflow и z-index: «αξία» выходит за низ hero и лежит поверх фона «Направлений», но под их текстом */
   /* паттерн — бесшовная плитка по вертикали; продолжается в следующей секции (запасной вариант без WebGL) */
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
@@ -365,7 +365,7 @@ html, body { overscroll-behavior-y: none; }
   .intro {
     justify-items: center;
     row-gap: 1.5rem;
-    padding-top: max(9rem, 30dvh);
+    padding-top: max(9rem, 30svh);
     text-align: center;
   }
   .intro__title, .intro__text { grid-column: 1 / -1; justify-self: center; }
@@ -396,28 +396,28 @@ html, body { overscroll-behavior-y: none; }
 /* геометрия круга — общая для «Направлений» и «хвоста» круга в «Подходе» */
 .axia {
   --ring: min(89vw, 166vh);
-  --ring-top: 58.6vh; --ring-top: 58.6dvh;
+  --ring-top: 58.6vh; --ring-top: 58.6svh;
 }
 /* два закреплённых слоя: фон (z 0) и контент (z 2); между ними ложится «αξία» из hero (z 1) */
 .dirs__bg {
   position: sticky; top: 0; z-index: 0;
-  height: 100vh; height: 100dvh;
+  height: 100vh; height: 100svh;
   /* статичный паттерн без анимации, продолжает сетку hero без шва:
-     та же плитка, сдвинутая на высоту hero (100dvh) */
+     та же плитка, сдвинутая на высоту hero (100svh) */
   background: var(--bg) url("../img/pattern.svg") center calc(-1 * 100vh) / 100% auto repeat-y;
-  background-position-y: calc(-1 * 100dvh);
+  background-position-y: calc(-1 * 100svh);
   /* --pat-phase: сдвиг сетки (задаёт скрипт на вертикальных экранах), тот же, что у hero — шва нет */
-  background-position-y: calc(var(--pat-phase, 0px) - 100dvh);
+  background-position-y: calc(var(--pat-phase, 0px) - 100svh);
 }
 .dirs__sticky {
   position: sticky; top: 0; z-index: 2;
-  margin-top: -100vh; margin-top: -100dvh;
-  height: 100vh; height: 100dvh;
+  margin-top: -100vh; margin-top: -100svh;
+  height: 100vh; height: 100svh;
   overflow: hidden;
 }
 @media (orientation: portrait) {
   .dirs__bg { background-image: url("../img/pattern-portrait.svg"); }
-  .axia { --ring: 150vw; --ring-top: 57vh; --ring-top: 57dvh; }
+  .axia { --ring: 150vw; --ring-top: 57vh; --ring-top: 57svh; }
 }
 
 .dirs__ring {
@@ -451,7 +451,7 @@ html, body { overscroll-behavior-y: none; }
 .dirs__tail {
   position: absolute; left: 0; right: 0; top: calc(-1 * var(--appr-gap, 0px)); z-index: 1;
   height: calc(var(--ring-top) + var(--ring) - 100vh + 4px);
-  height: calc(var(--ring-top) + var(--ring) - 100dvh + 4px);
+  height: calc(var(--ring-top) + var(--ring) - 100svh + 4px);
   overflow: hidden;
   pointer-events: none;
 }
@@ -459,7 +459,7 @@ html, body { overscroll-behavior-y: none; }
   content: "";
   position: absolute; left: 50%;
   top: calc(var(--ring-top) - 100vh);
-  top: calc(var(--ring-top) - 100dvh);
+  top: calc(var(--ring-top) - 100svh);
   width: var(--ring); height: var(--ring);
   margin-left: calc(var(--ring) / -2);
   border-radius: 50%;
@@ -468,7 +468,7 @@ html, body { overscroll-behavior-y: none; }
 .dirs__tail::after {
   border-color: rgba(232, 230, 224, 0.62); /* цвет заполненной линии прогресса */
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100vh - var(--ring-top)), transparent calc(100vh - var(--ring-top) + 38vh));
-  mask-image: linear-gradient(to bottom, #000 calc(100dvh - var(--ring-top)), transparent calc(100dvh - var(--ring-top) + 38dvh));
+  mask-image: linear-gradient(to bottom, #000 calc(100svh - var(--ring-top)), transparent calc(100svh - var(--ring-top) + 38svh));
 }
 
 .dirs__slide { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
@@ -513,24 +513,24 @@ html, body { overscroll-behavior-y: none; }
 /* два закреплённых слоя, как в «Направлениях»: фон с сеткой (z 0) и контент (z 2) — между ними ложится заглушка низа экрана */
 .appr__bg {
   position: sticky; top: 0; z-index: 0;
-  height: 100vh; height: 100dvh;
+  height: 100vh; height: 100svh;
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
   /* сетка продолжает фон «Направлений» без шва (их закреплённый фон показывает участок на 1 экран ниже hero) */
   background-position-y: calc(var(--pat-phase, 0px) - 200vh - var(--appr-gap, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 200dvh - var(--appr-gap, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 200svh - var(--appr-gap, 0px));
 }
 /* зазор перед «Подходом»: секция начинается ровно на горизонтальной линии сетки (высоту задаёт скрипт) */
 .appr-gap {
   height: var(--appr-gap, 0px);
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
   background-position-y: calc(var(--pat-phase, 0px) - 200vh);
-  background-position-y: calc(var(--pat-phase, 0px) - 200dvh);
+  background-position-y: calc(var(--pat-phase, 0px) - 200svh);
 }
 @media (orientation: portrait) { .appr-gap { background-image: url("../img/pattern-portrait.svg"); } }
 .appr__stage {
   position: sticky; top: 0; z-index: 2;
-  margin-top: -100vh; margin-top: -100dvh;
-  height: 100vh; height: 100dvh;
+  margin-top: -100vh; margin-top: -100svh;
+  height: 100vh; height: 100svh;
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   column-gap: var(--col-gap);
@@ -601,7 +601,7 @@ html, body { overscroll-behavior-y: none; }
   content: ""; position: absolute; inset: 0; z-index: -1;
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
   background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300svh - var(--appr-gap, 0px));
 }
 .team__title {
   position: absolute; left: var(--gutter); right: var(--gutter); z-index: 2;
@@ -663,18 +663,18 @@ html, body { overscroll-behavior-y: none; }
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   column-gap: var(--col-gap);
   padding-inline: var(--gutter);
-  min-height: 100vh; min-height: 100dvh;
+  min-height: 100vh; min-height: 100svh;
 }
 /* фон закреплён на высоту экрана (sticky): сетка стоит на месте, прокручивается только календарь.
    Пока блок не дошёл до верха экрана, фон едет вместе с ним и продолжает сетку «Команды» без шва. */
 .meet::before {
   content: ""; display: block; position: sticky; top: 0; z-index: -1;
   grid-column: 1 / -1; grid-row: 1; align-self: start;
-  height: 100vh; height: 100dvh;
+  height: 100vh; height: 100svh;
   margin-inline: calc(-1 * var(--gutter));
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
   background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300svh - var(--appr-gap, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
 }
 @media (orientation: portrait) { .meet::before { background-image: url("../img/pattern-portrait.svg"); } }
 
@@ -682,7 +682,7 @@ html, body { overscroll-behavior-y: none; }
   grid-column: 1 / 3; grid-row: 1;
   position: sticky; top: 0; z-index: 2;
   align-self: start;
-  height: 100vh; height: 100dvh;
+  height: 100vh; height: 100svh;
   display: flex; flex-direction: column; justify-content: center; gap: 3rem;
   padding: 7rem 2rem 3rem 0;
 }
@@ -920,7 +920,7 @@ textarea.field__input { height: auto; min-height: 6.5rem; padding: 0.875rem 1rem
 /* планшет: одна колонка; нижняя фиксированная кнопка «обсудить задачу» прячется, когда мы уже в этом блоке */
 @container axia (max-width: 66rem) {
   .meet { display: block; min-height: 0; }
-  .meet::before { margin-bottom: -100vh; margin-bottom: -100dvh; }
+  .meet::before { margin-bottom: -100vh; margin-bottom: -100svh; }
   .meet__side { position: relative; height: auto; padding: 8rem 0 2.5rem; gap: 2.5rem; }
   .meet__title { font-size: 3.5rem; }
   .meet__main { padding: 0 0 4rem; display: block; }
