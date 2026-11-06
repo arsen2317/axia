@@ -1461,28 +1461,24 @@ void main(){
     return d + ' ' + m[mo - 1] + ' ' + y;
   }
   /* демо: параметры записи из демо-админки (этот браузер) или те же, что в config/config.example.php.
-     Часть времени «занята» — как будто в календаре; перерыв и лимит в день считаются так же, как на сервере (free_slots) */
+     Календаря в демо нет — показываем все слоты по расписанию (как на сайте, когда в Яндекс Календаре на это время ничего нет) */
   demoSlots() {
     let b = null;
     try { b = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).booking || null; } catch (e) { b = null; }
-    if (!b || !b.windows) b = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 14, max_per_day: 3,
+    if (!b || !b.windows) b = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 30, max_per_day: 3,
       date_from: '2026-11-16', date_to: '2026-11-30', windows: { 2: [['11:00', '13:00']], 4: [['15:00', '17:00']], 5: [['13:00', '15:00']] }, holidays: [] };
-    const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3), dur = +b.duration_min, buf = +b.buffer_min;
+    const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3), dur = +b.duration_min;
     const earliest = Date.now() + b.min_notice_hours * 3600e3;
     const ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const out = [];
     for (let i = 0; i <= b.horizon_days; i++) {
-      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i), day = ymd(d), key = this.dayKey(d);
+      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i), day = ymd(d);
       if ((b.holidays || []).indexOf(day) >= 0 || (b.date_from && day < b.date_from) || (b.date_to && day > b.date_to)) continue;
       const starts = [];
       for (const [a, z] of (b.windows[d.getDay() || 7] || [])) for (let m = toMin(a); m + dur <= toMin(z); m += +b.step_min) starts.push(m);
-      /* «занятые» звонки: первый вариант начала в половине дней */
-      const busy = starts.length && this.hash(key) % 2 ? [starts[0]] : [];
-      if (b.max_per_day > 0 && busy.length >= b.max_per_day) continue;
       for (const m of starts) {
         const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).getTime();
         if (t < earliest) continue;
-        if (busy.some((x) => x - buf < m + dur && x + dur + buf > m)) continue;
         out.push(new Date(t).toISOString());
       }
     }

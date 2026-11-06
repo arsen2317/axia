@@ -35,7 +35,7 @@ function booking_cfg(): array
         'step_min' => (int)($c['step_min'] ?? 15),
         'buffer_min' => (int)($c['buffer_min'] ?? 15),
         'min_notice_hours' => (int)($c['min_notice_hours'] ?? 24),
-        'horizon_days' => (int)($c['horizon_days'] ?? 14),
+        'horizon_days' => (int)($c['horizon_days'] ?? 30),
         'max_per_day' => (int)($c['max_per_day'] ?? 3),
         'date_from' => (string)($c['date_from'] ?? ''),
         'date_to' => (string)($c['date_to'] ?? ''),
