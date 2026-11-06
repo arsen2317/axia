@@ -10,7 +10,7 @@ function page_head_html(string $title, string $description = '', string $navLabe
     $t = h($title);
     return '<!doctype html>' . "\n" . '<html lang="ru">' . "\n" . '<head>' . "\n"
         . '<meta charset="utf-8">' . "\n"
-        . '<meta name="viewport" content="width=device-width, initial-scale=1">' . "\n"
+        . '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' . "\n"
         . '<title>' . $t . '</title>' . "\n"
         . ($description !== '' ? '<meta name="description" content="' . h($description) . '">' . "\n" : '')
         . '<meta property="og:title" content="' . $t . '">' . "\n"
