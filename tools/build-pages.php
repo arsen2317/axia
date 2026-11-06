@@ -11,7 +11,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require __DIR__ . '/../lib/bootstrap.php';
 require ROOT . '/lib/views.php';
 
-$csp = '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\' https://smartcaptcha.yandexcloud.net; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob: https://smartcaptcha.yandexcloud.net; font-src \'self\'; connect-src \'self\' https://smartcaptcha.yandexcloud.net; frame-src https://smartcaptcha.yandexcloud.net; object-src \'none\'; base-uri \'self\'; form-action \'self\'">' . "\n"
+$csp = '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\' https://smartcaptcha.yandexcloud.net https://mc.yandex.ru https://yastatic.net; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob: https://smartcaptcha.yandexcloud.net https://mc.yandex.ru https://mc.yandex.com; font-src \'self\'; connect-src \'self\' https://smartcaptcha.yandexcloud.net https://mc.yandex.ru https://mc.yandex.com; frame-src https://smartcaptcha.yandexcloud.net; object-src \'none\'; base-uri \'self\'; form-action \'self\'">' . "\n"
     . '<meta name="referrer" content="strict-origin-when-cross-origin">' . "\n";
 $demoHead = '<meta name="robots" content="noindex">' . "\n" . '<link rel="stylesheet" href="/demo/demo.css">' . "\n";
 

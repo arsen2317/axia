@@ -1567,6 +1567,8 @@ void main(){
     }));
   }
   /* общая отправка формы: капча → POST → результат. kind: 'book' | 'msg' | 'inline' */
+  /* цель в Яндекс Метрике (assets/js/metrika.js; без согласия на cookie ничего не отправляется) */
+  goal(name) { const w = (this.root && this.root.ownerDocument.defaultView) || window; if (w.axiaGoal) w.axiaGoal(name); }
   sendForm(e, path, extra, errKey) {
     const f = this.formData(e);
     if (this.state.busy) return Promise.resolve(null);
@@ -1947,7 +1949,7 @@ void main(){
         if (this.demo) { const f = this.formData(e); this.setState({ step: 'done', bookedEmail: f.email || 'вашу почту' }); this.revealCal(); return; }
         this.sendForm(e, '/api/book.php', { start: st.slotIso }, 'bookError').then((d) => {
           if (!d) return;
-          if (d.ok) { this.setState({ step: 'done', bookedEmail: d.form.email }); this.revealCal(); this.loadSlots(); }
+          if (d.ok) { this.setState({ step: 'done', bookedEmail: d.form.email }); this.revealCal(); this.loadSlots(); this.goal('booking'); }
           else if (d.taken) this.loadSlots();
           else if (d.disabled) this.loadBooking();
         });
@@ -1966,7 +1968,7 @@ void main(){
       inlineForm: !st.inlineDone, inlineDone: !!st.inlineDone, inlineEmail: st.inlineEmail,
       submitInline: (e) => {
         if (this.demo) { const f = this.formData(e); this.setState({ inlineDone: true, inlineEmail: f.email || 'вашу почту' }); return; }
-        this.sendForm(e, '/api/contact.php', {}, 'inlineError').then((d) => { if (d && d.ok) { this.setState({ inlineDone: true, inlineEmail: d.form.email }); this.revealCal(); } });
+        this.sendForm(e, '/api/contact.php', {}, 'inlineError').then((d) => { if (d && d.ok) { this.setState({ inlineDone: true, inlineEmail: d.form.email }); this.revealCal(); this.goal('contact'); } });
       },
       resetInline: () => { this.formAt = Date.now(); this.setState({ inlineDone: false, inlineError: '' }); },
       /* модальное окно */
@@ -1976,7 +1978,7 @@ void main(){
       modalBackdrop: (e) => { if (e.target === e.currentTarget) this.setState({ modal: false }); },
       submitMsg: (e) => {
         if (this.demo) { const f = this.formData(e); this.setState({ modalDone: true, msgEmail: f.email || 'вашу почту' }); return; }
-        this.sendForm(e, '/api/contact.php', {}, 'msgError').then((d) => { if (d && d.ok) this.setState({ modalDone: true, msgEmail: d.form.email }); });
+        this.sendForm(e, '/api/contact.php', {}, 'msgError').then((d) => { if (d && d.ok) { this.setState({ modalDone: true, msgEmail: d.form.email }); this.goal('contact'); } });
       }
     };
   }

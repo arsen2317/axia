@@ -45,6 +45,7 @@ function page_foot_html(): string
         . '<script src="/assets/js/inner.js"></script>' . "\n"
         . '<script src="/assets/js/typograph.js"></script>' . "\n"
         . '<script src="/assets/js/cookies.js"></script>' . "\n"
+        . '<script src="/assets/js/metrika.js"></script>' . "\n"
         . '</body>' . "\n" . '</html>' . "\n";
 }
 

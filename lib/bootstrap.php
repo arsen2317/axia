@@ -153,7 +153,7 @@ function security_headers(bool $isAdmin = false): void
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
     header('X-Frame-Options: ' . ($isAdmin ? 'DENY' : 'SAMEORIGIN'));
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' https://smartcaptcha.yandexcloud.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://smartcaptcha.yandexcloud.net; font-src 'self'; connect-src 'self' https://smartcaptcha.yandexcloud.net; frame-src https://smartcaptcha.yandexcloud.net; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors " . ($isAdmin ? "'none'" : "'self'"));
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' https://smartcaptcha.yandexcloud.net https://mc.yandex.ru https://yastatic.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://smartcaptcha.yandexcloud.net https://mc.yandex.ru https://mc.yandex.com; font-src 'self'; connect-src 'self' https://smartcaptcha.yandexcloud.net https://mc.yandex.ru https://mc.yandex.com; frame-src https://smartcaptcha.yandexcloud.net; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors " . ($isAdmin ? "'none'" : "'self'"));
     if (is_https()) header('Strict-Transport-Security: max-age=31536000');
     if ($isAdmin) header('Cache-Control: no-store');
 }
