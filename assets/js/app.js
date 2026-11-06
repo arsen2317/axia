@@ -1,5 +1,22 @@
 /* аксиа — логика страницы (перенесено из Claude Design как есть).
    Разметка — в index.html, внутри <template id="page">. */
+/* Высота экрана для раскладки — «малая» (svh): на телефонах не меняется, когда при прокрутке прячется и появляется
+   адресная строка браузера (innerHeight и dvh в этот момент меняются, и секции прыгают). На компьютере = innerHeight.
+   Меряем по невидимому элементу высотой 100svh (старые браузеры — 100vh, на iOS это тоже постоянная величина) */
+function stableVh(win) {
+  win = win || window;
+  const doc = win.document;
+  let el = doc.getElementById('axia-svh');
+  if (!el && doc.body) {
+    el = doc.createElement('div');
+    el.id = 'axia-svh';
+    el.setAttribute('aria-hidden', 'true');
+    el.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100vh;visibility:hidden;pointer-events:none';
+    el.style.height = '100svh';
+    doc.body.appendChild(el);
+  }
+  return (el && el.offsetHeight) || win.innerHeight;
+}
 class Page extends DCLogic {
   constructor(props) {
     super(props);
@@ -81,7 +98,7 @@ class Page extends DCLogic {
       /* ищем секции по всему документу: ref корневого элемента в редакторе может не приходить */
       const doc = (this.sec && this.sec.ownerDocument) || (this.root && this.root.ownerDocument) || document;
       const win = doc.defaultView || window;
-      const mid = win.innerHeight / 2;
+      const mid = stableVh(win) / 2;
       let label = 'О нас';
       doc.querySelectorAll('[data-nav-label]').forEach((el) => {
         const r = el.getBoundingClientRect();
@@ -100,7 +117,7 @@ class Page extends DCLogic {
         const its = doc.querySelectorAll('.sol__item'), ax0 = its[0] && its[0].closest('.axia');
         let live = -1;
         if (ax0 && ax0.clientWidth <= 1056) {
-          let best = Infinity; const vh0 = win.innerHeight;
+          let best = Infinity; const vh0 = stableVh(win);
           its.forEach((it, i) => { const r = it.getBoundingClientRect(); if (r.bottom < 0 || r.top > vh0) return; const d0 = Math.abs((r.top + r.bottom) / 2 - vh0 / 2); if (d0 < best) { best = d0; live = i; } });
         }
         if (live !== (this.state.solLive ?? -1)) this.setState({ solLive: live });
@@ -118,6 +135,25 @@ class Page extends DCLogic {
         }
       }
       if (light !== !!this.state.light || lightSol !== !!this.state.lightSol) this.setState({ light, lightSol });
+      /* планшет и мобильный: прозрачная кнопка «обсудить задачу» внизу экрана — над чем лежит она сама
+         (белая «Команда» → серое стекло; открытый круг «Решений» → синий текст) */
+      {
+        let cl = false, cls = false;
+        const cta = doc.querySelector('.header .cta'), axc = cta && cta.closest('.axia');
+        if (cta && axc && axc.clientWidth <= 1056) {
+          const kr = cta.getBoundingClientRect(), y = kr.top + kr.height / 2;
+          const tmw = doc.querySelector('#team .tm');
+          if (tmw) { const r = tmw.getBoundingClientRect(); cl = r.top <= y && r.bottom > y; }
+          const card = !cl && doc.querySelector('.sol__item.is-open .sol__card');
+          if (card) {
+            const cr = card.getBoundingClientRect(), cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2, R = cr.width / 2;
+            let n = 0;
+            [0.15, 0.5, 0.85].forEach((f) => { const x = kr.left + kr.width * f; if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < R * R) n++; });
+            cls = n >= 2;
+          }
+        }
+        if (cl !== !!this.state.lightCta || cls !== !!this.state.lightSolCta) this.setState({ lightCta: cl, lightSolCta: cls });
+      }
       /* на hero (пока скролл не начался) меню на десктопе развёрнуто в строку разделов */
       const heroEl = doc.getElementById('top');
       const atTop = heroEl ? heroEl.getBoundingClientRect().top > -16 : true;
@@ -138,14 +174,14 @@ class Page extends DCLogic {
         const dirs = doc.getElementById('directions'), axr = dirs && dirs.closest('.axia');
         if (dirs && axr) {
           const cw = axr.clientWidth, dr = dirs.getBoundingClientRect();
-          if (this.dvPlayed || (false && dr.top < win.innerHeight * 0.35 && dr.bottom > win.innerHeight * 0.5)) this.dvPlayed = true;
+          if (this.dvPlayed || (false && dr.top < stableVh(win) * 0.35 && dr.bottom > stableVh(win) * 0.5)) this.dvPlayed = true;
           axr.style.setProperty('--dv-play', this.dvPlayed ? 'running' : 'paused');
           /* мобильный: карточки друг под другом — анимация карточки проигрывается, когда карточка целиком
              на экране и её центр в средней части экрана; ушла с середины — анимация сбрасывается и при
              возвращении проиграется снова */
           if (cw <= 1056) {
             this.dvOnM = this.dvOnM || [false, false, false];
-            const vhh = win.innerHeight;
+            const vhh = stableVh(win);
             dirs.querySelectorAll('.dv__card').forEach((c, i) => {
               const r = c.getBoundingClientRect(), mid = (r.top + r.bottom) / 2;
               const inC = r.top >= -8 && r.bottom <= vhh + 8 && mid > vhh * 0.3 && mid < vhh * 0.7;
@@ -422,7 +458,7 @@ void main(){
   }
   updateDv() {
     const sec = this.sec; if (!sec) return;
-    const win = sec.ownerDocument.defaultView || window, vh = win.innerHeight;
+    const win = sec.ownerDocument.defaultView || window, vh = stableVh(win);
     const key = vh + 'x' + (sec.querySelector('.dirs__sticky') || {}).clientWidth;
     if (!this.dvGeo || this.dvKey !== key) { this.dvGeo = this.dvLayout(); this.dvKey = key; }
     const g = this.dvGeo; if (!g) return;
@@ -497,7 +533,7 @@ void main(){
     };
     const geo = () => {
       const sc = scroller();
-      const vh = sc ? sc.clientHeight : win.innerHeight, W = sc ? sc.clientWidth : win.innerWidth;
+      const vh = sc ? sc.clientHeight : stableVh(win), W = sc ? sc.clientWidth : win.innerWidth;
       const y = sc ? sc.scrollTop : (win.scrollY || doc.documentElement.scrollTop);
       const max = sc ? sc.scrollHeight - sc.clientHeight : doc.documentElement.scrollHeight - win.innerHeight;
       const top0 = sc ? sc.getBoundingClientRect().top : 0;
@@ -581,7 +617,7 @@ void main(){
   }
   updateWho() {
     const sec = this.whoSec; if (!sec) return;
-    const vh = (sec.ownerDocument.defaultView || window).innerHeight;
+    const vh = stableVh(sec.ownerDocument.defaultView || window);
     const r = sec.getBoundingClientRect();
     const cy = this.whoCy || sec.offsetHeight / 2, R = this.whoR || 0, T = this.whoT || vh / 2;
     const top = r.top + cy - R;                         /* верх круга во вьюпорте */
@@ -598,7 +634,7 @@ void main(){
     return;   /* «о нас» закреплена — доводчик между hero и «о нас» не нужен */
     const sec = this.whoSec; if (!sec) return;
     const doc = sec.ownerDocument, win = doc.defaultView || window;
-    const vh = win.innerHeight;
+    const vh = stableVh(win);
     const r = sec.getBoundingClientRect();
     const dir = this.snapPrev == null ? 0 : Math.sign(this.snapPrev - r.top);   /* 1 — вниз, −1 — вверх */
     this.snapPrev = r.top;
@@ -654,7 +690,7 @@ void main(){
     const root = this.root || document.querySelector('.axia'); if (!root) return;
     const tm = root.querySelector('.tm'); if (!tm) return;
     const win = root.ownerDocument.defaultView || window;
-    const key = win.innerWidth + 'x' + win.innerHeight;
+    const key = win.innerWidth + 'x' + stableVh(win);
     if (!force && key === this.tmPgKey) return;
     this.tmPgKey = key;
     const desktop = root.clientWidth > 1056;
@@ -746,8 +782,8 @@ void main(){
     const N = 3, STEP = 40;                       /* 3 направления, 40° между ромбами */
     const win = sec.ownerDocument.defaultView || window;
     const r = sec.getBoundingClientRect();
-    const span = r.height - win.innerHeight;
-    const vh = win.innerHeight;
+    const span = r.height - stableVh(win);
+    const vh = stableVh(win);
     /* a0 — угол первого ромба (0° = верх круга, по часовой). Заливка всегда заканчивается ровно на нём */
     let e, a0;
     if (r.top > 0) {
@@ -765,12 +801,22 @@ void main(){
       a0 = e * STEP;
     }
     sec.style.setProperty('--fill', (90 + a0).toFixed(2) + 'deg');
+    /* Раскладка ниже (сетка фона, высоты «о нас», зазоры, «Решения», «Команда», подвал) зависит только от размеров
+       экрана и блоков, а не от прокрутки. Пересчитываем её, только когда что-то из этого поменялось: раньше она шла
+       на каждом кадре прокрутки и на телефоне занимала почти весь кадр (меню и анимации запаздывали на секунду) */
+    let relayout = false;
+    {
+      const ax = sec.closest('.axia'), fsd = sec.ownerDocument.fonts;
+      const q = (sel) => { const el = ax && ax.querySelector(sel); return el ? el.offsetHeight : 0; };
+      const key = [win.innerWidth, vh, sec.offsetHeight, q('.ab__title'), q('.ab__side'), q('.who__body'), q('.sol'), q('.team'), q('.news'), q('.meet'), fsd ? fsd.status : ''].join('|');
+      if (key !== this.layoutKey) { this.layoutKey = key; relayout = true; }
+    }
     /* вертикальные экраны: круг ставим туда, где ему место по композиции,
        а фоновую сетку сдвигаем (--pat-phase / uPhase) так, чтобы её горизонтальная линия прошла ровно по верху круга.
        Сдвиг общий для hero и «Направлений», поэтому шва между секциями нет. */
     const sticky = sec.querySelector('.dirs__sticky');
     const root = sec.closest('.axia');
-    if (sticky && root) {
+    if (relayout && sticky && root) {
       const W = win.innerWidth;
       if (win.matchMedia && win.matchMedia('(orientation: portrait)').matches) {
         let target;
@@ -800,7 +846,7 @@ void main(){
       }
     }
     /* зазор перед «Подходом»: чтобы секция начиналась ровно на горизонтальной линии сетки */
-    if (root) {
+    if (relayout && root) {
       const W = win.innerWidth;
       const portrait = win.matchMedia && win.matchMedia('(orientation: portrait)').matches;
       const sc = portrait ? W / 768 : W / 1200, P = (portrait ? 345 : 283) * sc, y0 = (portrait ? 235 : 259) * sc;
@@ -1268,7 +1314,7 @@ void main(){
     const spot = sec.querySelector('.appr__spot');
     if (!spot || !spot.offsetWidth) return null;
     const win = sec.ownerDocument.defaultView || window;
-    const vh = win.innerHeight, r = sec.getBoundingClientRect();
+    const vh = stableVh(win), r = sec.getBoundingClientRect();
     const span = r.height - vh;
     const p = span > 0 ? Math.min(Math.max(-r.top / span, 0), 1) : 0;
     const ss = (x) => { x = Math.min(Math.max(x, 0), 1); return x * x * (3 - 2 * x); };
@@ -1356,7 +1402,7 @@ void main(){
   updateSol() {
     const sec = this.solSec; if (!sec) return;
     const win = sec.ownerDocument.defaultView || window;
-    const r = sec.getBoundingClientRect(), span = r.height - (parseFloat(getComputedStyle(sec).paddingBottom) || 0) - win.innerHeight;   /* без отступа снизу */
+    const r = sec.getBoundingClientRect(), span = r.height - (parseFloat(getComputedStyle(sec).paddingBottom) || 0) - stableVh(win);   /* без отступа снизу */
     const p = span > 0 ? Math.min(Math.max(-r.top / span, 0), 1) : 0;
     sec.style.setProperty('--sol-p', p.toFixed(4));
   }
@@ -1415,28 +1461,24 @@ void main(){
     return d + ' ' + m[mo - 1] + ' ' + y;
   }
   /* демо: параметры записи из демо-админки (этот браузер) или те же, что в config/config.example.php.
-     Часть времени «занята» — как будто в календаре; перерыв и лимит в день считаются так же, как на сервере (free_slots) */
+     Календаря в демо нет — показываем все слоты по расписанию (как на сайте, когда в Яндекс Календаре на это время ничего нет) */
   demoSlots() {
     let b = null;
     try { b = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).booking || null; } catch (e) { b = null; }
     if (!b || !b.windows) b = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 14, max_per_day: 3,
       date_from: '2026-11-16', date_to: '2026-11-30', windows: { 2: [['11:00', '13:00']], 4: [['15:00', '17:00']], 5: [['13:00', '15:00']] }, holidays: [] };
-    const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3), dur = +b.duration_min, buf = +b.buffer_min;
+    const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3), dur = +b.duration_min;
     const earliest = Date.now() + b.min_notice_hours * 3600e3;
     const ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const out = [];
     for (let i = 0; i <= b.horizon_days; i++) {
-      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i), day = ymd(d), key = this.dayKey(d);
+      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i), day = ymd(d);
       if ((b.holidays || []).indexOf(day) >= 0 || (b.date_from && day < b.date_from) || (b.date_to && day > b.date_to)) continue;
       const starts = [];
       for (const [a, z] of (b.windows[d.getDay() || 7] || [])) for (let m = toMin(a); m + dur <= toMin(z); m += +b.step_min) starts.push(m);
-      /* «занятые» звонки: первый вариант начала в половине дней */
-      const busy = starts.length && this.hash(key) % 2 ? [starts[0]] : [];
-      if (b.max_per_day > 0 && busy.length >= b.max_per_day) continue;
       for (const m of starts) {
         const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).getTime();
         if (t < earliest) continue;
-        if (busy.some((x) => x - buf < m + dur && x + dur + buf > m)) continue;
         out.push(new Date(t).toISOString());
       }
     }
@@ -1924,7 +1966,7 @@ void main(){
       glOn,
       fieldOn,
       setField: this.setField,
-      rootClass: (glOn && this.state.glReady ? 'axia axia--gl' : 'axia') + (fieldOn ? ' hd' : '') + (this.state.navLabel === 'Обсудить задачу' ? ' is-contact' : '') + (this.state.light ? ' is-light' : '') + (this.state.lightSol ? ' is-light-sol' : '') + (this.state.top ? ' is-top' : ''),
+      rootClass: (glOn && this.state.glReady ? 'axia axia--gl' : 'axia') + (fieldOn ? ' hd' : '') + (this.state.navLabel === 'Обсудить задачу' ? ' is-contact' : '') + (this.state.light ? ' is-light' : '') + (this.state.lightSol ? ' is-light-sol' : '') + (this.state.lightCta ? ' is-light-cta' : '') + (this.state.lightSolCta ? ' is-light-sol-cta' : '') + (this.state.top ? ' is-top' : ''),
       ...this.meetVals(),
       navLabel: this.state.navLabel,
       /* КОМАНДА: выбранный участник (0 — Ксения, 1 — Андрей, 2 — Диана) */

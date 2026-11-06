@@ -28,7 +28,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .appr__copy--static .appr__desc { opacity: 1; transition: none; }
 /* ПОДХОД больше не закрепляется на экране: секция высотой в один экран (было 200vh для смены текстов).
    Фон следующих секций от этого не сдвигается — закреплённый фон «Подхода» и так занимает ровно экран */
-.axia .appr { height: 100vh; height: 100dvh; }
+.axia .appr { height: 100vh; height: 100svh; }
 /* НАПРАВЛЕНИЯ: круг-прогресс по ширине — от поля до поля, как весь остальной контент (вертикальные экраны — без изменений) */
 @media (orientation: landscape) {
   .axia.axia { --ring: calc(100cqw - 2 * var(--gutter)); }
@@ -43,7 +43,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
     /* --hb: высота зоны меню сверху (отступ 1.5rem + плашка 3.375rem) — круг центрируется в свободной области под ней */
     --hb: 4.875rem;
     --wd: min(50cqw - 2 * var(--gutter), 47.1667cqw - 2 * var(--gutter), 100vh - var(--hb) - 2 * var(--gutter));
-    --wd: min(50cqw - 2 * var(--gutter), 47.1667cqw - 2 * var(--gutter), 100dvh - var(--hb) - 2 * var(--gutter));
+    --wd: min(50cqw - 2 * var(--gutter), 47.1667cqw - 2 * var(--gutter), 100svh - var(--hb) - 2 * var(--gutter));
   }
   /* место круга в покое (по нему скрипт считает старт перехода); сам круг рисуется на холсте во весь экран */
   .axia .appr__spot {
@@ -63,13 +63,13 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   /* ПЕРЕХОД «Подход» → «Решения»: секция закреплена на 3 экрана скролла. Круг расширяется на весь экран,
      затем «проваливаемся» внутрь (кольца летят навстречу), в конце из центра открывается «Команда».
      «Команда» заезжает под закреплённый экран (отрицательный отступ) — её показывает «дыра» в центре. */
-  .axia .appr { height: 400vh; height: 400dvh; margin-bottom: -100vh; margin-bottom: -100dvh; }
+  .axia .appr { height: 400vh; height: 400svh; margin-bottom: -100vh; margin-bottom: -100svh; }
   /* экран «Подхода» выше экрана «Решений» (у него z 2), пока они заезжают под него */
   .axia .appr__stage { z-index: 3; }
   /* текст «подход» — по нижнему краю, на одной линии с низом круга */
   /* текст «подход» — по низу круга с оптической компенсацией: круг у нижней точки «тает»,
      поэтому текст поднят на 6% диаметра, чтобы визуально стоять на одном уровне с кругом */
-  .axia .appr__text { justify-content: flex-end; padding-bottom: calc(50vh - var(--hb) / 2 - var(--wd) * 0.44); padding-bottom: calc(50dvh - var(--hb) / 2 - var(--wd) * 0.44); }
+  .axia .appr__text { justify-content: flex-end; padding-bottom: calc(50vh - var(--hb) / 2 - var(--wd) * 0.44); padding-bottom: calc(50svh - var(--hb) / 2 - var(--wd) * 0.44); }
 }
 /* ПОДХОД, планшет и мобильный: круг во всю ширину контент-зоны. Панель — квадрат во всю ширину экрана
    (прозрачный, круг со словами рисуется на холсте), поэтому секция растёт по высоте под контент.
@@ -78,7 +78,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   .axia .appr { height: auto; }
   /* фон секции — обычный слой во всю её высоту (не закрепляется): сетка едет вместе с контентом */
   .axia .appr__bg { position: absolute; top: 0; left: 0; right: 0; height: 100%; }
-  .axia .appr__stage { position: relative; margin-top: 0; height: auto; min-height: 100vh; min-height: 100dvh; grid-template-rows: auto auto; overflow: visible; }
+  .axia .appr__stage { position: relative; margin-top: 0; height: auto; min-height: 100vh; min-height: 100svh; grid-template-rows: auto auto; overflow: visible; }
   .axia .appr__panel { background: transparent; cursor: default; height: auto; aspect-ratio: 1 / 1; }
 }
 /* НАПРАВЛЕНИЯ, мобильный: кольцо целиком помещается на экран, поэтому его низ виден здесь же.
@@ -112,11 +112,11 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* если «Подход» выше экрана (планшет, мобильный), сетка «Команды» и «Обсудить задачу» сдвигается на эту разницу */
 .axia .team::before {
   background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300svh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
 }
 .axia .meet::before {
   background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300svh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
 }
 /* ---------- РЕШЕНИЯ ----------
    Закреплённый экран: вертикальный скролл двигает ряд кругов по горизонтали (--sol-p 0…1 ставит скрипт).
@@ -126,20 +126,20 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   position: relative;
   /* диаметр = шаг горизонтальных линий сетки (283/1200): круг от линии до линии; шаг ряда — вертикальные линии (283.5/1200) */
   --sol-step: 23.625cqw; --sol-d: 23.5833cqw;
-  height: calc(100vh + 7 * var(--sol-step)); height: calc(100dvh + 7 * var(--sol-step));
+  height: calc(100vh + 7 * var(--sol-step)); height: calc(100svh + 7 * var(--sol-step));
 }
 .axia .sol__bg {
   position: sticky; top: 0; z-index: 0;
-  height: 100vh; height: 100dvh;
+  height: 100vh; height: 100svh;
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
   background-position-y: calc(var(--pat-phase, 0px) - 300vh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 300dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 300svh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
 }
 @media (orientation: portrait) { .axia .sol__bg { background-image: url("../img/pattern-portrait.svg"); } }
 .axia .sol__stage {
   position: sticky; top: 0; z-index: 2;
-  margin-top: -100vh; margin-top: -100dvh;
-  height: 100vh; height: 100dvh;
+  margin-top: -100vh; margin-top: -100svh;
+  height: 100vh; height: 100svh;
   overflow: hidden;
 }
 .axia .sol__title {
@@ -216,16 +216,16 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* «Решения» стоят между «Подходом» и «Командой»: сетка следующих секций сдвинута ещё на экран (фон «Решений» закреплён и занимает ровно экран) */
 .axia .team::before {
   background-position-y: calc(var(--pat-phase, 0px) - 400vh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 400dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 400svh - var(--appr-gap, 0px) - var(--appr-extra, 0px));
 }
 /* «Новости» — сразу после «Команды»: сетка продолжается без шва; «Обсудить задачу» сдвинута ещё на высоту «Новостей» */
 .axia .news::before {
   background-position-y: calc(var(--pat-phase, 0px) - 400vh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 400dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 400svh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
 }
 .axia .meet::before {
   background-position-y: calc(var(--pat-phase, 0px) - 400vh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
-  background-position-y: calc(var(--pat-phase, 0px) - 400dvh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
+  background-position-y: calc(var(--pat-phase, 0px) - 400svh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px) - var(--news-h, 0px));
 }
 /* КОМАНДА: невидимая метка вокруг заголовка, фото и подписей — по ней меню «команда» центрирует блок на экране */
 .axia .team__anchor {
@@ -257,7 +257,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .tm {
   --tm-ink: #595959; --tm-soft: #6b6b6b; --tm-text: #636363; --tm-end: #9e9e9e;
   position: relative; overflow: hidden;
-  height: 100vh; height: 100dvh;
+  height: 100vh; height: 100svh;
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: var(--col-gap);
   padding-inline: var(--gutter);
   /* затемнение снизу — тёплый светлый серо-бежевый (в тон фирменного #e8e6e0), с плавным нарастанием без «грязной» середины */
@@ -273,8 +273,8 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 }
 .axia .tm__photos { position: absolute; inset: 0; pointer-events: none; order: 2; }
 .axia .tm__photo {
-  position: absolute; left: 50%; top: 18vh; top: 18dvh;
-  height: 132vh; height: 132dvh; width: auto; max-width: none;
+  position: absolute; left: 50%; top: 18vh; top: 18svh;
+  height: 132vh; height: 132svh; width: auto; max-width: none;
   transform: translateX(-50%);
   mix-blend-mode: multiply;
   opacity: 0; transition: opacity 0.6s ease;
@@ -336,7 +336,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* ПЛАНШЕТ: текст слева, фото справа (низ уходит за край экрана), кружки по центру над кнопкой «обсудить задачу» */
 @container axia (max-width: 66rem) {
   .axia .tm {
-    height: 100vh; height: 100dvh; min-height: 46rem;
+    height: 100vh; height: 100svh; min-height: 46rem;
     display: flex; flex-direction: column;
     padding: 8.25rem var(--gutter) 0;
   }
@@ -354,7 +354,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
    во всю ширину (по колонкам сетки) над кнопкой «обсудить задачу» */
 @container axia (max-width: 40rem) {
   .axia .tm {
-    height: auto; min-height: 100vh; min-height: 100dvh;
+    height: auto; min-height: 100vh; min-height: 100svh;
     padding: 7.375rem var(--gutter) calc(1rem + var(--bar-h) + 1.75rem);
   }
   .axia .tm__title { margin: 0; font-size: 3rem; line-height: 0.85; white-space: normal; }
@@ -431,7 +431,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   mask-position: center var(--foot-pat, 0px);
 }
 /* «Обсудить задачу» кончается ровно на горизонтальной линии сетки: закреплённый фон чуть выше экрана (--meet-cut) */
-.axia .meet::before { height: calc(100vh + var(--meet-cut, 0px)); height: calc(100dvh + var(--meet-cut, 0px)); }
+.axia .meet::before { height: calc(100vh + var(--meet-cut, 0px)); height: calc(100svh + var(--meet-cut, 0px)); }
 @media (orientation: portrait) {
   .axia .foot::before {
     -webkit-mask-image: url("../img/pattern-portrait.svg");
@@ -488,7 +488,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   position: absolute; inset: 0; z-index: 0;
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
   background-position-y: calc(var(--pat-phase, 0px) - 100vh);
-  background-position-y: calc(var(--pat-phase, 0px) - 100dvh);
+  background-position-y: calc(var(--pat-phase, 0px) - 100svh);
 }
 @media (orientation: portrait) { .axia .who__bg { background-image: url("../img/pattern-portrait.svg"); } }
 .axia .who__fg { position: absolute; inset: 0; z-index: 2; }
@@ -528,7 +528,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
    Анимация проигрывается сама (не от скролла), поэтому секция — один экран, без закрепления.
    Сетка следующих секций от этого не сдвигается: закреплённый фон и раньше занимал ровно экран.
    Старый круг-прогресс и его «хвост» в «Подходе» убраны. */
-.axia .dirs { height: 100vh; height: 100dvh; }
+.axia .dirs { height: 100vh; height: 100svh; }
 .axia .dirs__tail { display: none; }
 .axia .dv__title {
   position: absolute; left: var(--gutter); right: var(--gutter); top: 9.5rem; z-index: 2;
@@ -595,11 +595,11 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* панель записи (календарь и форма) — того же цвета, что подвал */
 .axia .cal { background: #1e2f63; -webkit-backdrop-filter: none; backdrop-filter: none; }
 /* ПОДХОД без круга со словами: обычный экран (без перехода в «Решения»), заголовок и текст — по центру */
-.axia .appr, .axia .appr.appr { height: calc(100vh + var(--appr-g, 0px)); height: calc(100dvh + var(--appr-g, 0px)); margin-bottom: 0; }
+.axia .appr, .axia .appr.appr { height: calc(100vh + var(--appr-g, 0px)); height: calc(100svh + var(--appr-g, 0px)); margin-bottom: 0; }
 /* фон «Подхода» на десктопе выше экрана на --appr-g (сетка идёт дальше обычным скроллом), текст закреплён на это время */
 @container axia (width > 66rem) {
-  .axia .appr .appr__bg { height: calc(100vh + var(--appr-g, 0px)); height: calc(100dvh + var(--appr-g, 0px)); }
-  .axia .appr .appr__stage { margin-top: calc(-100vh - var(--appr-g, 0px)); margin-top: calc(-100dvh - var(--appr-g, 0px)); }
+  .axia .appr .appr__bg { height: calc(100vh + var(--appr-g, 0px)); height: calc(100svh + var(--appr-g, 0px)); }
+  .axia .appr .appr__stage { margin-top: calc(-100vh - var(--appr-g, 0px)); margin-top: calc(-100svh - var(--appr-g, 0px)); }
 }
 .axia .appr .appr__text, .axia .appr .appr__text.appr__text {
   grid-column: 1 / -1; align-items: center; justify-content: center; text-align: center;
@@ -608,7 +608,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .appr .appr__copy { max-width: 36rem; }
 @container axia (max-width: 66rem) {
   .axia .appr, .axia .appr.appr { height: auto; }
-  .axia .appr .appr__stage { min-height: 100vh; min-height: 100dvh; grid-template-rows: 1fr; }
+  .axia .appr .appr__stage { min-height: 100vh; min-height: 100svh; grid-template-rows: 1fr; }
 }
 /* «аксиа» шрифтом Soyuz (заголовок hero, лого в шапке и подвале): обе «а» — пузатая «α» без выреза
    (замкнутая чаша + прямой штрих справа, хвостик укорочен; верх — ровно по высоте строчных), высотой со строчные Soyuz (≈0.54 кегля), жирностью под Soyuz Grotesk Bold */
@@ -763,7 +763,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 }
 /* КОМАНДА, ПЛАНШЕТ: список участников (аватар, имя, должность) — сразу под заголовком, как на десктопе; ниже — описание */
 @container axia (40rem < width <= 66rem) {
-  .axia .tm { height: auto; min-height: 100vh; min-height: 100dvh; padding-bottom: calc(1rem + var(--bar-h, 3.5rem) + 2rem); background: #ffffff; }
+  .axia .tm { height: auto; min-height: 100vh; min-height: 100svh; padding-bottom: calc(1rem + var(--bar-h, 3.5rem) + 2rem); background: #ffffff; }
   .axia .tm__thumbs {
     position: relative; left: auto; bottom: auto; transform: none; order: 3;
     flex-direction: column; align-items: stretch; gap: 0.875rem;
@@ -796,7 +796,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
     border-radius: 50%; background: #e9e6e1;
   }
   .axia .tm__ava img { position: absolute; left: -30%; top: -6%; width: 160%; max-width: none; height: auto; mix-blend-mode: multiply; }
-  .axia .tm__card:nth-child(1) .tm__ava img { top: -12%; }
+  .axia .tm__card:nth-child(1) .tm__ava img { top: -12%; left: -26%; }   /* Ксения: голова на фото левее центра кадра — сдвигаем, чтобы лицо встало по центру круга */
   .axia .tm__desc p.is-hidden { display: block; }
   .axia .tm__desc p.is-first:not(:first-child) { margin-top: 0.67em; }
   .axia .tm__flow .tm__desc { margin-top: 1rem; }
@@ -958,13 +958,13 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   position: absolute; inset: 0; z-index: 0;
   background: var(--bg) url("../img/pattern.svg") center top / 100% auto repeat-y;
   background-position-y: calc(var(--pat-phase, 0px) - 100vh);
-  background-position-y: calc(var(--pat-phase, 0px) - 100dvh);
+  background-position-y: calc(var(--pat-phase, 0px) - 100svh);
 }
 @media (orientation: portrait) { .axia .ab__bg { background-image: url("../img/pattern-portrait.svg"); } }
 .axia .ab__content {
   position: absolute; inset: 0; z-index: 2;
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: var(--col-gap); align-items: start;
-  padding: 27vh var(--gutter) 0; padding-top: 27dvh;
+  padding: 27vh var(--gutter) 0; padding-top: 27svh;
 }
 .axia .ab__title {
   grid-column: 1 / 3; margin: 0;
@@ -1102,7 +1102,7 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
     content: ""; position: absolute; left: 0; right: 0; bottom: 0; top: var(--dirs-seam, 100%);
     background: inherit;
     background-position-y: calc(var(--pat-phase, 0px) - 100vh - var(--dirs-seam, 0px) + var(--dirs-shift, 0px));
-    background-position-y: calc(var(--pat-phase, 0px) - 100dvh - var(--dirs-seam, 0px) + var(--dirs-shift, 0px));
+    background-position-y: calc(var(--pat-phase, 0px) - 100svh - var(--dirs-seam, 0px) + var(--dirs-shift, 0px));
   }
   .axia .dirs__sticky { position: relative; height: auto; margin-top: 0; overflow: visible; padding: 6.25rem var(--gutter) 3rem; }
   .axia .dv__svg { display: none; }
@@ -1206,7 +1206,7 @@ html { -webkit-tap-highlight-color: transparent; }
 
 /* ПЛАШКА О COOKIE (assets/js/cookies.js): слева внизу на десктопе; на планшете и мобильном — над кнопкой «обсудить задачу» */
 .cookie {
-  position: fixed; z-index: 1000; left: 2.5rem; bottom: 2rem;
+  position: fixed; z-index: 1000; left: 2.5rem; bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box; width: min(38rem, calc(100vw - 2rem));
   display: flex; align-items: center; gap: 1.25rem;
   padding: 1rem 1rem 1rem 1.25rem; border-radius: 0.75rem;
@@ -1230,11 +1230,11 @@ html { -webkit-tap-highlight-color: transparent; }
 .cookie__btn--ghost:hover { background: rgba(232, 230, 224, 0.12); }
 .cookie__btn:focus-visible, .cookie__link:focus-visible { outline: 2px solid #e8e6e0; outline-offset: 2px; }
 @media (max-width: 1056px) {
-  .cookie { left: 50%; bottom: 6.25rem; transform: translate(-50%, 1rem); }
+  .cookie { left: 50%; bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 1rem); }
   .cookie.is-on { transform: translate(-50%, 0); }
 }
 @media (max-width: 640px) {
-  .cookie { bottom: 5.25rem; flex-direction: column; align-items: stretch; gap: 0.75rem; padding: 1rem; }
+  .cookie { bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)); flex-direction: column; align-items: stretch; gap: 0.75rem; padding: 1rem; }
   .cookie__actions { width: 100%; }
   .cookie__btn { flex: 1 1 0; }
 }
