@@ -62,7 +62,7 @@ function secret(): string
 
 function ensure_dir(string $dir): void
 {
-    if (!is_dir($dir)) @mkdir($dir, 0775, true);
+    if (!is_dir($dir)) @mkdir($dir, 0700, true);   // данные читает только сам сайт
 }
 
 /* ---- Файлы данных ----
