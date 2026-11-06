@@ -119,7 +119,7 @@ $attach = [['invite.ics', $clientIcs, 'text/calendar; charset=utf-8; method=PUBL
 $whereRows = ['Когда' => $when, 'Где' => $b['join_url'] ? 'Яндекс Телемост' : ''];
 
 $clientHtml = mail_layout('Встреча назначена',
-    mail_p(h($name) . ', спасибо за запись. Ждём вас на встрече.')
+    mail_p(h($name) . ', спасибо за запись! Ждём вас на встрече.')
     . mail_rows($whereRows) . $linkHtml
     . mail_p('Приглашение для календаря — во вложении.', true)
     . mail_p('Планы изменились? Встречу можно ' . mail_link($cancelUrl, 'отменить', true) . ' и выбрать на сайте другое время.', true));
