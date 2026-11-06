@@ -6,6 +6,11 @@
   'use strict';
   var KEY_ART = 'axia-demo-articles', KEY_SET = 'axia-demo-settings', KEY_SES = 'axia-demo-session';
   var DEMO_LOGIN = 'admin', DEMO_PASS = 'demo';
+  var NEWS_ON = 'Блок «Новости» включён: показывается на главной, в меню и подвале';
+  var NEWS_OFF = 'Блок «Новости» выключен: на главной, в меню и подвале его нет';
+  /* параметры записи по умолчанию (как booking в config/config.example.php) */
+  var BOOKING_DEFAULT = { duration_min: 30, min_notice_hours: 24, horizon_days: 14,
+    slots: { 2: ['11:00', '11:45', '12:30'], 4: ['15:00', '15:45', '16:30'], 5: ['13:00', '13:45', '14:30'] }, holidays: [] };
 
   function load(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch (e) { return def; } }
   function save(k, v) {
@@ -13,38 +18,15 @@
     catch (e) { alert('В браузере закончилось место для демо-данных. Удалите часть картинок или нажмите «Сбросить демо».'); return false; }
   }
   function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function rid() { var a = new Uint8Array(8); crypto.getRandomValues(a); return Array.prototype.map.call(a, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
 
-  /* ---- примеры статей при первом открытии ---- */
-  function seed() {
-    return [
-      { id: rid(), slug: 'kak-tsennosti-stanovyatsya-strategiey', title: 'Как ценности становятся стратегией', status: 'published', published_at: daysAgo(2),
-        description: 'Пример статьи: почему корпоративные ценности работают только тогда, когда из них вырастают решения и правила.',
-        author: 'Ксения Лопаткина', cover: '', cover_alt: '',
-        blocks: [
-          { type: 'text', text: 'Это **демонстрационная статья**: так будет выглядеть публикация на сайте. Текст, подзаголовки, цитаты и картинки добавляются в админке.\n\nВторой абзац — чтобы было видно расстояние между абзацами и длину строки.' },
-          { type: 'heading', text: 'Подзаголовок внутри статьи' },
-          { type: 'text', text: 'Абзац с [ссылкой](https://axiagroup.ru) и *курсивом*. Обычный текст статьи идёт колонкой удобной для чтения ширины.' },
-          { type: 'quote', text: 'Ценности — не слова на стене, а то, как принимаются решения.' },
-          { type: 'text', text: 'Заключительный абзац статьи.' }
-        ], created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-      { id: rid(), slug: 'otchet-ob-ustoychivom-razvitii', title: 'Отчёт об устойчивом развитии: с чего начать', status: 'published', published_at: daysAgo(9),
-        description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.',
-        author: '', cover: '', cover_alt: '',
-        blocks: [{ type: 'text', text: 'Текст второй демонстрационной статьи.' }], created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-      { id: rid(), slug: 'sotsialnye-programmy-dlya-territoriy', title: 'Социальные программы для территорий', status: 'published', published_at: daysAgo(20),
-        description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.',
-        author: '', cover: '', cover_alt: '',
-        blocks: [{ type: 'text', text: 'Текст третьей демонстрационной статьи.' }], created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-      { id: rid(), slug: 'chernovik', title: 'Черновик (не виден на сайте)', status: 'draft', published_at: today(),
-        description: 'Черновики видны только в админке.', author: '', cover: '', cover_alt: '',
-        blocks: [{ type: 'text', text: 'Текст черновика.' }], created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
-    ];
-  }
   function articles() {
     var a = load(KEY_ART, null);
-    if (!Array.isArray(a)) { a = seed(); save(KEY_ART, a); }
+    if (!Array.isArray(a)) a = [];
+    /* примеры статей из прошлых версий демо — убираем */
+    var SAMPLES = ['kak-tsennosti-stanovyatsya-strategiey', 'otchet-ob-ustoychivom-razvitii', 'sotsialnye-programmy-dlya-territoriy', 'chernovik'];
+    var clean = a.filter(function (x) { return SAMPLES.indexOf(x.slug) < 0; });
+    if (clean.length !== a.length) { a = clean; save(KEY_ART, a); }
     /* демо-статьи из прошлых версий: убираем примерные картинки (/demo/img/ больше нет) */
     var fixed = false;
     a.forEach(function (x) {
@@ -209,40 +191,34 @@
   }
 
   /* параметры записи (как booking в config/config.example.php); проверки — упрощённая копия booking_normalize() */
-  var BOOKING_DEFAULT = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 14, max_per_day: 3,
-    date_from: '2026-11-16', date_to: '2026-11-30', windows: { 2: [['11:00', '13:00']], 4: [['15:00', '17:00']], 5: [['13:00', '15:00']] }, holidays: [] };
-  function demoBooking() { var b = load(KEY_SET, {}).booking; return b && b.windows ? b : BOOKING_DEFAULT; }
+  function demoBooking() { var b = load(KEY_SET, {}).booking; return b && b.slots ? b : BOOKING_DEFAULT; }
   function normalizeBooking(s) {
-    var lim = { duration_min: [10, 240, 'Длительность звонка'], step_min: [5, 60, 'Шаг времени начала'], buffer_min: [0, 240, 'Перерыв между звонками'],
-      min_notice_hours: [0, 720, 'Минимальный срок записи'], horizon_days: [1, 365, 'Горизонт записи'], max_per_day: [0, 50, 'Звонков в день'] };
+    var lim = { duration_min: [10, 240, 'Длительность звонка'], min_notice_hours: [0, 720, 'Минимальный срок записи'], horizon_days: [1, 365, 'Горизонт записи'] };
     var out = {};
     Object.keys(lim).forEach(function (k) {
       var v = s[k], l = lim[k];
       if (v === '' || v == null || isNaN(v) || Math.floor(+v) !== +v || +v < l[0] || +v > l[1]) throw new Error(l[2] + ': число от ' + l[0] + ' до ' + l[1]);
       out[k] = +v;
     });
-    if ([5, 10, 15, 20, 30, 60].indexOf(out.step_min) < 0) throw new Error('Шаг времени начала: 5, 10, 15, 20, 30, 60 минут');
-    if (out.duration_min % 5 || out.buffer_min % 5) throw new Error('Длительность и перерыв должны быть кратны 5 минутам');
-    out.date_from = s.date_from || ''; out.date_to = s.date_to || '';
-    if (out.date_from && out.date_to && out.date_from > out.date_to) throw new Error('Период записи: дата начала позже даты окончания');
-    var min = function (t) { var m = /^(\d{2}):(\d{2})$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null; };
-    out.windows = {};
+    if (out.duration_min % 5) throw new Error('Длительность звонка должна быть кратна 5 минутам');
+    var min = function (t) { var m = /^(\d{2}):(\d{2})$/.exec(t || ''); return m && +m[1] < 24 && +m[2] < 60 ? +m[1] * 60 + +m[2] : null; };
+    out.slots = {};
     for (var d = 1; d <= 7; d++) {
-      var list = ((s.windows || {})[d] || []).map(function (w) {
-        var a = min(w[0]), b = min(w[1]);
-        if (a == null || b == null) throw new Error('Время в формате ЧЧ:ММ');
-        if (b - a < out.duration_min) throw new Error(w[0] + '–' + w[1] + ': интервал короче звонка');
-        return [a, b, w[0], w[1]];
-      }).sort(function (x, y) { return x[0] - y[0]; });
-      for (var i = 1; i < list.length; i++) if (list[i][0] < list[i - 1][1]) throw new Error('Интервалы пересекаются');
-      out.windows[d] = list.map(function (x) { return [x[2], x[3]]; });
+      var seen = {};
+      ((s.slots || {})[d] || []).forEach(function (t) {
+        var m = min(t);
+        if (m == null) throw new Error('Время в формате ЧЧ:ММ');
+        if (m % 5) throw new Error(t + ': время должно быть кратно 5 минутам');
+        if (m + out.duration_min > 1440) throw new Error(t + ': звонок заканчивается после полуночи');
+        seen[t] = m;
+      });
+      out.slots[d] = Object.keys(seen).sort(function (x, y) { return seen[x] - seen[y]; });
+      if (out.slots[d].length > 24) throw new Error('Не больше 24 слотов в день');
     }
     out.holidays = (s.holidays || []).filter(Boolean).sort();
     return out;
   }
 
-  var NEWS_ON = 'Новости на сайте показываются: блок на главной, пункты в меню и подвале';
-  var NEWS_OFF = 'Новости скрыты: на главной нет блока, в меню и подвале нет пункта «новости»';
   function renderDashboard() {
     var on = load(KEY_SET, {}).bookingEnabled !== false;
     var newsOn = load(KEY_SET, {}).newsEnabled !== false;
@@ -254,7 +230,7 @@
       + '<section class="ad-card"><h2>Запись на встречи</h2><label class="ad-switch"><input type="checkbox" id="booking-toggle"' + (on ? ' checked' : '') + '><span class="ad-switch__track" aria-hidden="true"></span>'
       + '<span id="booking-label">' + (on ? 'Включена — на сайте календарь со слотами' : 'Выключена — на сайте вместо календаря форма обратной связи') + '</span></label>'
       + '<p class="ad-hint">Подключения: <span class="ad-pill">Почта (SMTP): тестовый режим</span> <span class="ad-pill">SmartCaptcha: тестовый режим</span> <span class="ad-pill">Яндекс Телемост: тестовый режим</span> <span class="ad-pill">Яндекс Календарь: тестовый режим</span></p>'
-      + '<h3>Параметры и расписание</h3><p class="ad-hint">Время — московское. Слот появится на сайте, только если он попадает в расписание и период записи, в Яндекс Календаре в это время (с учётом перерыва) ничего нет и в этот день ещё не набрано максимальное число звонков. В демо параметры влияют на календарь главной в этом же браузере, часть слотов показана занятой — как будто в календаре.</p>'
+      + '<h3>Параметры и расписание</h3><p class="ad-hint">Время — московское. Слот виден на сайте, если на это время в Яндекс Календаре ничего нет и на него ещё никто не записался. В демо параметры влияют на календарь главной в этом же браузере.</p>'
       + '<div id="schedule" data-settings="' + esc(JSON.stringify(demoBooking())) + '"></div>'
       + '<h3>Ближайшие встречи</h3><p class="ad-hint">В демо-режиме встреч нет. На настоящем сайте здесь список записей с кнопкой «Отменить».</p></section>'
       + '<section class="ad-card"><div class="ad-card__head"><h2>Статьи</h2><a class="ad-btn ad-btn--primary" href="/admin/edit.php">Новая статья</a></div>'
@@ -284,7 +260,7 @@
       var d = e.target.closest('[data-delete]');
       if (d && confirm('Удалить статью насовсем?')) adminApi('delete', { id: d.getAttribute('data-delete') }).then(function () { d.closest('li').remove(); });
       if (e.target.closest('[data-logout]')) { e.preventDefault(); sessionStorage.removeItem(KEY_SES); location.reload(); }
-      if (e.target.closest('[data-reset]') && confirm('Удалить все демо-статьи и вернуть примеры?')) { localStorage.removeItem(KEY_ART); localStorage.removeItem(KEY_SET); location.reload(); }
+      if (e.target.closest('[data-reset]') && confirm('Удалить все демо-статьи и настройки?')) { localStorage.removeItem(KEY_ART); localStorage.removeItem(KEY_SET); location.reload(); }
     });
   }
 })();

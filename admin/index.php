@@ -68,7 +68,7 @@ admin_head('Панель');
 <p class="ad-hint">Подключения: <?php foreach ($checks as $k => $v): ?><span class="ad-pill <?= $v ? 'is-on' : '' ?>"><?= h($k) ?>: <?= $v ? 'настроено' : 'тестовый режим' ?></span> <?php endforeach; ?></p>
 
 <h3>Параметры и расписание</h3>
-<p class="ad-hint">Время — <?= (string)cfg('timezone') === 'Europe/Moscow' ? 'московское' : h((string)cfg('timezone')) ?>. Слот появится на сайте, только если он попадает в расписание и период записи, в Яндекс Календаре в это время (с учётом перерыва) ничего нет и в этот день ещё не набрано максимальное число звонков.</p>
+<p class="ad-hint">Время — <?= (string)cfg('timezone') === 'Europe/Moscow' ? 'московское' : h((string)cfg('timezone')) ?>. Слот виден на сайте, если на это время в Яндекс Календаре ничего нет и на него ещё никто не записался.</p>
 <div id="schedule" data-settings="<?= h(json_encode(booking_cfg(), JSON_UNESCAPED_UNICODE)) ?>"></div>
 <h3>Ближайшие встречи</h3>
 <?php if (!$upcoming): ?>
@@ -95,9 +95,9 @@ admin_head('Панель');
 <label class="ad-switch">
 <input type="checkbox" id="news-toggle" <?= $s['news_enabled'] ? 'checked' : '' ?>>
 <span class="ad-switch__track" aria-hidden="true"></span>
-<span id="news-label"><?= $s['news_enabled'] ? 'Новости на сайте показываются: блок на главной, пункты в меню и подвале' : 'Новости скрыты: на главной нет блока, в меню и подвале нет пункта «новости»' ?></span>
+<span id="news-label"><?= $s['news_enabled'] ? 'Блок «Новости» включён: показывается на главной, в меню и подвале' : 'Блок «Новости» выключен: на главной, в меню и подвале его нет' ?></span>
 </label>
-<p class="ad-hint">Отдельная страница /news и сами статьи остаются доступны по прямой ссылке. Пока нет ни одной опубликованной статьи, блок не показывается в любом случае.</p>
+<p class="ad-hint">Страница /news и статьи остаются доступны по прямой ссылке.<?php if (!articles_published()): ?> <b>Сейчас нет опубликованных статей, поэтому блока на сайте не видно, даже когда он включён.</b><?php endif; ?></p>
 <?php if (!$articles): ?>
 <p class="ad-hint">Статей пока нет.</p>
 <?php else: ?>

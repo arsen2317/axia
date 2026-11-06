@@ -20,9 +20,10 @@ function utc(): DateTimeZone
 
 /* ---- Параметры записи ----
    Меняются в админке (блок «Запись на встречи», хранятся в data/settings.php → booking). Пока в админке их ни разу
-   не сохраняли, действуют значения из config: booking.*. Ключи и допустимые значения — в booking_normalize(). */
+   не сохраняли, действуют значения из config: booking.*. Ключи и допустимые значения — в booking_normalize().
+   Расписание — это готовые слоты: на каждый день недели список времени начала звонка (slots: {"2": ["11:00", …]}). */
 
-const BOOKING_STEPS = [5, 10, 15, 20, 30, 60];
+const BOOKING_MAX_SLOTS_PER_DAY = 24;
 
 /** Действующие параметры записи: конфиг, поверх него — сохранённое в админке */
 function booking_cfg(): array
@@ -32,18 +33,15 @@ function booking_cfg(): array
     $c = (array)cfg('booking', []);
     $def = [
         'duration_min' => (int)($c['duration_min'] ?? 30),
-        'step_min' => (int)($c['step_min'] ?? 15),
-        'buffer_min' => (int)($c['buffer_min'] ?? 15),
         'min_notice_hours' => (int)($c['min_notice_hours'] ?? 24),
         'horizon_days' => (int)($c['horizon_days'] ?? 14),
-        'max_per_day' => (int)($c['max_per_day'] ?? 3),
-        'date_from' => (string)($c['date_from'] ?? ''),
-        'date_to' => (string)($c['date_to'] ?? ''),
-        'windows' => (array)($c['hours'] ?? []),
+        'slots' => (array)($c['slots'] ?? []),
         'holidays' => (array)($c['holidays'] ?? []),
     ];
     $saved = settings()['booking'] ?? null;
-    [$norm] = booking_normalize(is_array($saved) ? $saved + $def : $def);
+    /* настройки старого формата (интервалы и шаг) не переносим: слоты берём из конфига */
+    if (is_array($saved) && !isset($saved['slots'])) $saved = null;
+    [$norm] = booking_normalize(is_array($saved) ? array_intersect_key($saved, $def) + $def : $def);
     return $memo = $norm ?? booking_normalize($def)[0] ?? $def;
 }
 
@@ -54,8 +52,8 @@ function bk(string $key)
 
 function hm_to_min(string $t): ?int
 {
-    if (!preg_match('/^([01]\d|2[0-3]):([0-5]\d)$/', $t, $m) && $t !== '24:00') return null;
-    return $t === '24:00' ? 1440 : (int)$m[1] * 60 + (int)$m[2];
+    if (!preg_match('/^([01]\d|2[0-3]):([0-5]\d)$/', $t, $m)) return null;
+    return (int)$m[1] * 60 + (int)$m[2];
 }
 
 function min_to_hm(int $m): string
@@ -80,45 +78,31 @@ function booking_normalize(array $in): array
     try {
         $out = [
             'duration_min' => $int('duration_min', 10, 240, 'Длительность звонка'),
-            'step_min' => $int('step_min', 5, 60, 'Шаг времени начала'),
-            'buffer_min' => $int('buffer_min', 0, 240, 'Перерыв между звонками'),
             'min_notice_hours' => $int('min_notice_hours', 0, 720, 'Минимальный срок записи'),
             'horizon_days' => $int('horizon_days', 1, 365, 'Горизонт записи'),
-            'max_per_day' => $int('max_per_day', 0, 50, 'Звонков в день'),
         ];
     } catch (InvalidArgumentException $e) {
         return [null, $e->getMessage()];
     }
-    if (!in_array($out['step_min'], BOOKING_STEPS, true)) return [null, 'Шаг времени начала: ' . implode(', ', BOOKING_STEPS) . ' минут'];
     if ($out['duration_min'] % 5) return [null, 'Длительность звонка должна быть кратна 5 минутам'];
-    if ($out['buffer_min'] % 5) return [null, 'Перерыв между звонками должен быть кратен 5 минутам'];
 
-    foreach (['date_from', 'date_to'] as $k) {
-        $v = trim((string)($in[$k] ?? ''));
-        if ($v !== '' && !valid_ymd($v)) return [null, 'Неверная дата периода записи'];
-        $out[$k] = $v;
-    }
-    if ($out['date_from'] !== '' && $out['date_to'] !== '' && $out['date_from'] > $out['date_to']) return [null, 'Период записи: дата начала позже даты окончания'];
-
-    $win = (array)($in['windows'] ?? []);
-    $out['windows'] = [];
+    $in_slots = (array)($in['slots'] ?? []);
+    $out['slots'] = [];
     $names = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'];
     for ($d = 1; $d <= 7; $d++) {
+        $day = mb_strtoupper(mb_substr($names[$d - 1], 0, 1)) . mb_substr($names[$d - 1], 1);
         $list = [];
-        foreach ((array)($win[$d] ?? $win[(string)$d] ?? []) as $w) {
-            if (!is_array($w) || count($w) !== 2) return [null, 'Неверный интервал: ' . $names[$d - 1]];
-            [$a, $b] = array_values($w);
-            $am = is_string($a) ? hm_to_min($a) : null;
-            $bm = is_string($b) ? hm_to_min($b) : null;
-            if ($am === null || $bm === null) return [null, 'Время в формате ЧЧ:ММ: ' . $names[$d - 1]];
-            if ($am % 5 || $bm % 5) return [null, 'Время интервала должно быть кратно 5 минутам: ' . $names[$d - 1]];
-            if ($bm - $am < $out['duration_min']) return [null, mb_strtoupper(mb_substr($names[$d - 1], 0, 1)) . mb_substr($names[$d - 1], 1) . ', ' . $a . '–' . $b . ': интервал короче звонка'];
-            $list[] = [$am, $bm];
+        foreach ((array)($in_slots[$d] ?? $in_slots[(string)$d] ?? []) as $t) {
+            $m = is_string($t) ? hm_to_min($t) : null;
+            if ($m === null) return [null, "$day: время в формате ЧЧ:ММ"];
+            if ($m % 5) return [null, "$day, $t: время должно быть кратно 5 минутам"];
+            if ($m + $out['duration_min'] > 1440) return [null, "$day, $t: звонок заканчивается после полуночи"];
+            $list[$m] = true;
         }
-        if (count($list) > 8) return [null, 'Не больше 8 интервалов в день'];
-        usort($list, fn($x, $y) => $x[0] <=> $y[0]);
-        for ($i = 1; $i < count($list); $i++) if ($list[$i][0] < $list[$i - 1][1]) return [null, 'Интервалы пересекаются: ' . $names[$d - 1]];
-        $out['windows'][(string)$d] = array_map(fn($x) => [min_to_hm($x[0]), min_to_hm($x[1])], $list);
+        if (count($list) > BOOKING_MAX_SLOTS_PER_DAY) return [null, "$day: не больше " . BOOKING_MAX_SLOTS_PER_DAY . ' слотов'];
+        $list = array_keys($list);
+        sort($list);
+        $out['slots'][(string)$d] = array_map('min_to_hm', $list);
     }
 
     $hol = [];
@@ -146,24 +130,19 @@ function rule_slots(?DateTimeImmutable $now = null): array
     $out = [];
     $day = $now->setTime(0, 0);
     for ($i = 0; $i <= $c['horizon_days']; $i++, $day = $day->modify('+1 day')) {
-        $ymd = $day->format('Y-m-d');
-        if (isset($holidays[$ymd])) continue;
-        if ($c['date_from'] !== '' && $ymd < $c['date_from']) continue;
-        if ($c['date_to'] !== '' && $ymd > $c['date_to']) continue;
-        foreach ($c['windows'][$day->format('N')] ?? [] as [$a, $b]) {
-            $bm = hm_to_min($b);
-            for ($m = hm_to_min($a); $m + $dur <= $bm; $m += $c['step_min']) {
-                $s = $day->setTime(intdiv($m, 60), $m % 60);
-                if ($s < $earliest) continue;   /* горизонт — целыми днями: сегодня + horizon_days */
-                $out[] = [$s, $s->modify("+$dur minutes")];
-            }
+        if (isset($holidays[$day->format('Y-m-d')])) continue;
+        foreach ($c['slots'][$day->format('N')] ?? [] as $t) {
+            $m = hm_to_min($t);
+            $s = $day->setTime(intdiv($m, 60), $m % 60);
+            if ($s < $earliest) continue;   /* горизонт — целыми днями: сегодня + horizon_days */
+            $out[] = [$s, $s->modify("+$dur minutes")];
         }
     }
     return $out;
 }
 
-/** Свободные слоты: правила минус занятость календаря и уже созданные брони (с перерывом между звонками),
-    минус дни, где уже набрано максимальное число звонков */
+/** Свободные слоты: расписание минус занятость календаря и уже созданные брони.
+    Слот закрыт, если пересекается с любым событием календаря или другой встречей */
 function free_slots(bool $fresh = false): array
 {
     $slots = rule_slots();
@@ -171,18 +150,9 @@ function free_slots(bool $fresh = false): array
     $from = $slots[0][0];
     $to = end($slots)[1];
     $busy = array_merge(calendar_busy($from, $to, $fresh), bookings_busy());
-    $buf = bk('buffer_min') * 60;
-    $max = bk('max_per_day');
-    $perDay = [];
-    foreach (bookings_busy() as [$s]) {
-        $k = (new DateTimeImmutable('@' . $s))->setTimezone(tz())->format('Y-m-d');
-        $perDay[$k] = ($perDay[$k] ?? 0) + 1;
-    }
-    return array_values(array_filter($slots, function ($s) use ($busy, $buf, $max, $perDay) {
-        if ($max > 0 && ($perDay[$s[0]->format('Y-m-d')] ?? 0) >= $max) return false;
-        /* слот вместе с перерывом до и после не должен задевать занятое время */
-        $a = $s[0]->getTimestamp() - $buf;
-        $b = $s[1]->getTimestamp() + $buf;
+    return array_values(array_filter($slots, function ($s) use ($busy) {
+        $a = $s[0]->getTimestamp();
+        $b = $s[1]->getTimestamp();
         foreach ($busy as [$x, $y]) if ($x < $b && $y > $a) return false;
         return true;
     }));

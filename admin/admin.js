@@ -3,8 +3,8 @@
   'use strict';
   var main = document.querySelector('[data-csrf]');
   var csrf = main ? main.getAttribute('data-csrf') : '';
-  var NEWS_ON = 'Новости на сайте показываются: блок на главной, пункты в меню и подвале';
-  var NEWS_OFF = 'Новости скрыты: на главной нет блока, в меню и подвале нет пункта «новости»';
+  var NEWS_ON = 'Блок «Новости» включён: показывается на главной, в меню и подвале';
+  var NEWS_OFF = 'Блок «Новости» выключен: на главной, в меню и подвале его нет';
 
   window.adminApi = function (action, body, isForm) {
     var opts = { method: 'POST', headers: { 'X-CSRF': csrf }, credentials: 'same-origin' };

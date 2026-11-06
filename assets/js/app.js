@@ -1444,12 +1444,9 @@ void main(){
     if (set.newsEnabled === false) return [];
     try { arts = JSON.parse(localStorage.getItem('axia-demo-articles')); } catch (e) { arts = null; }
     const d0 = new Date(), ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    const ago = (n) => { const d = new Date(d0); d.setDate(d.getDate() - n); return ymd(d); };
-    if (!Array.isArray(arts)) arts = [
-      { slug: 'kak-tsennosti-stanovyatsya-strategiey', title: 'Как ценности становятся стратегией', status: 'published', published_at: ago(2), cover: '', description: 'Пример статьи: почему корпоративные ценности работают только тогда, когда из них вырастают решения и правила.' },
-      { slug: 'otchet-ob-ustoychivom-razvitii', title: 'Отчёт об устойчивом развитии: с чего начать', status: 'published', published_at: ago(9), cover: '', description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.' },
-      { slug: 'sotsialnye-programmy-dlya-territoriy', title: 'Социальные программы для территорий', status: 'published', published_at: ago(20), cover: '', description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.' }
-    ];
+    if (!Array.isArray(arts)) arts = [];
+    const samples = ['kak-tsennosti-stanovyatsya-strategiey', 'otchet-ob-ustoychivom-razvitii', 'sotsialnye-programmy-dlya-territoriy'];
+    arts = arts.filter((a) => samples.indexOf(a.slug) < 0);
     const today = ymd(d0);
     return arts.filter((a) => a.status === 'published' && a.published_at <= today)
       .sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(0, 3)
@@ -1460,26 +1457,24 @@ void main(){
     const [y, mo, d] = ymd.split('-').map(Number);
     return d + ' ' + m[mo - 1] + ' ' + y;
   }
-  /* демо: параметры записи из демо-админки (этот браузер) или те же, что в config/config.example.php.
+  /* демо: слоты из демо-админки (этот браузер) или те же, что в config/config.example.php.
      Календаря в демо нет — показываем все слоты по расписанию (как на сайте, когда в Яндекс Календаре на это время ничего нет) */
   demoSlots() {
     let b = null;
     try { b = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).booking || null; } catch (e) { b = null; }
-    if (!b || !b.windows) b = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 14, max_per_day: 3,
-      date_from: '2026-11-16', date_to: '2026-11-30', windows: { 2: [['11:00', '13:00']], 4: [['15:00', '17:00']], 5: [['13:00', '15:00']] }, holidays: [] };
-    const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3), dur = +b.duration_min;
+    if (!b || !b.slots) b = { duration_min: 30, min_notice_hours: 24, horizon_days: 14,
+      slots: { 2: ['11:00', '11:45', '12:30'], 4: ['15:00', '15:45', '16:30'], 5: ['13:00', '13:45', '14:30'] }, holidays: [] };
+    const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3);
     const earliest = Date.now() + b.min_notice_hours * 3600e3;
     const ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const out = [];
     for (let i = 0; i <= b.horizon_days; i++) {
-      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i), day = ymd(d);
-      if ((b.holidays || []).indexOf(day) >= 0 || (b.date_from && day < b.date_from) || (b.date_to && day > b.date_to)) continue;
-      const starts = [];
-      for (const [a, z] of (b.windows[d.getDay() || 7] || [])) for (let m = toMin(a); m + dur <= toMin(z); m += +b.step_min) starts.push(m);
-      for (const m of starts) {
-        const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).getTime();
-        if (t < earliest) continue;
-        out.push(new Date(t).toISOString());
+      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i);
+      if ((b.holidays || []).indexOf(ymd(d)) >= 0) continue;
+      for (const t of (b.slots[d.getDay() || 7] || [])) {
+        const ts = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, toMin(t)).getTime();
+        if (ts < earliest) continue;
+        out.push(new Date(ts).toISOString());
       }
     }
     return out;
