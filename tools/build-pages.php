@@ -27,10 +27,23 @@ foreach ($pages as $file => [$title, $desc, $label, $extraHead, $bodyAttr, $extr
     $path = ROOT . '/' . $file;
     $old = (string)file_get_contents($path);
     if (!preg_match('#<main\b.*?</main>#s', $old, $m)) { fwrite(STDERR, "$file: не найден <main>\n"); exit(1); }
-    $html = page_head_html($title, $desc, $label) . "\n" . $m[0] . "\n" . $extraScript . page_foot_html();
+    $html = page_head_html($title, $desc, $label, $file === 'privacy.html' ? ['path' => '/privacy'] : []) . "\n" . $m[0] . "\n" . $extraScript . page_foot_html();
     $html = str_replace("</title>\n", "</title>\n" . $extraHead, $html);
     $html = str_replace('<body class="pg">', '<body class="pg"' . $bodyAttr . '>', $html);
     if (str_starts_with($file, 'demo/')) $html = str_replace("<!doctype html>\n", "<!doctype html>\n<!-- ДЕМО для Vercel: см. demo/demo.js -->\n", $html);
     file_put_contents($path, $html);
     echo "✓ $file\n";
+}
+
+/* Номера версий у стилей и скриптов в статичных страницах (?v=… — первые знаки отпечатка файла).
+   Файл изменился — меняется адрес, и браузеры посетителей сразу берут новую версию, а не старую из кеша.
+   PHP-страницы (новости, админка) ставят версии сами через asset() в lib/bootstrap.php */
+foreach (['index.html', 'privacy.html', 'demo/news.html', 'demo/article.html', 'demo/admin.html', 'demo/edit.html'] as $file) {
+    $path = ROOT . '/' . $file;
+    $html = (string)file_get_contents($path);
+    $new = preg_replace_callback('#((?:src|href)=")(/?(?:assets|admin|demo)/[^"?]+\.(?:css|js))(?:\?v=[0-9a-f]+)?"#', function ($m) {
+        $f = ROOT . '/' . ltrim($m[2], '/');
+        return $m[1] . $m[2] . (is_file($f) ? '?v=' . substr(md5_file($f), 0, 10) : '') . '"';
+    }, $html);
+    if ($new !== $html) { file_put_contents($path, $new); echo "✓ версии: $file\n"; }
 }

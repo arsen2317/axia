@@ -119,6 +119,6 @@ admin_head('Панель');
 <?php endif; ?>
 </section>
 </main>
-<script src="/admin/admin.js"></script>
-<script src="/admin/schedule.js"></script>
+<script src="<?= h(asset('/admin/admin.js')) ?>"></script>
+<script src="<?= h(asset('/admin/schedule.js')) ?>"></script>
 </body></html>

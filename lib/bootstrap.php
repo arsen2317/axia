@@ -217,6 +217,17 @@ function h(?string $s): string
     return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+/** Адрес файла сайта с версией (?v=…) — меняется при изменении файла, поэтому браузеры сразу берут новый */
+function asset(string $path): string
+{
+    static $memo = [];
+    if (!isset($memo[$path])) {
+        $f = ROOT . $path;
+        $memo[$path] = $path . (is_file($f) ? '?v=' . substr(md5_file($f), 0, 10) : '');
+    }
+    return $memo[$path];
+}
+
 function site_url(string $path = ''): string
 {
     $base = rtrim((string)cfg('site_url', ''), '/');
