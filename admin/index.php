@@ -21,17 +21,28 @@ if (!admin_logged_in()) {
     admin_head('Вход');
     ?>
 <main class="ad-login">
-<form class="ad-card ad-login__form" method="post" action="/admin/">
+<div class="ad-card ad-login__form">
 <p class="ad-logo">аксиа · админка</p>
 <?php if (!admin_configured()): ?>
-<p class="ad-note ad-note--warn">Пароль администратора ещё не задан. Укажите <code>admin.password_hash</code> в <code>config/config.local.php</code> (см. README).</p>
+<p class="ad-note ad-note--warn">Вход ещё не настроен: укажите <code>yandex_id</code> или <code>admin.password_hash</code> в <code>config/config.local.php</code> (см. README).</p>
 <?php endif; ?>
 <?php if ($error): ?><p class="ad-note ad-note--err" role="alert"><?= h($error) ?></p><?php endif; ?>
+<?php if (yandex_configured()): ?>
+<a class="ad-btn ad-btn--primary ad-btn--yandex" href="/admin/oauth.php?start=1">Войти с Яндексом</a>
+<p class="ad-hint">Рабочим аккаунтом Яндекса, которому открыт доступ.</p>
+<?php endif; ?>
+<?php if (admin_password_hash() !== ''): ?>
+<details class="ad-login__pass"<?= $error || !yandex_configured() ? ' open' : '' ?>>
+<summary>Войти по запасному паролю</summary>
+<form method="post" action="/admin/">
 <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
-<label class="ad-field"><span>Логин</span><input name="login" autocomplete="username" required autofocus></label>
+<label class="ad-field"><span>Логин</span><input name="login" autocomplete="username" required></label>
 <label class="ad-field"><span>Пароль</span><input name="password" type="password" autocomplete="current-password" required></label>
-<button class="ad-btn ad-btn--primary" type="submit">Войти</button>
+<button class="ad-btn" type="submit">Войти</button>
 </form>
+</details>
+<?php endif; ?>
+</div>
 </main>
 </body></html>
 <?php
@@ -50,13 +61,15 @@ $checks = [
     'Яндекс Телемост' => telemost_enabled(),
     'Яндекс Календарь' => caldav_enabled(),
 ];
+$who = admin_who();
+$access = admin_access();
 admin_head('Панель');
 ?>
 <header class="ad-top">
 <a class="ad-logo" href="/admin/">аксиа · админка</a>
-<nav class="ad-top__nav"><a href="/" target="_blank" rel="noopener">сайт ↗</a><a href="/news" target="_blank" rel="noopener">новости ↗</a><a href="/admin/?logout=1&amp;t=<?= h(csrf_token()) ?>">выйти</a></nav>
+<nav class="ad-top__nav"><span class="ad-hint"><?= $who['via'] === 'yandex' ? h($who['email']) : 'вход по паролю' ?></span><a href="/" target="_blank" rel="noopener">сайт ↗</a><a href="/news" target="_blank" rel="noopener">новости ↗</a><a href="/admin/?logout=1&amp;t=<?= h(csrf_token()) ?>">выйти</a></nav>
 </header>
-<main class="ad-main" data-csrf="<?= h(csrf_token()) ?>">
+<main class="ad-main" data-csrf="<?= h(csrf_token()) ?>" data-idle="<?= ADMIN_IDLE ?>">
 
 <section class="ad-card">
 <h2>Запись на встречи</h2>
@@ -84,6 +97,31 @@ admin_head('Панель');
 </li>
 <?php endforeach; ?>
 </ul>
+<?php endif; ?>
+</section>
+
+<section class="ad-card" id="access" data-owner="<?= $who['owner'] ? '1' : '0' ?>" data-list="<?= h(json_encode($access['list'], JSON_UNESCAPED_UNICODE)) ?>">
+<h2>Доступ к админке</h2>
+<p class="ad-hint">Вход — кнопкой «Войти с Яндексом» рабочим аккаунтом из этого списка. Главный адрес <b><?= h(admin_owner()) ?></b> из списка не удаляется;
+только он меняет список и запасной пароль. Убрали адрес — этот человек выходит из админки сразу. Без действий в админке 1 час — выход.</p>
+<?php if (!yandex_configured()): ?><p class="ad-note ad-note--warn">Вход через Яндекс ещё не настроен (нет <code>yandex_id</code> в настройках сайта) — пока работает только запасной пароль.</p><?php endif; ?>
+<ul class="ad-list" id="access-list">
+<?php foreach ($access['list'] as $e): ?>
+<li class="ad-list__row" data-email="<?= h($e) ?>"><span><b><?= h($e) ?></b><?= $e === admin_owner() ? ' <span class="ad-pill is-on">главный</span>' : '' ?><br><span class="ad-hint"><?= isset($access['last'][$e]) ? 'последний вход: ' . h(date('d.m.Y H:i', (int)strtotime((string)$access['last'][$e]))) : 'ещё не входил(а)' ?></span></span>
+<?php if ($who['owner'] && $e !== admin_owner()): ?><span class="ad-list__actions"><button class="ad-btn ad-btn--small ad-btn--danger" type="button" data-access-remove="<?= h($e) ?>">Убрать</button></span><?php endif; ?>
+</li>
+<?php endforeach; ?>
+</ul>
+<?php if ($who['owner']): ?>
+<div class="ad-row ad-access__add"><label class="ad-field"><span>Добавить адрес</span><input id="access-new" type="email" maxlength="254" placeholder="name@axiagroup.ru"></label><button class="ad-btn" type="button" id="access-add">Добавить</button></div>
+<h3>Запасной пароль</h3>
+<p class="ad-hint">Для входа по ссылке «войти по запасному паролю», если вход через Яндекс недоступен. Логин — <b><?= h((string)cfg('admin.login')) ?></b>.
+<?= (string)(settings()['admin_password_hash'] ?? '') !== '' ? 'Пароль задан в админке.' : 'Сейчас действует пароль из файла настроек — задайте новый.' ?> После смены все входы по старому паролю закрываются.</p>
+<div class="ad-row"><label class="ad-field"><span>Новый пароль (от 12 символов)</span><input id="pw-new" type="password" autocomplete="new-password" minlength="12"></label>
+<label class="ad-field"><span>Ещё раз</span><input id="pw-new2" type="password" autocomplete="new-password" minlength="12"></label></div>
+<div class="ad-sched__bar"><button class="ad-btn ad-btn--primary" type="button" id="pw-save">Сохранить пароль</button><span class="ad-hint" id="pw-state" role="status"></span></div>
+<?php else: ?>
+<p class="ad-hint">Менять список и запасной пароль может только <?= h(admin_owner()) ?>, войдя через Яндекс.</p>
 <?php endif; ?>
 </section>
 

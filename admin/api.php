@@ -45,6 +45,20 @@ switch ($action) {
         article_save($a, $old);
         json_out(['ok' => true, 'article' => $a]);
 
+    case 'access':
+    case 'password':
+        $who = admin_who();
+        if (!$who || !$who['owner']) fail('Это может только ' . admin_owner() . ', войдя через Яндекс', 403);
+        $d = json_body();
+        if ($action === 'access') {
+            [$list, $err] = admin_access_save((array)($d['list'] ?? []));
+            if ($err) fail($err, 422);
+            json_out(['ok' => true, 'list' => $list]);
+        }
+        $err = admin_set_password((string)($d['password'] ?? ''));
+        if ($err) fail($err, 422);
+        json_out(['ok' => true]);
+
     case 'contacts':
         $d = json_body();
         [$c, $err] = contacts_normalize((array)($d['contacts'] ?? []));

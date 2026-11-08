@@ -75,8 +75,18 @@ return [
         'password' => '',
     ],
 
+    // ---- Вход в админку через Яндекс ID (oauth.yandex.ru → «Создать приложение» → «Для авторизации пользователей»,
+    //      доступ «Доступ к адресу электронной почты», Redirect URI: https://<сайт>/admin/oauth.php) ----
+    'yandex_id' => [
+        'client_id'     => '',   // ClientID приложения
+        'client_secret' => '',   // Client secret (секретный)
+    ],
+
     // ---- Админка (/admin) ----
     'admin' => [
+        // главный адрес: всегда в списке доступа, только он меняет список и запасной пароль
+        'owner'         => 'hello@axiagroup.ru',
+        // запасной вход по паролю (пока пароль не задан в админке)
         'login'         => 'admin',
         // хэш пароля: php -r "echo password_hash('ваш-пароль', PASSWORD_DEFAULT), PHP_EOL;"
         'password_hash' => '',

@@ -38,6 +38,47 @@
       .then(function () { newsToggle.disabled = false; });
   });
 
+  /* автовыход: через час без действий сервер закрывает сессию — страница сама уходит на вход, чтобы не терять правки молча */
+  if (main && main.getAttribute('data-idle')) {
+    var idleMs = (+main.getAttribute('data-idle') || 3600) * 1000, lastAct = Date.now();
+    ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, function () { lastAct = Date.now(); }, { passive: true }); });
+    var origApi = window.adminApi;
+    window.adminApi = function () { lastAct = Date.now(); return origApi.apply(null, arguments); };
+    setInterval(function () { if (Date.now() - lastAct > idleMs) location.href = '/admin/'; }, 30000);
+  }
+
+  /* доступ к админке (менять может только главный адрес) */
+  var abox = document.getElementById('access');
+  if (abox && abox.getAttribute('data-owner') === '1') {
+    var alist = JSON.parse(abox.getAttribute('data-list') || '[]');
+    var saveList = function (list) {
+      return adminApi('access', { list: list }).then(function () { location.reload(); }).catch(function (er) { alert(er.message); });
+    };
+    abox.addEventListener('click', function (e) {
+      var rm = e.target.closest('[data-access-remove]');
+      if (rm && confirm('Убрать доступ у ' + rm.getAttribute('data-access-remove') + '? Если этот человек сейчас в админке, его сразу выкинет.')) {
+        saveList(alist.filter(function (x) { return x !== rm.getAttribute('data-access-remove'); }));
+      }
+    });
+    var addBtn = document.getElementById('access-add'), addInp = document.getElementById('access-new');
+    if (addBtn) addBtn.addEventListener('click', function () {
+      var v = (addInp.value || '').trim().toLowerCase();
+      if (!v) { addInp.focus(); return; }
+      saveList(alist.concat([v]));
+    });
+    var pwBtn = document.getElementById('pw-save'), pwState = document.getElementById('pw-state');
+    if (pwBtn) pwBtn.addEventListener('click', function () {
+      var p1 = document.getElementById('pw-new').value, p2 = document.getElementById('pw-new2').value;
+      if (p1.length < 12) { pwState.textContent = 'Пароль — не короче 12 символов'; return; }
+      if (p1 !== p2) { pwState.textContent = 'Пароли не совпадают'; return; }
+      pwBtn.disabled = true; pwState.textContent = 'Сохраняем…';
+      adminApi('password', { password: p1 }).then(function () {
+        document.getElementById('pw-new').value = document.getElementById('pw-new2').value = '';
+        pwState.textContent = 'Сохранено. Старый пароль больше не действует';
+      }).catch(function (er) { pwState.textContent = er.message; }).then(function () { pwBtn.disabled = false; });
+    });
+  }
+
   /* контакты на сайте */
   var cbox = document.getElementById('contacts');
   if (cbox) {
