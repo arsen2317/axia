@@ -44,9 +44,15 @@ function admin_owner(): string
     return mb_strtolower(trim((string)cfg('admin.owner', 'hello@axiagroup.ru')));
 }
 
+/** ClientID и секрет приложения Яндекс ID; пробелы и переносы по краям (частая ошибка при вставке) отбрасываем */
+function yandex_cfg(string $key): string
+{
+    return trim((string)cfg('yandex_id.' . $key, ''));
+}
+
 function yandex_configured(): bool
 {
-    return (string)cfg('yandex_id.client_id', '') !== '' && (string)cfg('yandex_id.client_secret', '') !== '';
+    return yandex_cfg('client_id') !== '' && yandex_cfg('client_secret') !== '';
 }
 
 function admin_password_hash(): string

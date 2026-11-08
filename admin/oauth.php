@@ -41,7 +41,7 @@ if (isset($_GET['start'])) {
     setcookie($cookie, $state, ['expires' => time() + 600, 'path' => '/', 'secure' => is_https(), 'httponly' => true, 'samesite' => 'Lax']);
     header('Location: https://oauth.yandex.ru/authorize?' . http_build_query([
         'response_type' => 'code',
-        'client_id' => (string)cfg('yandex_id.client_id'),
+        'client_id' => yandex_cfg('client_id'),
         'redirect_uri' => $redirect,
         'state' => $state,
         'force_confirm' => 'yes',   /* всегда показывать, каким аккаунтом входим — удобно, если в браузере их несколько */
@@ -62,8 +62,8 @@ if (!preg_match('/^[A-Za-z0-9_-]{4,64}$/', $code)) oauth_fail('Яндекс не
 $tok = oauth_http('https://oauth.yandex.ru/token', [
     'grant_type' => 'authorization_code',
     'code' => $code,
-    'client_id' => (string)cfg('yandex_id.client_id'),
-    'client_secret' => (string)cfg('yandex_id.client_secret'),
+    'client_id' => yandex_cfg('client_id'),
+    'client_secret' => yandex_cfg('client_secret'),
 ]);
 if (!$tok || !is_string($tok['access_token'] ?? null)) oauth_fail('Не удалось подтвердить вход у Яндекса. Попробуйте ещё раз.');
 $info = oauth_http('https://login.yandex.ru/info?format=json', null, ['Authorization: OAuth ' . $tok['access_token']]);
