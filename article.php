@@ -13,7 +13,8 @@ if (!$a) {
     page_close();
     exit;
 }
-page_open($a['title'] . ' — аксиа', $a['description'], ['label' => 'Новости', 'image' => $a['cover']]);
+article_view_hit($a);   /* уникальные просмотры — для админки */
+page_open($a['title'] . ' — аксиа', $a['description'], ['label' => 'Новости', 'image' => $a['cover'], 'path' => '/news/' . $a['slug'], 'type' => 'article']);
 ?>
 <main class="pg-main">
 <article class="art">

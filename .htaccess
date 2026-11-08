@@ -20,7 +20,9 @@ RewriteRule \.(md|log|bak|swp|orig|sql|sh|ini|dist|lock|tmp)$ - [F,L,NC]
 # красивые адреса
 RewriteRule ^news/?$ news.php [L]
 RewriteRule ^news/([a-z0-9-]+)/?$ article.php?slug=$1 [L,QSA]
-RewriteRule ^privacy/?$ privacy.html [L]
+RewriteRule ^privacy/?$ privacy.php [L]
+RewriteRule ^privacy\.html$ /privacy [R=301,L]   # старый адрес статичной страницы
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
 RewriteRule ^consent/?$ /privacy [R=301,L]   # отдельной страницы согласия нет — всё в политике
 </IfModule>
 
@@ -35,7 +37,21 @@ Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), 
 
 <IfModule mod_expires.c>
 ExpiresActive On
+# стили и скрипты подключаются с номером версии (?v=…), поэтому их можно хранить долго
+ExpiresByType text/css "access plus 1 year"
+ExpiresByType application/javascript "access plus 1 year"
+ExpiresByType text/javascript "access plus 1 year"
+ExpiresByType image/svg+xml "access plus 1 month"
+ExpiresByType image/png "access plus 1 month"
+ExpiresByType image/x-icon "access plus 1 month"
 ExpiresByType font/woff2 "access plus 1 year"
 ExpiresByType font/woff "access plus 1 year"
 ExpiresByType image/webp "access plus 1 month"
+</IfModule>
+
+# страницы — всегда свежие: браузер каждый раз проверяет, не изменились ли они
+<IfModule mod_headers.c>
+<FilesMatch "\.html$">
+Header set Cache-Control "no-cache"
+</FilesMatch>
 </IfModule>

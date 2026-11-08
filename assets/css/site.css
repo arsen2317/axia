@@ -34,6 +34,9 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 /* страницу нельзя «оттянуть» за верхний и нижний край (резинка при прокрутке тачпадом и на телефоне):
    иначе над светлой статьёй виден синий фон, а на главной — пустота над hero */
 html, body { overscroll-behavior-y: none; }
+/* без «привязки прокрутки» браузера: когда календарь записи сменяется формой и блок укорачивается, браузер
+   перескакивал вверх, к «Команде». Прокрутку к нужному месту сайт делает сам (revealCal) */
+html, body { overflow-anchor: none; }
 
 .axia {
   container: axia / inline-size;
@@ -49,6 +52,9 @@ html, body { overscroll-behavior-y: none; }
 }
 .axia *, .axia *::before, .axia *::after { box-sizing: border-box; }
 .axia a { color: inherit; text-decoration: none; }
+/* над текстом — обычная стрелка, без текстовой «палочки» (выделять и копировать текст можно); в полях ввода — как обычно */
+.axia { cursor: default; }
+.axia input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), .axia textarea, .axia [contenteditable="true"] { cursor: text; }
 /* без «висячих» слов в последней строке (плюс неразрывный пробел между двумя последними словами в тексте) */
 .axia p, .axia h1, .axia h2 { text-wrap: pretty; }
 
@@ -752,7 +758,7 @@ html, body { overscroll-behavior-y: none; }
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 .btn--dark { background: var(--dark); border-color: rgba(255, 255, 255, 0.08); }
-.btn--light { background: var(--ink); color: var(--bg); }
+.btn--light, .axia a.btn--light { background: var(--ink); color: var(--bg); }   /* a.btn--light: иначе правило «ссылки — цветом текста» (.axia a) делало текст светлым на светлом */
 .btn--ghost { background: transparent; border-color: rgba(232, 230, 224, 0.35); }
 @media (hover: hover) {
   .btn--dark:hover { background: #333333; }

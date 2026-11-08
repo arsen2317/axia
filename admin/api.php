@@ -5,6 +5,7 @@ require __DIR__ . '/../lib/bootstrap.php';
 require __DIR__ . '/../lib/admin.php';
 require __DIR__ . '/../lib/booking.php';
 require __DIR__ . '/../lib/articles.php';
+require_once __DIR__ . '/../lib/site_content.php';
 
 if (!admin_logged_in()) fail('Нужно войти заново', 401);
 require_method('POST');
@@ -43,6 +44,39 @@ switch ($action) {
         if ($err) fail($err, 422);
         article_save($a, $old);
         json_out(['ok' => true, 'article' => $a]);
+
+    case 'access':
+    case 'password':
+        $who = admin_who();
+        if (!$who || !$who['owner']) fail('Это может только ' . admin_owner() . ', войдя через Яндекс', 403);
+        $d = json_body();
+        if ($action === 'access') {
+            [$list, $err] = admin_access_save((array)($d['list'] ?? []));
+            if ($err) fail($err, 422);
+            json_out(['ok' => true, 'list' => $list]);
+        }
+        $err = admin_set_password((string)($d['password'] ?? ''));
+        if ($err) fail($err, 422);
+        json_out(['ok' => true]);
+
+    case 'contacts':
+        $d = json_body();
+        [$c, $err] = contacts_normalize((array)($d['contacts'] ?? []));
+        if ($err) fail($err, 422);
+        save_settings(['contacts' => $c]);
+        json_out(['ok' => true, 'contacts' => $c]);
+
+    case 'privacy':
+        $d = json_body(1_000_000);
+        $err = privacy_save((string)($d['text'] ?? ''));
+        if ($err) fail($err, 422);
+        json_out(['ok' => true]);
+
+    case 'archive':
+        $d = json_body();
+        $a = article_set_archived((string)($d['id'] ?? ''), !empty($d['archived']));
+        if (!$a) fail('Статья не найдена', 404);
+        json_out(['ok' => true, 'status' => $a['status']]);
 
     case 'delete':
         $d = json_body();

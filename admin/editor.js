@@ -9,6 +9,21 @@
   var fields = { title: 'f-title', description: 'f-description', author: 'f-author', published_at: 'f-date', slug: 'f-slug', cover_alt: 'f-cover-alt' };
   Object.keys(fields).forEach(function (k) { $(fields[k]).value = a[k] || ''; $(fields[k]).addEventListener('input', markDirty); });
 
+  /* рекомендуемая длина заголовка и описания: в карточке новости — 2–3 строки заголовка и 3–4 строки описания,
+     в поисковой выдаче — без обрезки. Подсказка, сохранять не мешает */
+  [['f-title', 30, 60], ['f-description', 100, 160]].forEach(function (c) {
+    var inp = $(c[0]); if (!inp) return;
+    var out = document.createElement('small'); out.className = 'ad-count'; out.setAttribute('aria-live', 'polite');
+    inp.insertAdjacentElement('afterend', out);
+    var upd = function () {
+      var n = inp.value.trim().length, ok = n >= c[1] && n <= c[2];
+      out.textContent = n + ' ' + (n % 10 === 1 && n % 100 !== 11 ? 'символ' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'символа' : 'символов') + ' · рекомендуется ' + c[1] + '–' + c[2];
+      out.classList.toggle('is-ok', ok);
+      out.classList.toggle('is-warn', n > 0 && !ok);
+    };
+    inp.addEventListener('input', upd); upd();
+  });
+
   var LABELS = { text: 'Текст', heading: 'Подзаголовок', image: 'Картинка', quote: 'Цитата' };
 
   function upload(file) {
@@ -101,7 +116,7 @@
       dirty = false;
       if (location.search.indexOf('id=') < 0) history.replaceState(null, '', '/admin/edit.php?id=' + a.id);
       $('save-state').innerHTML = '';
-      var msg = document.createTextNode(status === 'published' ? 'опубликовано · ' : 'черновик сохранён');
+      var msg = document.createTextNode(status === 'published' ? 'опубликовано · ' : status === 'archived' ? 'сохранено в архиве' : 'черновик сохранён');
       $('save-state').appendChild(msg);
       if (status === 'published') { var l = el('a', '', 'открыть ↗'); l.href = '/news/' + a.slug; l.target = '_blank'; l.rel = 'noopener'; $('save-state').appendChild(l); }
       updateButtons();
@@ -109,10 +124,11 @@
       .then(function () { $('btn-draft').disabled = $('btn-publish').disabled = false; });
   }
   function updateButtons() {
-    $('btn-draft').textContent = a.status === 'published' ? 'Снять с публикации' : 'Сохранить черновик';
-    $('btn-publish').textContent = a.status === 'published' ? 'Сохранить изменения' : 'Опубликовать';
+    $('btn-draft').textContent = a.status === 'published' ? 'Снять с публикации' : a.status === 'archived' ? 'Сохранить в архиве' : 'Сохранить черновик';
+    $('btn-publish').textContent = a.status === 'published' ? 'Сохранить изменения' : a.status === 'archived' ? 'Вернуть на сайт' : 'Опубликовать';
   }
-  $('btn-draft').addEventListener('click', function () { save('draft'); });
+  /* статья в архиве остаётся в архиве, пока её не вернут на сайт */
+  $('btn-draft').addEventListener('click', function () { save(a.status === 'archived' ? 'archived' : 'draft'); });
   $('btn-publish').addEventListener('click', function () { save('published'); });
   updateButtons();
   window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });

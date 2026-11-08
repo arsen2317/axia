@@ -8,16 +8,8 @@
  * Выгрузка в CSV — в админке (/admin/consents.php).
  */
 declare(strict_types=1);
+require_once __DIR__ . '/site_content.php';   // privacy_hash() — отпечаток редакции политики
 
-function consent_doc_hash(string $file): string
-{
-    $path = ROOT . '/' . $file;
-    if (!is_file($path)) return '';
-    $html = (string)file_get_contents($path);
-    /* хэшируем только текст документа (<main>), чтобы правки шапки или подвала не меняли отпечаток */
-    if (preg_match('#<main\b.*?</main>#s', $html, $m)) $html = $m[0];
-    return substr(hash('sha256', $html), 0, 16);
-}
 
 function consent_log(string $form, string $name, string $email, string $phone): void
 {
@@ -31,7 +23,7 @@ function consent_log(string $form, string $name, string $email, string $phone): 
         'ip' => client_ip(),
         'ua' => mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 300),
         'page' => mb_substr($ref, 0, 300),
-        'privacy_doc' => '/privacy#' . consent_doc_hash('privacy.html'),
+        'privacy_doc' => '/privacy#' . privacy_hash(),   /* отпечаток редакции политики (lib/site_content.php) */
     ];
     $dir = DATA . '/consents';
     ensure_dir($dir);

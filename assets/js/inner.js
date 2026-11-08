@@ -34,14 +34,32 @@
      На Vercel (демо, без PHP) — по настройке демо-админки в этом браузере */
   fetch('/api/settings.php', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (d) {
     if (d && d.ok && d.newsVisible === false) root.classList.add('no-news');
+    navFit();
   }).catch(function () {
     try { if ((JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).newsEnabled === false) root.classList.add('no-news'); } catch (e) {}
+    navFit();
   });
+
+  /* ширина развёрнутого меню — по числу пунктов (как updateNavFit() в app.js) */
+  var fitKey = '';
+  function navFit() {
+    var row = root.querySelector('.nav__row');
+    if (!row || !nav) return;
+    var items = Array.prototype.filter.call(row.children, function (li) { return li.offsetWidth > 0; });
+    var W = root.clientWidth, key = W + ':' + items.length + ':' + (document.fonts ? document.fonts.status : '');
+    if (!items.length || key === fitKey) return;
+    fitKey = key;
+    var cs = getComputedStyle(row), text = 0;
+    items.forEach(function (li) { text += li.getBoundingClientRect().width; });
+    var need = text + Math.max(54, 0.038 * W) * (items.length - 1) + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 2;
+    nav.style.setProperty('--nav-fit', Math.max(0, (need - nav.parentElement.getBoundingClientRect().width) / 2).toFixed(1) + 'px');
+  }
 
   var ticking = false;
   var pinned = document.body.getAttribute('data-nav') === 'pinned';
   function update() {
     ticking = false;
+    navFit();
     var top = pinned || window.scrollY < 16;
     if (top !== root.classList.contains('is-top')) {
       root.classList.toggle('is-top', top);
@@ -73,4 +91,5 @@
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll);
   update();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fitKey = ''; navFit(); });
 })();

@@ -6,6 +6,7 @@ require __DIR__ . '/../lib/admin.php';
 require __DIR__ . '/../lib/booking.php';
 require __DIR__ . '/../lib/articles.php';
 require __DIR__ . '/../lib/consent.php';
+require_once __DIR__ . '/../lib/site_content.php';
 
 admin_session();
 $error = null;
@@ -20,17 +21,28 @@ if (!admin_logged_in()) {
     admin_head('Вход');
     ?>
 <main class="ad-login">
-<form class="ad-card ad-login__form" method="post" action="/admin/">
+<div class="ad-card ad-login__form">
 <p class="ad-logo">аксиа · админка</p>
 <?php if (!admin_configured()): ?>
-<p class="ad-note ad-note--warn">Пароль администратора ещё не задан. Укажите <code>admin.password_hash</code> в <code>config/config.local.php</code> (см. README).</p>
+<p class="ad-note ad-note--warn">Вход ещё не настроен: укажите <code>yandex_id</code> или <code>admin.password_hash</code> в <code>config/config.local.php</code> (см. README).</p>
 <?php endif; ?>
 <?php if ($error): ?><p class="ad-note ad-note--err" role="alert"><?= h($error) ?></p><?php endif; ?>
+<?php if (yandex_configured()): ?>
+<a class="ad-btn ad-btn--primary ad-btn--yandex" href="/admin/oauth.php?start=1">Войти с Яндексом</a>
+<p class="ad-hint">Рабочим аккаунтом Яндекса, которому открыт доступ.</p>
+<?php endif; ?>
+<?php if (admin_password_hash() !== ''): ?>
+<details class="ad-login__pass"<?= $error || !yandex_configured() ? ' open' : '' ?>>
+<summary>Войти по запасному паролю</summary>
+<form method="post" action="/admin/">
 <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
-<label class="ad-field"><span>Логин</span><input name="login" autocomplete="username" required autofocus></label>
+<label class="ad-field"><span>Логин</span><input name="login" autocomplete="username" required></label>
 <label class="ad-field"><span>Пароль</span><input name="password" type="password" autocomplete="current-password" required></label>
-<button class="ad-btn ad-btn--primary" type="submit">Войти</button>
+<button class="ad-btn" type="submit">Войти</button>
 </form>
+</details>
+<?php endif; ?>
+</div>
 </main>
 </body></html>
 <?php
@@ -49,13 +61,15 @@ $checks = [
     'Яндекс Телемост' => telemost_enabled(),
     'Яндекс Календарь' => caldav_enabled(),
 ];
+$who = admin_who();
+$access = admin_access();
 admin_head('Панель');
 ?>
 <header class="ad-top">
 <a class="ad-logo" href="/admin/">аксиа · админка</a>
-<nav class="ad-top__nav"><a href="/" target="_blank" rel="noopener">сайт ↗</a><a href="/news" target="_blank" rel="noopener">новости ↗</a><a href="/admin/?logout=1&amp;t=<?= h(csrf_token()) ?>">выйти</a></nav>
+<nav class="ad-top__nav"><span class="ad-hint"><?= $who['via'] === 'yandex' ? h($who['email']) : 'вход по паролю' ?></span><a href="/" target="_blank" rel="noopener">сайт ↗</a><a href="/news" target="_blank" rel="noopener">новости ↗</a><a href="/admin/?logout=1&amp;t=<?= h(csrf_token()) ?>">выйти</a></nav>
 </header>
-<main class="ad-main" data-csrf="<?= h(csrf_token()) ?>">
+<main class="ad-main" data-csrf="<?= h(csrf_token()) ?>" data-idle="<?= ADMIN_IDLE ?>">
 
 <section class="ad-card">
 <h2>Запись на встречи</h2>
@@ -68,7 +82,7 @@ admin_head('Панель');
 <p class="ad-hint">Подключения: <?php foreach ($checks as $k => $v): ?><span class="ad-pill <?= $v ? 'is-on' : '' ?>"><?= h($k) ?>: <?= $v ? 'настроено' : 'тестовый режим' ?></span> <?php endforeach; ?></p>
 
 <h3>Параметры и расписание</h3>
-<p class="ad-hint">Время — <?= (string)cfg('timezone') === 'Europe/Moscow' ? 'московское' : h((string)cfg('timezone')) ?>. Слот появится на сайте, только если он попадает в расписание и период записи, в Яндекс Календаре в это время (с учётом перерыва) ничего нет и в этот день ещё не набрано максимальное число звонков.</p>
+<p class="ad-hint">Время — <?= (string)cfg('timezone') === 'Europe/Moscow' ? 'московское' : h((string)cfg('timezone')) ?>. Слот виден на сайте, если на это время в Яндекс Календаре ничего нет и на него ещё никто не записался.</p>
 <div id="schedule" data-settings="<?= h(json_encode(booking_cfg(), JSON_UNESCAPED_UNICODE)) ?>"></div>
 <h3>Ближайшие встречи</h3>
 <?php if (!$upcoming): ?>
@@ -86,6 +100,52 @@ admin_head('Панель');
 <?php endif; ?>
 </section>
 
+<section class="ad-card" id="access" data-owner="<?= $who['owner'] ? '1' : '0' ?>" data-list="<?= h(json_encode($access['list'], JSON_UNESCAPED_UNICODE)) ?>">
+<h2>Доступ к админке</h2>
+<p class="ad-hint">Вход — кнопкой «Войти с Яндексом» рабочим аккаунтом из этого списка. Главный адрес <b><?= h(admin_owner()) ?></b> из списка не удаляется;
+только он меняет список и запасной пароль. Убрали адрес — этот человек выходит из админки сразу. Без действий в админке 1 час — выход.</p>
+<?php if (!yandex_configured()): ?><p class="ad-note ad-note--warn">Вход через Яндекс ещё не настроен (нет <code>yandex_id</code> в настройках сайта) — пока работает только запасной пароль.</p><?php endif; ?>
+<ul class="ad-list" id="access-list">
+<?php foreach ($access['list'] as $e): ?>
+<li class="ad-list__row" data-email="<?= h($e) ?>"><span><b><?= h($e) ?></b><?= $e === admin_owner() ? ' <span class="ad-pill is-on">главный</span>' : '' ?><br><span class="ad-hint"><?= isset($access['last'][$e]) ? 'последний вход: ' . h(date('d.m.Y H:i', (int)strtotime((string)$access['last'][$e]))) : 'ещё не входил(а)' ?></span></span>
+<?php if ($who['owner'] && $e !== admin_owner()): ?><span class="ad-list__actions"><button class="ad-btn ad-btn--small ad-btn--danger" type="button" data-access-remove="<?= h($e) ?>">Убрать</button></span><?php endif; ?>
+</li>
+<?php endforeach; ?>
+</ul>
+<?php if ($who['owner']): ?>
+<div class="ad-row ad-access__add"><label class="ad-field"><span>Добавить адрес</span><input id="access-new" type="email" maxlength="254" placeholder="name@axiagroup.ru"></label><button class="ad-btn" type="button" id="access-add">Добавить</button></div>
+<h3>Запасной пароль</h3>
+<p class="ad-hint">Для входа по ссылке «войти по запасному паролю», если вход через Яндекс недоступен. Логин — <b><?= h((string)cfg('admin.login')) ?></b>.
+<?= (string)(settings()['admin_password_hash'] ?? '') !== '' ? 'Пароль задан в админке.' : 'Сейчас действует пароль из файла настроек — задайте новый.' ?> После смены все входы по старому паролю закрываются.</p>
+<div class="ad-row"><label class="ad-field"><span>Новый пароль (от 12 символов)</span><input id="pw-new" type="password" autocomplete="new-password" minlength="12"></label>
+<label class="ad-field"><span>Ещё раз</span><input id="pw-new2" type="password" autocomplete="new-password" minlength="12"></label></div>
+<div class="ad-sched__bar"><button class="ad-btn ad-btn--primary" type="button" id="pw-save">Сохранить пароль</button><span class="ad-hint" id="pw-state" role="status"></span></div>
+<?php else: ?>
+<p class="ad-hint">Менять список и запасной пароль может только <?= h(admin_owner()) ?>, войдя через Яндекс.</p>
+<?php endif; ?>
+</section>
+
+<section class="ad-card" id="contacts" data-contacts="<?= h(json_encode(contacts(), JSON_UNESCAPED_UNICODE)) ?>">
+<h2>Контакты на сайте</h2>
+<p class="ad-hint">Подвал всех страниц и почты в блоке «Команда». Пустое поле — пункт на сайте не показывается (кроме общей почты).
+Заявки и уведомления о встречах приходят на адрес из настроек сайта — его здесь не меняют.</p>
+<div class="ad-row">
+<label class="ad-field"><span>Общая почта *</span><input name="email" type="email" maxlength="254" required></label>
+<label class="ad-field"><span>Телефон</span><input name="phone" type="tel" maxlength="24" placeholder="+7 900 000-00-00"></label>
+<label class="ad-field"><span>Телеграм-канал</span><input name="telegram" maxlength="100" placeholder="https://t.me/… или @имя"></label>
+</div>
+<div class="ad-row">
+<?php foreach (CONTACTS_TEAM as $i => $n): ?><label class="ad-field"><span>Почта: <?= h($n) ?></span><input name="team<?= $i ?>" type="email" maxlength="254"></label>
+<?php endforeach; ?>
+</div>
+<div class="ad-sched__bar"><button class="ad-btn ad-btn--primary" type="button" id="contacts-save" disabled>Сохранить</button><span class="ad-hint" id="contacts-state" role="status"></span></div>
+</section>
+
+<section class="ad-card">
+<div class="ad-card__head"><h2>Политика конфиденциальности</h2><a class="ad-btn" href="/admin/privacy.php">Редактировать текст</a></div>
+<p class="ad-hint"><?php $pd = privacy_doc(); echo $pd['updated_at'] !== '' ? 'Последняя правка: ' . h(date('d.m.Y H:i', (int)strtotime($pd['updated_at']))) . '.' : 'Действует исходный текст.'; ?> Страница на сайте — <a href="/privacy" target="_blank" rel="noopener">/privacy ↗</a></p>
+</section>
+
 <section class="ad-card">
 <div class="ad-card__head"><h2>Согласия на обработку персональных данных</h2><?php if ($consentN): ?><a class="ad-btn" href="/admin/consents.php?t=<?= h(csrf_token()) ?>">Скачать CSV</a><?php endif; ?></div>
 <p class="ad-hint"><?= $consentN ? 'В журнале записей: <b>' . $consentN . '</b>.' : 'Пока записей нет.' ?> Каждая отправка формы «напишите нам» и запись на встречу сохраняет, кто, когда, с какого IP и с какой редакцией политики согласился. Файлы журнала — в <code>data/consents/</code>.</p>
@@ -95,9 +155,10 @@ admin_head('Панель');
 <label class="ad-switch">
 <input type="checkbox" id="news-toggle" <?= $s['news_enabled'] ? 'checked' : '' ?>>
 <span class="ad-switch__track" aria-hidden="true"></span>
-<span id="news-label"><?= $s['news_enabled'] ? 'Новости на сайте показываются: блок на главной, пункты в меню и подвале' : 'Новости скрыты: на главной нет блока, в меню и подвале нет пункта «новости»' ?></span>
+<span id="news-label"><?= $s['news_enabled'] ? 'Блок «Новости» включён: показывается на главной, в меню и подвале' : 'Блок «Новости» выключен: на главной, в меню и подвале его нет' ?></span>
 </label>
-<p class="ad-hint">Отдельная страница /news и сами статьи остаются доступны по прямой ссылке. Пока нет ни одной опубликованной статьи, блок не показывается в любом случае.</p>
+<p class="ad-hint">Просмотры — уникальные посетители статьи (каждый человек засчитывается один раз; роботы и вы сами, пока вошли в админку, не считаются). «В архив» — статья пропадает с сайта, но не удаляется: её можно вернуть.</p>
+<p class="ad-hint">Страница /news и статьи остаются доступны по прямой ссылке.<?php if (!articles_published()): ?> <b>Сейчас нет опубликованных статей, поэтому блока на сайте не видно, даже когда он включён.</b><?php endif; ?></p>
 <?php if (!$articles): ?>
 <p class="ad-hint">Статей пока нет.</p>
 <?php else: ?>
@@ -106,11 +167,14 @@ admin_head('Панель');
 <li class="ad-list__row" data-id="<?= h($a['id']) ?>">
 <span class="ad-list__main">
 <?php if ($a['cover']): ?><img class="ad-thumb" src="<?= h($a['cover']) ?>" alt=""><?php else: ?><span class="ad-thumb"></span><?php endif; ?>
-<span><b><?= h($a['title']) ?></b><br><span class="ad-hint"><?= $a['status'] === 'published' ? ($a['published_at'] > date('Y-m-d') ? 'запланирована на ' : 'опубликована ') . h(ru_date($a['published_at'])) : 'черновик' ?></span></span>
+<?php $views = $a['status'] !== 'draft' ? article_views($a['id']) : 0; ?>
+<span><b><?= h($a['title']) ?></b><br><span class="ad-hint"><?= $a['status'] === 'published' ? ($a['published_at'] > date('Y-m-d') ? 'запланирована на ' : 'опубликована ') . h(ru_date($a['published_at'])) : ($a['status'] === 'archived' ? 'в архиве — на сайте не видна' : 'черновик') ?><?= $a['status'] !== 'draft' ? ' · просмотров: ' . $views : '' ?></span></span>
 </span>
 <span class="ad-list__actions">
 <?php if ($a['status'] === 'published'): ?><a href="/news/<?= h($a['slug']) ?>" target="_blank" rel="noopener">открыть ↗</a><?php endif; ?>
 <a class="ad-btn ad-btn--small" href="/admin/edit.php?id=<?= h($a['id']) ?>">Редактировать</a>
+<?php if ($a['status'] === 'published'): ?><button class="ad-btn ad-btn--small" type="button" data-archive="<?= h($a['id']) ?>" data-to="1">В архив</button><?php endif; ?>
+<?php if ($a['status'] === 'archived'): ?><button class="ad-btn ad-btn--small" type="button" data-archive="<?= h($a['id']) ?>" data-to="0">Вернуть на сайт</button><?php endif; ?>
 <button class="ad-btn ad-btn--small ad-btn--danger" type="button" data-delete="<?= h($a['id']) ?>">Удалить</button>
 </span>
 </li>
@@ -119,6 +183,6 @@ admin_head('Панель');
 <?php endif; ?>
 </section>
 </main>
-<script src="/admin/admin.js"></script>
-<script src="/admin/schedule.js"></script>
+<script src="<?= h(asset('/admin/admin.js')) ?>"></script>
+<script src="<?= h(asset('/admin/schedule.js')) ?>"></script>
 </body></html>

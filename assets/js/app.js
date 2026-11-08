@@ -20,6 +20,8 @@ function stableVh(win) {
 class Page extends DCLogic {
   constructor(props) {
     super(props);
+    /* контакты — из админки (/api/settings.php → contacts); до ответа сервера и в демо — эти */
+    this.contacts = { email: 'hello@axiagroup.ru', phone: '', telegram: 'https://t.me/axialogia', team: ['klopatkina@axiagroup.ru', 'akosko@axiagroup.ru', 'dstasova@axiagroup.ru'] };
     this.state = { open: false, glReady: false, navLabel: 'О нас', dir: 0, apprStep: 0, tm: 0, tmPage: 0, tmPageN: 2, light: false, top: true, solOpen: -1 };
     /* ОБСУДИТЬ ЗАДАЧУ: свободные слоты приходят с сервера (/api/slots.php — рабочие часы минус занятость
        Яндекс Календаря). Если сервера нет (превью на Vercel, открытие файла) — показываем данные-примеры,
@@ -45,7 +47,7 @@ class Page extends DCLogic {
     this.apprSec = null;
     this.setApprSection = (el) => { this.apprSec = el; if (el) this.updateAppr(); };
     this.solSec = null;
-    this.setSol = (el) => { this.solSec = el; if (el) this.updateSol(); };
+    this.setSol = (el) => { if (el && el !== this.solSec) this.initSol(el); this.solSec = el; if (el) this.updateSol(); };
     /* НОВОСТИ: блок появляется после загрузки статей — пересчитываем сетку (высота блока сдвигает фон «Обсудить задачу»)
        и, если пришли по ссылке /#news с другой страницы, докручиваем к нему */
     this.setNews = (el) => {
@@ -83,6 +85,24 @@ class Page extends DCLogic {
       if (el) this.startGL(el);
     };
   }
+  /* МЕНЮ, десктоп: ширина развёрнутой плашки — по числу пунктов. Промежуток между пунктами постоянный
+     (как при пяти пунктах: 3,8% ширины страницы, не меньше 54 px), поэтому без пункта «новости» плашка уже.
+     Результат — --nav-fit у .nav: сколько добавить с каждой стороны к компактной плашке. Та же функция — в inner.js */
+  updateNavFit() {
+    const doc = (this.root && this.root.ownerDocument) || document;
+    const row = doc.querySelector('.nav__row'), nav = row && row.closest('.nav'), slot = nav && nav.parentElement;
+    if (!row || !slot) return;
+    const items = Array.prototype.filter.call(row.children, (li) => li.offsetWidth > 0);
+    const W = (this.root || doc.documentElement).clientWidth;
+    const key = W + ':' + items.length + ':' + (doc.fonts ? doc.fonts.status : '');
+    if (!items.length || key === this.navFitKey) return;
+    this.navFitKey = key;
+    const cs = getComputedStyle(row);
+    const text = items.reduce((s, li) => s + li.getBoundingClientRect().width, 0);
+    const need = text + Math.max(54, 0.038 * W) * (items.length - 1) + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 2;
+    nav.style.setProperty('--nav-fit', Math.max(0, (need - slot.getBoundingClientRect().width) / 2).toFixed(1) + 'px');
+  }
+  componentDidUpdate() { this.updateNavFit(); }
   /* подпись в плашке меню = секция, которая сейчас на экране (атрибут data-nav-label) */
   componentDidMount() {
     this.ticking = false;
@@ -92,7 +112,7 @@ class Page extends DCLogic {
       if (!this.snapAnim) this.snapT = setTimeout(() => this.snapWho(), 220);
       if (this.ticking) return;
       this.ticking = true;
-      requestAnimationFrame(() => { this.ticking = false; this.updateLabel(); this.updateDirs(); this.updateDv(); this.updateWho(); this.updateTmPages(); this.updateAppr(); this.updateSol(); });
+      requestAnimationFrame(() => { this.ticking = false; this.updateNavFit(); this.updateLabel(); this.updateDirs(); this.updateDv(); this.updateWho(); this.updateTmPages(); this.updateAppr(); this.updateSol(); });
     };
     this.updateLabel = () => {
       /* ищем секции по всему документу: ref корневого элемента в редакторе может не приходить */
@@ -221,7 +241,7 @@ class Page extends DCLogic {
     this.updateDirs();
     this.updateDv();
     this.updateTmPages(true);
-    { const d = (this.root && this.root.ownerDocument) || document; if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => this.updateTmPages(true)); }
+    { const d = (this.root && this.root.ownerDocument) || document; if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => { this.updateTmPages(true); this.navFitKey = null; this.updateNavFit(); }); }
     this.updateWho();
     this.updateAppr();
     this.loadBooking();
@@ -517,10 +537,12 @@ void main(){
      до ближайшего экрана с учётом направления: прокрутили вниз дальше 15% экрана от экрана — едем к следующему,
      меньше — возвращаемся. Экраны: hero, «о нас», «направления», «решения», «команда»,
      «обсудить задачу». Внутри «решений», высокой «команды» и «обсудить задачу» с подвалом — без доводки.
-     Любое касание колеса / пальца / клавиш прерывает доводку. Десктоп и планшет; на мобильном — без доводки. */
+     Любое касание колеса / пальца / клавиш прерывает доводку. Десктоп и планшет; на мобильном — без доводки.
+     Доводка — только после прокрутки самим пользователем (колесо, палец, клавиши прокрутки, полоса прокрутки).
+     Прокрутку, которую делает сама страница (подкрутка к форме записи, переходы из меню), не трогаем. */
   startPaging() {
     const doc = (this.root && this.root.ownerDocument) || document, win = doc.defaultView || window;
-    let anim = null, timer = 0, startY = null, touching = false, selfScroll = false, restY = 0;   /* restY — где страница стояла до жеста */
+    let anim = null, timer = 0, startY = null, touching = false, selfScroll = false, restY = 0, user = false;   /* restY — где страница стояла до жеста; user — прокручивал ли пользователь с прошлой доводки */
     const scroller = () => {
       let sc = doc.querySelector('.ab') || doc.querySelector('section');
       sc = sc && sc.parentElement;
@@ -576,6 +598,8 @@ void main(){
     };
     const settle = () => {
       if (touching || anim) return;
+      if (!user) { startY = null; restY = (scroller() || {}).scrollTop ?? (win.scrollY || doc.documentElement.scrollTop); return; }
+      user = false;
       const g = geo();
       if (g.W <= 1056) { startY = null; return; }   /* планшет и мобильный — без доводчика */
       const y = g.y, dir = Math.sign(y - (startY == null ? restY : startY));
@@ -600,18 +624,28 @@ void main(){
       timer = win.setTimeout(settle, 160);
     };
     const onInput = () => { if (anim) stop(); };
-    const onTouchStart = () => { touching = true; onInput(); };
+    const onWheel = () => { user = true; onInput(); };
+    /* клавиши прокрутки — только не в полях ввода */
+    const SCROLL_KEYS = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'];
+    const onKey = (e) => {
+      onInput();
+      const t = e.target, tag = t && t.tagName;
+      if (SCROLL_KEYS.indexOf(e.key) >= 0 && !(t && (t.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON'))) user = true;
+    };
+    /* нажатие мыши — прокрутка, только если это полоса прокрутки (правее содержимого страницы) */
+    const onDown = (e) => { onInput(); if (e.clientX >= doc.documentElement.clientWidth) user = true; };
+    const onTouchStart = () => { touching = true; user = true; onInput(); };
     const onTouchEnd = () => { touching = false; win.clearTimeout(timer); timer = win.setTimeout(settle, 220); };
     doc.addEventListener('scroll', onScroll, { capture: true, passive: true });
-    win.addEventListener('wheel', onInput, { passive: true });
-    win.addEventListener('mousedown', onInput);
-    win.addEventListener('keydown', onInput);
+    win.addEventListener('wheel', onWheel, { passive: true });
+    win.addEventListener('mousedown', onDown);
+    win.addEventListener('keydown', onKey);
     win.addEventListener('touchstart', onTouchStart, { passive: true });
     win.addEventListener('touchend', onTouchEnd, { passive: true });
     this.pagingStop = () => {
       stop(); win.clearTimeout(timer);
       doc.removeEventListener('scroll', onScroll, { capture: true });
-      win.removeEventListener('wheel', onInput); win.removeEventListener('mousedown', onInput); win.removeEventListener('keydown', onInput);
+      win.removeEventListener('wheel', onWheel); win.removeEventListener('mousedown', onDown); win.removeEventListener('keydown', onKey);
       win.removeEventListener('touchstart', onTouchStart); win.removeEventListener('touchend', onTouchEnd);
     };
   }
@@ -761,11 +795,17 @@ void main(){
     /* анимация текста — только при листании страниц внутри карточки. При смене участника карточка и так проявляется
        сама (CSS), а анимация описания в тот же кадр, когда карточка становится видимой, в Safari иногда оставляла
        описание пустым до следующего клика */
+    /* CSS-анимация по классу is-in, а не Web Animations: в Safari отмена JS-анимации (animation.cancel) у блока
+       с overflow: hidden иногда оставляла описание непрорисованным — пустое место вместо текста */
     const cards2 = tm.querySelectorAll('.tm__card');
-    cards2.forEach((c) => { const f = c.querySelector('.tm__flow'); if (f && f.getAnimations) f.getAnimations().forEach((a) => a.cancel()); });
+    cards2.forEach((c) => { const f = c.querySelector('.tm__flow'); if (f) f.classList.remove('is-in'); });
     if (anim) {
       const card = cards2[cur], flow = card && card.querySelector('.tm__flow');
-      if (flow && flow.animate) flow.animate([{ opacity: 0, transform: 'translateX(0.75rem)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'ease', fill: 'none' });
+      if (flow) {
+        void flow.offsetWidth;   /* перезапуск анимации, если класс только что сняли */
+        flow.classList.add('is-in');
+        flow.addEventListener('animationend', () => flow.classList.remove('is-in'), { once: true });
+      }
     }
   }
   /* класс абзаца описания: на какой странице он (карта — из updateTmPages; до замера: основное / подробнее) */
@@ -961,6 +1001,18 @@ void main(){
             if (best !== null) cy = best;
           }
           sol.style.setProperty('--sol-cy', cy.toFixed(1) + 'px');
+          /* стрелки — посередине между низом заголовка и верхом номеров кругов */
+          {
+            const stg = sol.querySelector('.sol__stage'), num = sol.querySelector('.sol__num');
+            if (stg && ttl && num && W > 1056) {
+              const st = stg.getBoundingClientRect().top;
+              const ay = (ttl.getBoundingClientRect().bottom - st + num.getBoundingClientRect().top - st) / 2;
+              if (ay > 0) sol.style.setProperty('--sol-ay', ay.toFixed(1) + 'px');
+              /* на невысоких экранах зазор маленький — стрелки меньше (не больше 60% зазора, от 32 до 48 px) */
+              const gapY = num.getBoundingClientRect().top - ttl.getBoundingClientRect().bottom;
+              sol.style.setProperty('--sol-an', Math.max(32, Math.min(48, gapY * 0.6)).toFixed(1) + 'px');
+            }
+          }
           /* десктоп: после ряда кругов — отступ до «Команды»: её верх ложится на следующую горизонталь сетки под кругами */
           if (!portrait && d) {
             const below = vh - (cy + d / 2);
@@ -1399,12 +1451,88 @@ void main(){
   }
 
   /* РЕШЕНИЯ: прогресс скролла по закреплённой секции → сдвиг ряда кругов */
+  /* РЕШЕНИЯ, десктоп: ряд кругов листается вбок. solX — номер круга по центру (дробный во время жеста),
+     от SOL_MIN до SOL_MAX: при первом показе по центру второй круг, первый виден слева от него.
+     Управление: горизонтальный свайп по тачпаду (и Shift+колесо), стрелки слева и справа, перетаскивание мышью, Tab по кругам.
+     Вертикальная прокрутка страницы проходит мимо. После жеста ряд доезжает до ближайшего круга.
+     На планшете и мобильном круги идут друг под другом — там всё это выключено. */
+  initSol(sec) {
+    const SOL_MIN = 1, SOL_MAX = 6;
+    if (this.solX == null) this.solX = SOL_MIN;
+    const win = sec.ownerDocument.defaultView || window;
+    const desk = () => { const ax = sec.closest('.axia'); return !!ax && ax.clientWidth > 1056; };
+    const track = () => sec.querySelector('.sol__track');
+    const stepPx = () => { const it = sec.querySelectorAll('.sol__item'); return it.length > 1 ? (it[1].offsetLeft - it[0].offsetLeft) || 1 : 1; };
+    const clamp = (x) => Math.min(SOL_MAX, Math.max(SOL_MIN, x));
+    let snapT = 0;
+    const set = (x, snap) => {
+      const t = track(); if (!t) return;
+      this.solX = clamp(x);
+      t.classList.toggle('is-snap', !!snap);
+      this.updateSol();
+    };
+    const snapSoon = (ms) => { win.clearTimeout(snapT); snapT = win.setTimeout(() => set(Math.round(this.solX), true), ms); };
+
+    /* свайп по тачпаду: горизонтальная составляющая; обычное колесо мыши — только с Shift */
+    sec.addEventListener('wheel', (e) => {
+      if (!desk()) return;
+      let dx = 0;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) dx = e.deltaX;
+      else if (e.shiftKey) dx = e.deltaY;
+      else return;
+      e.preventDefault();   /* иначе браузер листает историю назад/вперёд */
+      if (e.deltaMode === 1) dx *= 40;
+      set(this.solX + dx / stepPx(), false);
+      snapSoon(140);
+    }, { passive: false });
+
+    /* перетаскивание мышью */
+    let drag = null;
+    sec.addEventListener('pointerdown', (e) => {
+      if (!desk() || e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('.sol__navbtn')) return;
+      drag = { x: e.clientX, x0: this.solX, moved: false };
+    });
+    win.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) < 6) return;
+      drag.moved = true; sec.classList.add('is-drag');
+      set(drag.x0 - dx / stepPx(), false);
+    });
+    win.addEventListener('pointerup', () => {
+      if (!drag) return;
+      const moved = drag.moved; drag = null; sec.classList.remove('is-drag');
+      if (moved) {
+        set(Math.round(this.solX), true);
+        /* отпустили после перетаскивания — это не клик по кругу */
+        const eat = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+        win.addEventListener('click', eat, { capture: true, once: true });
+        win.setTimeout(() => win.removeEventListener('click', eat, true), 50);
+      }
+    });
+
+    /* стрелки: на один круг */
+    sec.addEventListener('click', (e) => {
+      const btn = e.target.closest('.sol__navbtn'); if (!btn) return;
+      set(Math.round(this.solX) + (+btn.getAttribute('data-sol') || 0), true);
+    });
+
+    /* Tab по кругам: круг с фокусом всегда в кадре */
+    sec.addEventListener('focusin', (e) => {
+      const li = e.target.closest('.sol__item'); if (!li || !desk()) return;
+      const stage = sec.querySelector('.sol__stage'); if (stage) stage.scrollLeft = 0;   /* браузер сам сдвигает обрезанный блок к фокусу */
+      const i = Array.prototype.indexOf.call(li.parentNode.children, li);
+      if (Math.abs(i - this.solX) > 1) set(i, true);
+    });
+  }
   updateSol() {
     const sec = this.solSec; if (!sec) return;
-    const win = sec.ownerDocument.defaultView || window;
-    const r = sec.getBoundingClientRect(), span = r.height - (parseFloat(getComputedStyle(sec).paddingBottom) || 0) - stableVh(win);   /* без отступа снизу */
-    const p = span > 0 ? Math.min(Math.max(-r.top / span, 0), 1) : 0;
-    sec.style.setProperty('--sol-p', p.toFixed(4));
+    const x = this.solX == null ? 1 : this.solX;
+    sec.style.setProperty('--sol-x', x.toFixed(4));
+    /* у края ряда стрелка в ту сторону скрывается */
+    const prev = sec.querySelector('.sol__navbtn--prev'), next = sec.querySelector('.sol__navbtn--next');
+    if (prev) { prev.classList.toggle('is-off', x <= 1.001); prev.setAttribute('aria-disabled', x <= 1.001 ? 'true' : 'false'); }
+    if (next) { next.classList.toggle('is-off', x >= 5.999); next.setAttribute('aria-disabled', x >= 5.999 ? 'true' : 'false'); }
   }
 
   /* ---------- календарь ---------- */
@@ -1444,12 +1572,9 @@ void main(){
     if (set.newsEnabled === false) return [];
     try { arts = JSON.parse(localStorage.getItem('axia-demo-articles')); } catch (e) { arts = null; }
     const d0 = new Date(), ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    const ago = (n) => { const d = new Date(d0); d.setDate(d.getDate() - n); return ymd(d); };
-    if (!Array.isArray(arts)) arts = [
-      { slug: 'kak-tsennosti-stanovyatsya-strategiey', title: 'Как ценности становятся стратегией', status: 'published', published_at: ago(2), cover: '', description: 'Пример статьи: почему корпоративные ценности работают только тогда, когда из них вырастают решения и правила.' },
-      { slug: 'otchet-ob-ustoychivom-razvitii', title: 'Отчёт об устойчивом развитии: с чего начать', status: 'published', published_at: ago(9), cover: '', description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.' },
-      { slug: 'sotsialnye-programmy-dlya-territoriy', title: 'Социальные программы для территорий', status: 'published', published_at: ago(20), cover: '', description: 'Пример: краткое описание статьи, которое показывается в списке новостей под заголовком.' }
-    ];
+    if (!Array.isArray(arts)) arts = [];
+    const samples = ['kak-tsennosti-stanovyatsya-strategiey', 'otchet-ob-ustoychivom-razvitii', 'sotsialnye-programmy-dlya-territoriy'];
+    arts = arts.filter((a) => samples.indexOf(a.slug) < 0);
     const today = ymd(d0);
     return arts.filter((a) => a.status === 'published' && a.published_at <= today)
       .sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(0, 3)
@@ -1460,26 +1585,24 @@ void main(){
     const [y, mo, d] = ymd.split('-').map(Number);
     return d + ' ' + m[mo - 1] + ' ' + y;
   }
-  /* демо: параметры записи из демо-админки (этот браузер) или те же, что в config/config.example.php.
+  /* демо: слоты из демо-админки (этот браузер) или те же, что в config/config.example.php.
      Календаря в демо нет — показываем все слоты по расписанию (как на сайте, когда в Яндекс Календаре на это время ничего нет) */
   demoSlots() {
     let b = null;
     try { b = (JSON.parse(localStorage.getItem('axia-demo-settings')) || {}).booking || null; } catch (e) { b = null; }
-    if (!b || !b.windows) b = { duration_min: 30, step_min: 15, buffer_min: 15, min_notice_hours: 24, horizon_days: 14, max_per_day: 3,
-      date_from: '2026-11-16', date_to: '2026-11-30', windows: { 2: [['11:00', '13:00']], 4: [['15:00', '17:00']], 5: [['13:00', '15:00']] }, holidays: [] };
-    const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3), dur = +b.duration_min;
+    if (!b || !b.slots) b = { duration_min: 30, min_notice_hours: 24, horizon_days: 14,
+      slots: { 2: ['11:00', '11:45', '12:30'], 4: ['15:00', '15:45', '16:30'], 5: ['13:00', '13:45', '14:30'] }, holidays: [] };
+    const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3);
     const earliest = Date.now() + b.min_notice_hours * 3600e3;
     const ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const out = [];
     for (let i = 0; i <= b.horizon_days; i++) {
-      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i), day = ymd(d);
-      if ((b.holidays || []).indexOf(day) >= 0 || (b.date_from && day < b.date_from) || (b.date_to && day > b.date_to)) continue;
-      const starts = [];
-      for (const [a, z] of (b.windows[d.getDay() || 7] || [])) for (let m = toMin(a); m + dur <= toMin(z); m += +b.step_min) starts.push(m);
-      for (const m of starts) {
-        const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m).getTime();
-        if (t < earliest) continue;
-        out.push(new Date(t).toISOString());
+      const d = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + i);
+      if ((b.holidays || []).indexOf(ymd(d)) >= 0) continue;
+      for (const t of (b.slots[d.getDay() || 7] || [])) {
+        const ts = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, toMin(t)).getTime();
+        if (ts < earliest) continue;
+        out.push(new Date(ts).toISOString());
       }
     }
     return out;
@@ -1487,7 +1610,7 @@ void main(){
   api(path, body) {
     const opts = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {};
     return fetch(path, opts).then((r) => r.json().catch(() => ({ ok: false, error: 'Сервер недоступен', status: r.status })))
-      .catch(() => ({ ok: false, error: 'Нет связи с сервером. Проверьте интернет или напишите нам на hello@axiagroup.ru', offline: true }));
+      .catch(() => ({ ok: false, error: 'Нет связи с сервером. Проверьте интернет или напишите нам на ' + this.contacts.email, offline: true }));
   }
   loadBooking() {
     return this.api('/api/settings.php').then((st) => {
@@ -1501,6 +1624,7 @@ void main(){
         return;
       }
       this.captchaKey = st.captchaSiteKey || '';
+      if (st.contacts && st.contacts.email) { this.contacts = st.contacts; this.setState({ contactsV: (this.state.contactsV || 0) + 1 }); }
       this.durationMin = st.durationMin || 30;
       this.setState({ bookingOn: !!st.bookingEnabled });
       if (st.newsVisible) this.api('/api/articles.php?limit=3').then((d) => { if (d && d.ok) this.setState({ news: d.articles || [] }); });
@@ -1540,6 +1664,8 @@ void main(){
     }));
   }
   /* общая отправка формы: капча → POST → результат. kind: 'book' | 'msg' | 'inline' */
+  /* цель в Яндекс Метрике (assets/js/metrika.js; без согласия на cookie ничего не отправляется) */
+  goal(name) { const w = (this.root && this.root.ownerDocument.defaultView) || window; if (w.axiaGoal) w.axiaGoal(name); }
   sendForm(e, path, extra, errKey) {
     const f = this.formData(e);
     if (this.state.busy) return Promise.resolve(null);
@@ -1920,7 +2046,7 @@ void main(){
         if (this.demo) { const f = this.formData(e); this.setState({ step: 'done', bookedEmail: f.email || 'вашу почту' }); this.revealCal(); return; }
         this.sendForm(e, '/api/book.php', { start: st.slotIso }, 'bookError').then((d) => {
           if (!d) return;
-          if (d.ok) { this.setState({ step: 'done', bookedEmail: d.form.email }); this.revealCal(); this.loadSlots(); }
+          if (d.ok) { this.setState({ step: 'done', bookedEmail: d.form.email }); this.revealCal(); this.loadSlots(); this.goal('booking'); }
           else if (d.taken) this.loadSlots();
           else if (d.disabled) this.loadBooking();
         });
@@ -1939,7 +2065,7 @@ void main(){
       inlineForm: !st.inlineDone, inlineDone: !!st.inlineDone, inlineEmail: st.inlineEmail,
       submitInline: (e) => {
         if (this.demo) { const f = this.formData(e); this.setState({ inlineDone: true, inlineEmail: f.email || 'вашу почту' }); return; }
-        this.sendForm(e, '/api/contact.php', {}, 'inlineError').then((d) => { if (d && d.ok) { this.setState({ inlineDone: true, inlineEmail: d.form.email }); this.revealCal(); } });
+        this.sendForm(e, '/api/contact.php', {}, 'inlineError').then((d) => { if (d && d.ok) { this.setState({ inlineDone: true, inlineEmail: d.form.email }); this.revealCal(); this.goal('contact'); } });
       },
       resetInline: () => { this.formAt = Date.now(); this.setState({ inlineDone: false, inlineError: '' }); },
       /* модальное окно */
@@ -1949,7 +2075,7 @@ void main(){
       modalBackdrop: (e) => { if (e.target === e.currentTarget) this.setState({ modal: false }); },
       submitMsg: (e) => {
         if (this.demo) { const f = this.formData(e); this.setState({ modalDone: true, msgEmail: f.email || 'вашу почту' }); return; }
-        this.sendForm(e, '/api/contact.php', {}, 'msgError').then((d) => { if (d && d.ok) this.setState({ modalDone: true, msgEmail: d.form.email }); });
+        this.sendForm(e, '/api/contact.php', {}, 'msgError').then((d) => { if (d && d.ok) { this.setState({ modalDone: true, msgEmail: d.form.email }); this.goal('contact'); } });
       }
     };
   }
@@ -1988,6 +2114,12 @@ void main(){
       setSol: this.setSol,
       setNews: this.setNews,
       newsOn: (this.state.news || []).length > 0,
+      cEmail: this.contacts.email, cEmailHref: 'mailto:' + this.contacts.email,
+      cTgOn: !!this.contacts.telegram, cTg: this.contacts.telegram || '#',
+      cPhoneOn: !!this.contacts.phone, cPhone: this.contacts.phone || '', cPhoneHref: 'tel:' + String(this.contacts.phone || '').replace(/[^0-9+]/g, '').replace(/^8(\d{10})$/, '+7$1'),
+      cTm0On: !!(this.contacts.team || [])[0], cTm0: (this.contacts.team || [])[0] || '', cTm0Href: 'mailto:' + ((this.contacts.team || [])[0] || ''),
+      cTm1On: !!(this.contacts.team || [])[1], cTm1: (this.contacts.team || [])[1] || '', cTm1Href: 'mailto:' + ((this.contacts.team || [])[1] || ''),
+      cTm2On: !!(this.contacts.team || [])[2], cTm2: (this.contacts.team || [])[2] || '', cTm2Href: 'mailto:' + ((this.contacts.team || [])[2] || ''),
       news: this.state.news || [],
       solI0: 'sol__item' + (this.state.solOpen === 0 ? ' is-open' : '') + (this.state.solLive === 0 ? ' is-live' : ''), solE0: this.state.solOpen === 0 ? 'true' : 'false',
       solT0: (e) => this.solToggle(0, e), solK0: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.solToggle(0, e); } },

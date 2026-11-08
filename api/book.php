@@ -112,15 +112,17 @@ set_booking($b['id'], ['status' => 'active', 'join_url' => $b['join_url'], 'conf
 
 /* --- письма --- */
 $linkHtml = $b['join_url']
-    ? '<p><a href="' . h($b['join_url']) . '" style="display:inline-block;padding:12px 20px;background:#2c4595;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold">Подключиться в Телемосте</a></p><p style="font-size:13px;color:#6b7aa8">Ссылка: ' . h($b['join_url']) . '</p>'
-    : '<p>Ссылку на видеовстречу мы пришлём отдельным письмом.</p>';
+    ? mail_button($b['join_url'], 'Подключиться в Телемосте')
+    : mail_p('Ссылку на видеовстречу мы пришлём отдельным письмом.');
 $clientIcs = build_ics($b, $title, ($b['join_url'] ? 'Яндекс Телемост: ' . $b['join_url'] . "\n" : '') . 'Отменить встречу: ' . $cancelUrl, 'PUBLISH');
 $attach = [['invite.ics', $clientIcs, 'text/calendar; charset=utf-8; method=PUBLISH']];
+$whereRows = ['Когда' => $when, 'Где' => $b['join_url'] ? 'Яндекс Телемост' : ''];
 
 $clientHtml = mail_layout('Встреча назначена',
-    '<p>' . h($name) . ', спасибо! Ждём вас на встрече.</p><p><b>' . h($when) . '</b></p>' . $linkHtml
-    . '<p>Файл во вложении можно добавить в свой календарь.</p>'
-    . '<p style="font-size:13px;color:#6b7aa8">Планы изменились? <a href="' . h($cancelUrl) . '" style="color:#2c4595">Отменить встречу</a> — после этого можно выбрать другое время на сайте.</p>');
+    mail_p(h($name) . ', спасибо за запись! Ждём вас на встрече.')
+    . mail_rows($whereRows) . $linkHtml
+    . mail_p('Приглашение для календаря — во вложении.', true)
+    . mail_p('Планы изменились? Встречу можно ' . mail_link($cancelUrl, 'отменить', true) . ' и выбрать на сайте другое время.', true));
 $clientText = "Встреча назначена\n\n$when\n" . ($b['join_url'] ? "Яндекс Телемост: {$b['join_url']}\n" : '') . "\nОтменить встречу: $cancelUrl\n";
 $sentClient = send_mail($email, 'Встреча с аксиа: ' . $when, $clientHtml, $clientText, ['attachments' => $attach, 'reply_to' => [(string)cfg('mail.to'), (string)cfg('mail.from_name')]]);
 
@@ -128,15 +130,15 @@ foreach ($guests as $g) {
     send_mail($g, 'Приглашение на встречу с аксиа: ' . $when,
         /* имя пригласившего в письмо гостю не подставляем: адрес гостя вводит посетитель, и чужой текст не должен
            уходить на произвольные адреса от имени компании */
-        mail_layout('Вас пригласили на встречу', '<p>Вас пригласили на встречу с командой аксиа.</p><p><b>' . h($when) . '</b></p>' . $linkHtml
-            . '<p style="font-size:13px;color:#6b7aa8">Если вы не ожидали это письмо, просто проигнорируйте его.</p>'),
+        mail_layout('Вас пригласили на встречу', mail_p('Вас пригласили на встречу с командой аксиа.') . mail_rows($whereRows) . $linkHtml
+            . mail_p('Если вы не ожидали это письмо, просто проигнорируйте его.', true)),
         "Вас пригласили на встречу с аксиа\n\n$when\n" . ($b['join_url'] ? "Яндекс Телемост: {$b['join_url']}\n" : ''),
         ['attachments' => [['invite.ics', build_ics($b, $title, $b['join_url'] ? 'Яндекс Телемост: ' . $b['join_url'] : '', 'PUBLISH'), 'text/calendar; charset=utf-8; method=PUBLISH']]]);
 }
 
 send_mail((string)cfg('mail.to'), 'Новая встреча: ' . $name . ', ' . $when,
-    mail_layout('Новая встреча с сайта', '<p><b>' . h($when) . '</b></p>' . mail_rows($rows + ['Телемост' => $b['join_url']])
-        . (!$sentClient ? '<p style="color:#b00020">Письмо клиенту отправить не удалось — свяжитесь с ним сами.</p>' : '')),
+    mail_layout('Новая встреча с сайта', mail_rows(['Когда' => $when] + $rows + ['Телемост' => $b['join_url']])
+        . (!$sentClient ? mail_p('<b>Письмо клиенту отправить не удалось — свяжитесь с ним сами.</b>') : '')),
     "Новая встреча с сайта\n\n$when\n" . mail_text_rows($rows + ['Телемост' => $b['join_url']]),
     ['reply_to' => [$email, $name]]);
 

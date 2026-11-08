@@ -37,6 +37,10 @@ function send_mail($to, string $subject, string $html, string $text, array $opts
         $m->Body = $html;
         $m->AltBody = $text;
         foreach ($opts['attachments'] ?? [] as [$name, $content, $mime]) $m->addStringAttachment($content, $name, PHPMailer::ENCODING_BASE64, $mime);
+        /* логотип в шапке письма — вложенной картинкой */
+        if (str_contains($html, 'cid:axia-logo') && is_file(ROOT . '/assets/img/mail-logo.png')) {
+            $m->addEmbeddedImage(ROOT . '/assets/img/mail-logo.png', 'axia-logo', 'axia.png', PHPMailer::ENCODING_BASE64, 'image/png');
+        }
 
         if (!$smtp) {
             /* SMTP не настроен. Локально (php -S) письмо складывается в data/outbox; на настоящем сервере —
@@ -59,22 +63,59 @@ function send_mail($to, string $subject, string $html, string $text, array $opts
 }
 
 /* Простая вёрстка письма в стиле сайта */
+/* ---- Оформление писем ----
+   Один шрифт (системный), три размера (22 — заголовок, 15 — текст, 13 — подписи), два цвета текста
+   (основной и приглушённый) и фирменный синий — только для кнопки и логотипа. Логотип — картинка во вложении
+   письма (cid:axia-logo, assets/img/mail-logo.png): так он виден и там, где внешние картинки отключены. */
+
+const MAIL_FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+const MAIL_INK = '#1c2333';
+const MAIL_MUTED = '#7b8190';
+const MAIL_LINE = '#e9e8e3';
+const MAIL_ACCENT = '#2c4595';
+
 function mail_layout(string $title, string $bodyHtml): string
 {
-    return '<!doctype html><html lang="ru"><body style="margin:0;padding:24px;background:#f2f1ec;font-family:Arial,Helvetica,sans-serif;color:#1e2f63">'
-        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px">'
-        . '<tr><td style="padding:28px 28px 8px;font-size:22px;font-weight:bold;color:#2c4595">аксиа</td></tr>'
-        . '<tr><td style="padding:8px 28px 0;font-size:20px;font-weight:bold">' . h($title) . '</td></tr>'
-        . '<tr><td style="padding:12px 28px 28px;font-size:15px;line-height:1.5">' . $bodyHtml . '</td></tr>'
-        . '</table></body></html>';
+    $f = 'font-family:' . MAIL_FONT . ';';
+    return '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+        . '<meta name="color-scheme" content="light"><title>' . h($title) . '</title></head>'
+        . '<body style="margin:0;padding:0;background:#f4f3ef;' . $f . '">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f3ef"><tr><td align="center" style="padding:32px 16px">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:12px">'
+        . '<tr><td style="padding:36px 40px 0"><img src="cid:axia-logo" width="108" height="20" alt="аксиа" style="display:block;border:0;width:108px;height:20px"></td></tr>'
+        . '<tr><td style="padding:32px 40px 0;' . $f . 'font-size:22px;line-height:28px;font-weight:600;color:' . MAIL_INK . '">' . h($title) . '</td></tr>'
+        . '<tr><td style="padding:16px 40px 40px;' . $f . 'font-size:15px;line-height:24px;color:' . MAIL_INK . '">' . $bodyHtml . '</td></tr>'
+        . '</table></td></tr></table></body></html>';
 }
 
+/** Абзац. $muted — приглушённый мелкий текст (подписи, пояснения) */
+function mail_p(string $html, bool $muted = false): string
+{
+    return '<p style="margin:0 0 16px;' . ($muted ? 'font-size:13px;line-height:20px;color:' . MAIL_MUTED : 'font-size:15px;line-height:24px;color:' . MAIL_INK) . '">' . $html . '</p>';
+}
+
+/** Ссылка в тексте: цвет текста вокруг, подчёркнута */
+function mail_link(string $url, string $label, bool $muted = false): string
+{
+    return '<a href="' . h($url) . '" style="color:' . ($muted ? MAIL_MUTED : MAIL_INK) . ';text-decoration:underline">' . h($label) . '</a>';
+}
+
+function mail_button(string $url, string $label): string
+{
+    return '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="border-radius:8px;background:' . MAIL_ACCENT . '">'
+        . '<a href="' . h($url) . '" style="display:inline-block;padding:13px 24px;font-family:' . MAIL_FONT . ';font-size:15px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px">' . h($label) . '</a>'
+        . '</td></tr></table>';
+}
+
+/** Подпись и значение друг под другом, между строками — тонкие линии */
 function mail_rows(array $rows): string
 {
-    $out = '<table role="presentation" cellpadding="0" cellspacing="0" style="font-size:15px;line-height:1.5">';
+    $out = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid ' . MAIL_LINE . '">';
     foreach ($rows as $k => $v) {
         if ($v === '' || $v === null) continue;
-        $out .= '<tr><td style="padding:3px 16px 3px 0;color:#6b7aa8;vertical-align:top">' . h($k) . '</td><td style="padding:3px 0;white-space:pre-wrap">' . h((string)$v) . '</td></tr>';
+        $out .= '<tr><td style="padding:12px 0;border-bottom:1px solid ' . MAIL_LINE . ';font-family:' . MAIL_FONT . '">'
+            . '<div style="font-size:13px;line-height:20px;color:' . MAIL_MUTED . '">' . h($k) . '</div>'
+            . '<div style="font-size:15px;line-height:24px;color:' . MAIL_INK . ';white-space:pre-wrap">' . h((string)$v) . '</div></td></tr>';
     }
     return $out . '</table>';
 }

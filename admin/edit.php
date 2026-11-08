@@ -57,6 +57,6 @@ admin_head($a['id'] ? 'Редактирование' : 'Новая статья'
 <button class="ad-btn ad-btn--primary" type="button" id="btn-publish">Опубликовать</button>
 </div>
 </main>
-<script src="/admin/admin.js"></script>
-<script src="/admin/editor.js"></script>
+<script src="<?= h(asset('/admin/admin.js')) ?>"></script>
+<script src="<?= h(asset('/admin/editor.js')) ?>"></script>
 </body></html>

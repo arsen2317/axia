@@ -119,14 +119,15 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   background-position-y: calc(var(--pat-phase, 0px) - 300svh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
 }
 /* ---------- РЕШЕНИЯ ----------
-   Закреплённый экран: вертикальный скролл двигает ряд кругов по горизонтали (--sol-p 0…1 ставит скрипт).
+   Один экран (десктоп): ряд кругов листается вбок — горизонтальным свайпом по тачпаду, стрелками слева и справа,
+   Shift+колесо и перетаскиванием мышью (--sol-x — номер круга по центру, ставит скрипт; сначала по центру второй круг).
    Десктоп: шаг ряда = шаг вертикальных линий сетки (283/1200 ширины), первый круг стартует на центральной линии,
    центр ряда — на горизонтальной линии сетки (--sol-cy ищет скрипт). Наведение / фокус — описание на светлом круге. */
 .axia .sol {
   position: relative;
   /* диаметр = шаг горизонтальных линий сетки (283/1200): круг от линии до линии; шаг ряда — вертикальные линии (283.5/1200) */
   --sol-step: 23.625cqw; --sol-d: 23.5833cqw;
-  height: calc(100vh + 7 * var(--sol-step)); height: calc(100svh + 7 * var(--sol-step));
+  height: calc(100vh + var(--sol-pb, 0px)); height: calc(100svh + var(--sol-pb, 0px));   /* экран с кругами + отступ до «Команды» */
 }
 .axia .sol__bg {
   position: sticky; top: 0; z-index: 0;
@@ -152,9 +153,37 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   list-style: none; margin: 0; padding: 0;
   position: absolute; left: calc(50% - var(--sol-d) / 2); top: calc(var(--sol-cy, 60vh) - var(--sol-d) / 2);
   display: flex; gap: calc(var(--sol-step) - var(--sol-d));
-  transform: translateX(calc(var(--sol-p, 0) * -7 * var(--sol-step)));
+  transform: translateX(calc(var(--sol-x, 1) * -1 * var(--sol-step)));
   will-change: transform;
 }
+.axia .sol__track.is-snap { transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) { .axia .sol__track.is-snap { transition: none; } }
+.axia .sol.is-drag .sol__stage { cursor: grabbing; -webkit-user-select: none; user-select: none; }
+/* десктоп: ряд перетаскивается мышью — в блоке обычный курсор (без текстовой «палочки» над заголовком и текстами)
+   и текст не выделяется при перетаскивании */
+@container axia (width > 66rem) {
+  .axia .sol__stage { cursor: default; -webkit-user-select: none; user-select: none; }
+}
+/* во время перетаскивания круги не реагируют на наведение — иначе открытым мог остаться не тот круг */
+.axia .sol.is-drag .sol__item { pointer-events: none; }
+/* стрелки (десктоп): по левому и правому краю, на высоте посередине между заголовком и номерами кругов
+   (--sol-ay считает скрипт) */
+.axia .sol__nav {
+  position: absolute; left: var(--gutter); right: var(--gutter); z-index: 3; top: var(--sol-ay, 40%); transform: translateY(-50%);
+  display: flex; justify-content: space-between; pointer-events: none;
+}
+.axia .sol__nav .sol__navbtn { pointer-events: auto; }
+.axia .sol__nav .sol__navbtn.is-off { pointer-events: none; }
+.axia .sol__navbtn {
+  display: inline-flex; align-items: center; justify-content: center; width: var(--sol-an, 3rem); height: var(--sol-an, 3rem); padding: 0;
+  border: 1px solid rgba(232, 230, 224, 0.35); border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+}
+.axia .sol__navbtn svg { width: calc(var(--sol-an, 3rem) / 3); height: calc(var(--sol-an, 3rem) / 3); }
+@media (hover: hover) { .axia .sol__navbtn:hover { background: var(--ink); border-color: var(--ink); color: var(--bg); } }
+.axia .sol__navbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.axia .sol__navbtn.is-off { opacity: 0.3; pointer-events: none; }
+@container axia (max-width: 66rem) { .axia .sol__nav { display: none; } }
 .axia .sol__item { flex: none; width: var(--sol-d); height: var(--sol-d); border-radius: 50%; outline: none; cursor: default; }
 .axia .sol__card {
   position: relative; width: 100%; height: 100%; border-radius: 50%;
@@ -377,11 +406,11 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .header .logo, .axia .nav, .axia .nav__toggle { transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease; }
 /* МЕНЮ, десктоп: на hero — развёрнутая плашка со всеми разделами в строку; с началом скролла плавно
    сжимается к центру до компактного вида (подпись раздела + бургер). Шире, чем колонка меню, — на --nav-x с каждой стороны,
-   но не заходя на логотип и кнопку */
+   но не заходя на логотип и кнопку. Ширина — по числу пунктов: промежуток между ними постоянный */
 .nav__row { display: none; }
 @container axia (width > 66rem) {
   .axia .nav {
-    --nav-x: max(0px, min(7.5rem, (100cqw - 2 * var(--gutter) - 24rem - 3rem) / 2 - 11rem));
+    --nav-x: max(0px, min(var(--nav-fit, 7.5rem), (100cqw - 2 * var(--gutter) - 24rem - 3rem) / 2 - 11rem));   /* --nav-fit — по числу пунктов, считает скрипт */
     left: 0; right: 0;
     transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease,
                 left 0.55s cubic-bezier(.65, 0, .35, 1), right 0.55s cubic-bezier(.65, 0, .35, 1);
@@ -684,6 +713,10 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* высоту блока описания задаёт только видимая страница (иначе длинный доп. текст выталкивал стрелки ниже края);
    если текст всё равно не помещается на низком экране — он прокручивается внутри, а стрелки всегда стоят внизу */
 .axia .tm__flow { position: relative; }
+/* смена страницы описания: текст выезжает справа (класс is-in ставит скрипт и снимает после анимации) */
+@keyframes tm-flow-in { from { opacity: 0; transform: translateX(0.75rem); } to { opacity: 1; transform: none; } }
+.axia .tm__flow.is-in { animation: tm-flow-in 0.38s ease; }
+@media (prefers-reduced-motion: reduce) { .axia .tm__flow.is-in { animation: none; } }
 @container axia (width > 66rem) {
   /* колонка описания занимает всё место между должностью и стрелками; лишние абзацы уходят на следующую страницу */
   .axia .tm__flow { flex: 1 1 0; min-height: 0; overflow: hidden; }
@@ -1038,12 +1071,12 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* десктоп: как было — без плюса, описание по наведению (и фокусу с клавиатуры) */
 .axia .sol__plus { display: none; }
 @container axia (width > 66rem) {
-  .axia .sol__item:hover .sol__num, .axia .sol__item:focus .sol__num { transform: translate(-50%, calc(var(--sol-d) * 0.0353)); color: #2c4595; }
-  .axia .sol__item:hover .sol__dot, .axia .sol__item:focus .sol__dot { transform: translateY(calc(var(--sol-d) * -0.0353 - 0.6629rem)) rotate(45deg); background-color: #2c4595; }
-  .axia .sol__item:hover .sol__card, .axia .sol__item:focus .sol__card { background-color: #fbfbef; }
-  .axia .sol__item:hover .sol__card::before, .axia .sol__item:focus .sol__card::before { opacity: 0; }
-  .axia .sol__item:hover .sol__name, .axia .sol__item:focus .sol__name { opacity: 0; }
-  .axia .sol__item:hover .sol__desc, .axia .sol__item:focus .sol__desc { opacity: 1; }
+  .axia .sol__item:hover .sol__num, .axia .sol__item:focus-visible .sol__num { transform: translate(-50%, calc(var(--sol-d) * 0.0353)); color: #2c4595; }
+  .axia .sol__item:hover .sol__dot, .axia .sol__item:focus-visible .sol__dot { transform: translateY(calc(var(--sol-d) * -0.0353 - 0.6629rem)) rotate(45deg); background-color: #2c4595; }
+  .axia .sol__item:hover .sol__card, .axia .sol__item:focus-visible .sol__card { background-color: #fbfbef; }
+  .axia .sol__item:hover .sol__card::before, .axia .sol__item:focus-visible .sol__card::before { opacity: 0; }
+  .axia .sol__item:hover .sol__name, .axia .sol__item:focus-visible .sol__name { opacity: 0; }
+  .axia .sol__item:hover .sol__desc, .axia .sol__item:focus-visible .sol__desc { opacity: 1; }
 }
 @container axia (max-width: 66rem) {
 .axia .sol__item { --sol-cell: var(--sol-d); position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }

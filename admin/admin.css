@@ -21,6 +21,13 @@ h3 { margin: 28px 0 12px; font-size: 1rem; }
 
 .ad-login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
 .ad-login__form { width: min(100%, 380px); display: flex; flex-direction: column; gap: 16px; }
+.ad-login__form .ad-field { flex: none; margin-bottom: 0; }
+.ad-btn--yandex { width: 100%; justify-content: center; }
+.ad-login__pass { border-top: 1px solid var(--ad-line); padding-top: 12px; }
+.ad-login__pass summary { cursor: pointer; font-size: 0.875rem; color: var(--ad-muted); }
+.ad-login__pass form { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.ad-access__add { align-items: flex-end; gap: 0 12px; }
+.ad-access__add .ad-btn { margin-bottom: 16px; }   /* в столбце flex-basis поля (200px) растягивал высоту */
 
 .ad-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; font-size: 0.875rem; color: var(--ad-muted); flex: 1 1 200px; }
 .ad-field input, .ad-field textarea, .ad-block__text, .ad-block__caption {
@@ -97,3 +104,9 @@ h4 { margin: 24px 0 8px; font-size: 0.9375rem; }
 .ad-bk__preview { grid-column: 2; font-variant-numeric: tabular-nums; }
 @media (max-width: 600px) { .ad-bk__day { grid-template-columns: 1fr; } .ad-bk__name { padding-top: 0; } .ad-bk__preview { grid-column: 1; } }
 .ad-sched__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+/* счётчик длины заголовка и описания в редакторе статьи */
+.ad-count { font-size: 0.8125rem; color: var(--ad-muted); font-variant-numeric: tabular-nums; }
+.ad-count.is-ok { color: var(--ad-ok); }
+.ad-count.is-warn { color: #b26a00; }
+/* [hidden] сильнее стилей кнопок: иначе скрытая кнопка («Убрать» без обложки) оставалась видна */
+[hidden] { display: none !important; }

@@ -16,8 +16,8 @@ function cfg(?string $path = null, $default = null)
         $base = require ROOT . '/config/config.example.php';
         $local = is_file(ROOT . '/config/config.local.php') ? require ROOT . '/config/config.local.php' : [];
         $c = array_replace_recursive($base, is_array($local) ? $local : []);
-        /* рабочие часы и праздники заменяются целиком, а не сливаются по ключам */
-        if (isset($local['booking']) && array_key_exists('hours', (array)$local['booking'])) $c['booking']['hours'] = $local['booking']['hours'];
+        /* слоты и праздники заменяются целиком, а не сливаются по ключам */
+        if (isset($local['booking']) && array_key_exists('slots', (array)$local['booking'])) $c['booking']['slots'] = $local['booking']['slots'];
         if (isset($local['booking']['holidays'])) $c['booking']['holidays'] = $local['booking']['holidays'];
     }
     if ($path === null) return $c;
@@ -62,7 +62,7 @@ function secret(): string
 
 function ensure_dir(string $dir): void
 {
-    if (!is_dir($dir)) @mkdir($dir, 0775, true);
+    if (!is_dir($dir)) @mkdir($dir, 0700, true);   // данные читает только сам сайт
 }
 
 /* ---- Файлы данных ----
@@ -153,7 +153,7 @@ function security_headers(bool $isAdmin = false): void
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
     header('X-Frame-Options: ' . ($isAdmin ? 'DENY' : 'SAMEORIGIN'));
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' https://smartcaptcha.yandexcloud.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://smartcaptcha.yandexcloud.net; font-src 'self'; connect-src 'self' https://smartcaptcha.yandexcloud.net; frame-src https://smartcaptcha.yandexcloud.net; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors " . ($isAdmin ? "'none'" : "'self'"));
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' https://smartcaptcha.yandexcloud.net https://mc.yandex.ru https://yastatic.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://smartcaptcha.yandexcloud.net https://mc.yandex.ru https://mc.yandex.com; font-src 'self'; connect-src 'self' https://smartcaptcha.yandexcloud.net https://mc.yandex.ru https://mc.yandex.com; frame-src https://smartcaptcha.yandexcloud.net; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors " . ($isAdmin ? "'none'" : "'self'"));
     if (is_https()) header('Strict-Transport-Security: max-age=31536000');
     if ($isAdmin) header('Cache-Control: no-store');
 }
@@ -215,6 +215,17 @@ function str_field(array $d, string $k, int $max, bool $required = false, bool $
 function h(?string $s): string
 {
     return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+/** Адрес файла сайта с версией (?v=…) — меняется при изменении файла, поэтому браузеры сразу берут новый */
+function asset(string $path): string
+{
+    static $memo = [];
+    if (!isset($memo[$path])) {
+        $f = ROOT . $path;
+        $memo[$path] = $path . (is_file($f) ? '?v=' . substr(md5_file($f), 0, 10) : '');
+    }
+    return $memo[$path];
 }
 
 function site_url(string $path = ''): string
