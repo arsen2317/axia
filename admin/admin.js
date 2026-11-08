@@ -43,6 +43,15 @@
     if (c && confirm('Отменить встречу? Событие удалится из календаря. Клиенту напишите сами — автоматического письма об отмене нет.')) {
       adminApi('cancel', { id: c.getAttribute('data-cancel') }).then(function () { c.closest('li').remove(); }).catch(function (er) { alert(er.message); });
     }
+    var ar = e.target.closest('[data-archive]');
+    if (ar) {
+      var toArch = ar.getAttribute('data-to') === '1';
+      if (!toArch || confirm('Убрать статью в архив? На сайте её не будет видно, но она сохранится, и её можно вернуть.')) {
+        ar.disabled = true;
+        adminApi('archive', { id: ar.getAttribute('data-archive'), archived: toArch }).then(function () { location.reload(); })
+          .catch(function (er) { ar.disabled = false; alert(er.message); });
+      }
+    }
     var d = e.target.closest('[data-delete]');
     if (d && confirm('Удалить статью насовсем? Картинки статьи тоже удалятся.')) {
       adminApi('delete', { id: d.getAttribute('data-delete') }).then(function () { d.closest('li').remove(); }).catch(function (er) { alert(er.message); });

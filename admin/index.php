@@ -97,6 +97,7 @@ admin_head('Панель');
 <span class="ad-switch__track" aria-hidden="true"></span>
 <span id="news-label"><?= $s['news_enabled'] ? 'Блок «Новости» включён: показывается на главной, в меню и подвале' : 'Блок «Новости» выключен: на главной, в меню и подвале его нет' ?></span>
 </label>
+<p class="ad-hint">Просмотры — уникальные посетители статьи (каждый человек засчитывается один раз; роботы и вы сами, пока вошли в админку, не считаются). «В архив» — статья пропадает с сайта, но не удаляется: её можно вернуть.</p>
 <p class="ad-hint">Страница /news и статьи остаются доступны по прямой ссылке.<?php if (!articles_published()): ?> <b>Сейчас нет опубликованных статей, поэтому блока на сайте не видно, даже когда он включён.</b><?php endif; ?></p>
 <?php if (!$articles): ?>
 <p class="ad-hint">Статей пока нет.</p>
@@ -106,11 +107,14 @@ admin_head('Панель');
 <li class="ad-list__row" data-id="<?= h($a['id']) ?>">
 <span class="ad-list__main">
 <?php if ($a['cover']): ?><img class="ad-thumb" src="<?= h($a['cover']) ?>" alt=""><?php else: ?><span class="ad-thumb"></span><?php endif; ?>
-<span><b><?= h($a['title']) ?></b><br><span class="ad-hint"><?= $a['status'] === 'published' ? ($a['published_at'] > date('Y-m-d') ? 'запланирована на ' : 'опубликована ') . h(ru_date($a['published_at'])) : 'черновик' ?></span></span>
+<?php $views = $a['status'] !== 'draft' ? article_views($a['id']) : 0; ?>
+<span><b><?= h($a['title']) ?></b><br><span class="ad-hint"><?= $a['status'] === 'published' ? ($a['published_at'] > date('Y-m-d') ? 'запланирована на ' : 'опубликована ') . h(ru_date($a['published_at'])) : ($a['status'] === 'archived' ? 'в архиве — на сайте не видна' : 'черновик') ?><?= $a['status'] !== 'draft' ? ' · просмотров: ' . $views : '' ?></span></span>
 </span>
 <span class="ad-list__actions">
 <?php if ($a['status'] === 'published'): ?><a href="/news/<?= h($a['slug']) ?>" target="_blank" rel="noopener">открыть ↗</a><?php endif; ?>
 <a class="ad-btn ad-btn--small" href="/admin/edit.php?id=<?= h($a['id']) ?>">Редактировать</a>
+<?php if ($a['status'] === 'published'): ?><button class="ad-btn ad-btn--small" type="button" data-archive="<?= h($a['id']) ?>" data-to="1">В архив</button><?php endif; ?>
+<?php if ($a['status'] === 'archived'): ?><button class="ad-btn ad-btn--small" type="button" data-archive="<?= h($a['id']) ?>" data-to="0">Вернуть на сайт</button><?php endif; ?>
 <button class="ad-btn ad-btn--small ad-btn--danger" type="button" data-delete="<?= h($a['id']) ?>">Удалить</button>
 </span>
 </li>

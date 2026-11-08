@@ -101,7 +101,7 @@
       dirty = false;
       if (location.search.indexOf('id=') < 0) history.replaceState(null, '', '/admin/edit.php?id=' + a.id);
       $('save-state').innerHTML = '';
-      var msg = document.createTextNode(status === 'published' ? 'опубликовано · ' : 'черновик сохранён');
+      var msg = document.createTextNode(status === 'published' ? 'опубликовано · ' : status === 'archived' ? 'сохранено в архиве' : 'черновик сохранён');
       $('save-state').appendChild(msg);
       if (status === 'published') { var l = el('a', '', 'открыть ↗'); l.href = '/news/' + a.slug; l.target = '_blank'; l.rel = 'noopener'; $('save-state').appendChild(l); }
       updateButtons();
@@ -109,10 +109,11 @@
       .then(function () { $('btn-draft').disabled = $('btn-publish').disabled = false; });
   }
   function updateButtons() {
-    $('btn-draft').textContent = a.status === 'published' ? 'Снять с публикации' : 'Сохранить черновик';
-    $('btn-publish').textContent = a.status === 'published' ? 'Сохранить изменения' : 'Опубликовать';
+    $('btn-draft').textContent = a.status === 'published' ? 'Снять с публикации' : a.status === 'archived' ? 'Сохранить в архиве' : 'Сохранить черновик';
+    $('btn-publish').textContent = a.status === 'published' ? 'Сохранить изменения' : a.status === 'archived' ? 'Вернуть на сайт' : 'Опубликовать';
   }
-  $('btn-draft').addEventListener('click', function () { save('draft'); });
+  /* статья в архиве остаётся в архиве, пока её не вернут на сайт */
+  $('btn-draft').addEventListener('click', function () { save(a.status === 'archived' ? 'archived' : 'draft'); });
   $('btn-publish').addEventListener('click', function () { save('published'); });
   updateButtons();
   window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });

@@ -1,9 +1,55 @@
 <?php
-/* Статьи (новости): хранение в data/articles/<id>.json, картинки — в uploads/, вывод в HTML. */
+/* Статьи (новости): хранение в data/articles/<id>.json, картинки — в uploads/, вывод в HTML.
+   Статусы: draft — черновик, published — на сайте (с даты публикации), archived — в архиве: на сайте не видна,
+   но хранится вместе с картинками и её можно вернуть. Просмотры — data/views/<id>.php (см. article_view_hit). */
 declare(strict_types=1);
 defined('ROOT') || exit;
 
 const ARTICLE_DIR = DATA . '/articles';
+const VIEWS_DIR = DATA . '/views';
+
+/** Архив: статья скрыта с сайта, но не удаляется. $archived = false — вернуть на сайт (published) */
+function article_set_archived(string $id, bool $archived): ?array
+{
+    return with_lock('articles', function () use ($id, $archived) {
+        $a = article_get($id);
+        if (!$a) return null;
+        $a['status'] = $archived ? 'archived' : 'published';
+        $a['updated_at'] = date('c');
+        write_json(ARTICLE_DIR . '/' . $a['id'] . '.php', $a);
+        return $a;
+    });
+}
+
+/* ---- Уникальные просмотры статьи ----
+   Посетитель = отпечаток (HMAC с секретом сайта) от IP и браузера; сами IP и браузер не хранятся. Каждый посетитель
+   засчитывается статье один раз. Не считаются: поисковые и прочие роботы, превью ссылок в мессенджерах,
+   вошедший в админку. Посетитель без cookie-согласия тоже считается: cookie для этого не нужны. */
+function article_view_hit(array $a): void
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return;
+    $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+    if ($ua === '' || preg_match('/bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|vkshare|yandex(?!browser)|google(?!.*chrome)|bing|curl|wget|python|php|java\/|headless|lighthouse/i', $ua)) return;
+    if (isset($_COOKIE['__Host-axia_admin']) || isset($_COOKIE['axia_admin'])) return;
+    $id = (string)($a['id'] ?? '');
+    if (!preg_match('/^[a-f0-9]{16}$/', $id)) return;
+    $mark = substr(hash_hmac('sha256', client_ip() . '|' . $ua, secret() . '|views'), 0, 16);
+    with_lock('views-' . $id, function () use ($id, $mark) {
+        $f = VIEWS_DIR . '/' . $id . '.php';
+        $v = read_json($f, []);
+        $seen = (array)($v['seen'] ?? []);
+        if (isset($seen[$mark])) return;
+        $seen[$mark] = 1;
+        write_json($f, ['n' => count($seen), 'seen' => $seen]);
+    });
+}
+
+function article_views(string $id): int
+{
+    if (!preg_match('/^[a-f0-9]{16}$/', $id)) return 0;
+    $v = read_json(VIEWS_DIR . '/' . $id . '.php', []);
+    return (int)($v['n'] ?? 0);
+}
 
 function articles_all(): array
 {
@@ -40,6 +86,7 @@ function article_delete(string $id): void
     $a = article_get($id);
     if (!$a) return;
     @unlink(ARTICLE_DIR . '/' . $id . '.php');
+    @unlink(VIEWS_DIR . '/' . $id . '.php');
     /* картинки статьи больше нигде не используются — удаляем файлы */
     foreach (article_images($a) as $url) upload_delete($url);
 }
@@ -97,7 +144,7 @@ function article_normalize(array $in, ?array $old): array
         'cover' => is_upload_url($cover) ? $cover : '',
         'cover_alt' => $str('cover_alt', 200),
         'blocks' => $blocks,
-        'status' => ($in['status'] ?? '') === 'published' ? 'published' : 'draft',
+        'status' => in_array($in['status'] ?? '', ['published', 'archived'], true) ? $in['status'] : 'draft',
         'published_at' => $date,
         'created_at' => $old['created_at'] ?? date('c'),
         'updated_at' => date('c'),

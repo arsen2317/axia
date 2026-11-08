@@ -44,6 +44,12 @@ switch ($action) {
         article_save($a, $old);
         json_out(['ok' => true, 'article' => $a]);
 
+    case 'archive':
+        $d = json_body();
+        $a = article_set_archived((string)($d['id'] ?? ''), !empty($d['archived']));
+        if (!$a) fail('Статья не найдена', 404);
+        json_out(['ok' => true, 'status' => $a['status']]);
+
     case 'delete':
         $d = json_body();
         article_delete((string)($d['id'] ?? ''));
