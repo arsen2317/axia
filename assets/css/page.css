@@ -159,6 +159,11 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 .axia .sol__track.is-snap { transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1); }
 @media (prefers-reduced-motion: reduce) { .axia .sol__track.is-snap { transition: none; } }
 .axia .sol.is-drag .sol__stage { cursor: grabbing; -webkit-user-select: none; user-select: none; }
+/* десктоп: ряд перетаскивается мышью — в блоке обычный курсор (без текстовой «палочки» над заголовком и текстами)
+   и текст не выделяется при перетаскивании */
+@container axia (width > 66rem) {
+  .axia .sol__stage { cursor: default; -webkit-user-select: none; user-select: none; }
+}
 /* во время перетаскивания круги не реагируют на наведение — иначе открытым мог остаться не тот круг */
 .axia .sol.is-drag .sol__item { pointer-events: none; }
 /* стрелки (десктоп): по левому и правому краю, на высоте посередине между заголовком и номерами кругов
