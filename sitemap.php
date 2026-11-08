@@ -5,11 +5,12 @@ declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/views.php';
 require __DIR__ . '/lib/articles.php';
+require __DIR__ . '/lib/site_content.php';
 
 $day = fn(string $file) => is_file($file) ? date('Y-m-d', (int)filemtime($file)) : '';
 $urls = [
     ['/', $day(__DIR__ . '/index.html')],
-    ['/privacy', $day(__DIR__ . '/privacy.html')],
+    ['/privacy', substr((string)(privacy_doc()['updated_at'] ?: date('c', (int)filemtime(__DIR__ . '/lib/privacy-default.php'))), 0, 10)],
 ];
 $arts = articles_published();
 if ($arts) {

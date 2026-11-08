@@ -227,7 +227,7 @@ function inline_md(string $s): string
     $s = h($s);
     $s = preg_replace('/\*\*(.+?)\*\*/su', '<strong>$1</strong>', $s) ?? $s;
     $s = preg_replace('/(?<![*\w])\*(?!\s)(.+?)(?<!\s)\*(?![*\w])/su', '<em>$1</em>', $s) ?? $s;
-    $s = preg_replace_callback('/\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/(?![\/\x5c])[^\s)]*|mailto:[^\s)]+)\)/u', function ($m) {
+    $s = preg_replace_callback('/\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/(?![\/\x5c])[^\s)]*|mailto:[^\s)]+|tel:\+?[0-9]+)\)/u', function ($m) {
         $ext = str_starts_with($m[2], 'http') ? ' target="_blank" rel="noopener noreferrer"' : '';
         return '<a href="' . $m[2] . '"' . $ext . '>' . $m[1] . '</a>';
     }, $s) ?? $s;

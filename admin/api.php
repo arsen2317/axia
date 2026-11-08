@@ -5,6 +5,7 @@ require __DIR__ . '/../lib/bootstrap.php';
 require __DIR__ . '/../lib/admin.php';
 require __DIR__ . '/../lib/booking.php';
 require __DIR__ . '/../lib/articles.php';
+require __DIR__ . '/../lib/site_content.php';
 
 if (!admin_logged_in()) fail('Нужно войти заново', 401);
 require_method('POST');
@@ -43,6 +44,19 @@ switch ($action) {
         if ($err) fail($err, 422);
         article_save($a, $old);
         json_out(['ok' => true, 'article' => $a]);
+
+    case 'contacts':
+        $d = json_body();
+        [$c, $err] = contacts_normalize((array)($d['contacts'] ?? []));
+        if ($err) fail($err, 422);
+        save_settings(['contacts' => $c]);
+        json_out(['ok' => true, 'contacts' => $c]);
+
+    case 'privacy':
+        $d = json_body(1_000_000);
+        $err = privacy_save((string)($d['text'] ?? ''));
+        if ($err) fail($err, 422);
+        json_out(['ok' => true]);
 
     case 'archive':
         $d = json_body();

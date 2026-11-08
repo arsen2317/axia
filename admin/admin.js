@@ -38,6 +38,36 @@
       .then(function () { newsToggle.disabled = false; });
   });
 
+  /* контакты на сайте */
+  var cbox = document.getElementById('contacts');
+  if (cbox) {
+    var c = JSON.parse(cbox.getAttribute('data-contacts') || '{}'), cSave = document.getElementById('contacts-save'), cState = document.getElementById('contacts-state');
+    var inp = function (n) { return cbox.querySelector('[name="' + n + '"]'); };
+    inp('email').value = c.email || ''; inp('phone').value = c.phone || ''; inp('telegram').value = c.telegram || '';
+    (c.team || []).forEach(function (m, i) { if (inp('team' + i)) inp('team' + i).value = m; });
+    cbox.addEventListener('input', function () { cSave.disabled = false; cState.textContent = 'Есть несохранённые изменения'; });
+    cSave.addEventListener('click', function () {
+      var team = []; for (var i = 0; inp('team' + i); i++) team.push(inp('team' + i).value);
+      cSave.disabled = true; cState.textContent = 'Сохраняем…';
+      adminApi('contacts', { contacts: { email: inp('email').value, phone: inp('phone').value, telegram: inp('telegram').value, team: team } }).then(function (d) {
+        inp('telegram').value = d.contacts.telegram; cState.textContent = 'Сохранено. На сайте — сразу (обновите страницу)';
+      }).catch(function (er) { cSave.disabled = false; cState.textContent = er.message; });
+    });
+  }
+
+  /* текст политики */
+  var ptext = document.getElementById('privacy-text');
+  if (ptext) {
+    var pSave = document.getElementById('privacy-save'), pState = document.getElementById('privacy-state'), pErr = document.getElementById('privacy-error'), pDirty = false;
+    ptext.addEventListener('input', function () { pDirty = true; pSave.disabled = false; pState.textContent = 'Есть несохранённые изменения'; });
+    pSave.addEventListener('click', function () {
+      pSave.disabled = true; pErr.hidden = true; pState.textContent = 'Сохраняем…';
+      adminApi('privacy', { text: ptext.value }).then(function () { pDirty = false; pState.textContent = 'Сохранено'; })
+        .catch(function (er) { pSave.disabled = false; pState.textContent = ''; pErr.textContent = er.message; pErr.hidden = false; });
+    });
+    window.addEventListener('beforeunload', function (e) { if (pDirty) { e.preventDefault(); e.returnValue = ''; } });
+  }
+
   document.addEventListener('click', function (e) {
     var c = e.target.closest('[data-cancel]');
     if (c && confirm('Отменить встречу? Событие удалится из календаря. Клиенту напишите сами — автоматического письма об отмене нет.')) {

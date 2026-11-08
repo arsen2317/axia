@@ -6,6 +6,7 @@ require __DIR__ . '/../lib/admin.php';
 require __DIR__ . '/../lib/booking.php';
 require __DIR__ . '/../lib/articles.php';
 require __DIR__ . '/../lib/consent.php';
+require __DIR__ . '/../lib/site_content.php';
 
 admin_session();
 $error = null;
@@ -84,6 +85,27 @@ admin_head('Панель');
 <?php endforeach; ?>
 </ul>
 <?php endif; ?>
+</section>
+
+<section class="ad-card" id="contacts" data-contacts="<?= h(json_encode(contacts(), JSON_UNESCAPED_UNICODE)) ?>">
+<h2>Контакты на сайте</h2>
+<p class="ad-hint">Подвал всех страниц и почты в блоке «Команда». Пустое поле — пункт на сайте не показывается (кроме общей почты).
+Заявки и уведомления о встречах приходят на адрес из настроек сайта — его здесь не меняют.</p>
+<div class="ad-row">
+<label class="ad-field"><span>Общая почта *</span><input name="email" type="email" maxlength="254" required></label>
+<label class="ad-field"><span>Телефон</span><input name="phone" type="tel" maxlength="24" placeholder="+7 900 000-00-00"></label>
+<label class="ad-field"><span>Телеграм-канал</span><input name="telegram" maxlength="100" placeholder="https://t.me/… или @имя"></label>
+</div>
+<div class="ad-row">
+<?php foreach (CONTACTS_TEAM as $i => $n): ?><label class="ad-field"><span>Почта: <?= h($n) ?></span><input name="team<?= $i ?>" type="email" maxlength="254"></label>
+<?php endforeach; ?>
+</div>
+<div class="ad-sched__bar"><button class="ad-btn ad-btn--primary" type="button" id="contacts-save" disabled>Сохранить</button><span class="ad-hint" id="contacts-state" role="status"></span></div>
+</section>
+
+<section class="ad-card">
+<div class="ad-card__head"><h2>Политика конфиденциальности</h2><a class="ad-btn" href="/admin/privacy.php">Редактировать текст</a></div>
+<p class="ad-hint"><?php $pd = privacy_doc(); echo $pd['updated_at'] !== '' ? 'Последняя правка: ' . h(date('d.m.Y H:i', (int)strtotime($pd['updated_at']))) . '.' : 'Действует исходный текст.'; ?> Страница на сайте — <a href="/privacy" target="_blank" rel="noopener">/privacy ↗</a></p>
 </section>
 
 <section class="ad-card">

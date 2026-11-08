@@ -8,7 +8,8 @@ defined('ROOT') || exit;
 const CANONICAL_BASE = 'https://axiagroup.ru';
 
 /** Шапка страницы (<head> и шапка сайта). $navLabel — подпись в свёрнутом меню.
-    $meta: path — адрес страницы для поисковиков (/privacy, /news/…), image — картинка для превью, type — website|article */
+    $meta: path — адрес страницы для поисковиков (/privacy, /news/…), image — картинка для превью, type — website|article,
+    body_attr — атрибуты <body> (например ' data-nav="pinned"') */
 function page_head_html(string $title, string $description = '', string $navLabel = '', array $meta = []): string
 {
     $t = h($title);
@@ -32,7 +33,7 @@ function page_head_html(string $title, string $description = '', string $navLabe
         . '<meta name="twitter:card" content="summary_large_image">' . "\n"
         . '<link rel="icon" href="/favicon.ico" sizes="32x32">' . "\n" . '<link rel="icon" href="/favicon.svg" type="image/svg+xml">' . "\n" . '<link rel="apple-touch-icon" href="/apple-touch-icon.png">' . "\n"
         . $css
-        . '</head>' . "\n" . '<body class="pg">' . "\n"
+        . '</head>' . "\n" . '<body class="pg"' . (string)($meta['body_attr'] ?? '') . '>' . "\n"
         . '<div class="axia is-top pg-axia">' . "\n"
         . site_header_html($navLabel);
 }
@@ -44,10 +45,21 @@ function site_header_html(string $navLabel): string
     return str_replace('%NAV_LABEL%', h($navLabel), $html);
 }
 
+/** Подвал: контакты — из админки (lib/site_content.php) */
 function site_footer_html(): string
 {
+    require_once ROOT . '/lib/site_content.php';
+    $c = contacts();
     $html = (string)file_get_contents(ROOT . '/lib/partials/footer.html');
-    return preg_replace('/^<!--.*?-->\n/s', '', $html) ?? $html;
+    $html = preg_replace('/^<!--.*?-->\n/s', '', $html) ?? $html;
+    /* необязательные пункты: <!--if:phone-->…<!--/if:phone--> убираются, если значение пустое */
+    $html = preg_replace_callback('#<!--if:(\w+)-->(.*?)<!--/if:\1-->#s', fn($m) => ($c[$m[1]] ?? '') !== '' ? $m[2] : '', $html) ?? $html;
+    return strtr($html, [
+        '%EMAIL%' => h($c['email']),
+        '%TELEGRAM%' => h($c['telegram']),
+        '%PHONE%' => h($c['phone']),
+        '%PHONE_HREF%' => h(phone_href($c['phone'])),
+    ]);
 }
 
 function page_foot_html(): string

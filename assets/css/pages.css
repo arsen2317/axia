@@ -83,10 +83,6 @@ body.pg:has(.art) { background: #f7f6f3; }
 .axia.is-light-nav .nav.is-open .nav__icon { color: #595959; }
 /* документ: карточка «цель / данные / основания / срок» в разделе 3 политики */
 .doc h3 { margin-top: 2em; }
-.doc .doc__card { margin: 0 0 1.5em; padding: 1.25rem 1.5rem; border-left: 2px solid var(--line); background: rgba(30, 47, 99, 0.45); border-radius: 0 10px 10px 0; }
-.doc .doc__card p { margin: 0 0 0.6em; }
-.doc .doc__card p:last-child { margin-bottom: 0; }
-@container axia (max-width: 40rem) { .doc .doc__card { padding: 1rem 1.125rem; } }
 /* новости выключены в админке: на внутренних страницах нет пунктов «новости» в меню и подвале (класс ставит inner.js) */
 .axia.no-news [data-news] { display: none; }
 /* СТРАНИЦА НОВОСТЕЙ: фоновая сетка, как на главной; справа от заголовка — «вернуться на главную»

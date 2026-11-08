@@ -25,6 +25,10 @@
       "destination": "/demo/article"
     },
     {
+      "source": "/privacy",
+      "destination": "/demo/privacy"
+    },
+    {
       "source": "/admin",
       "destination": "/demo/admin"
     },

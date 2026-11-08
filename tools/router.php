@@ -10,6 +10,7 @@ if (preg_match('#^/news/?$#', $path)) { require $root . '/news.php'; return true
 if (preg_match('#^/news/([a-z0-9-]+)/?$#', $path, $m)) { $_GET['slug'] = $m[1]; require $root . '/article.php'; return true; }
 if (preg_match('#^/consent/?$#', $path)) { header('Location: /privacy', true, 301); return true; }
 if ($path === '/sitemap.xml') { require $root . '/sitemap.php'; return true; }
-if (preg_match('#^/privacy/?$#', $path)) { header('Content-Type: text/html; charset=utf-8'); readfile($root . '/privacy.html'); return true; }
+if (preg_match('#^/privacy/?$#', $path)) { require $root . '/privacy.php'; return true; }
+if ($path === '/privacy.html') { header('Location: /privacy', true, 301); return true; }
 if ($path === '/admin' || $path === '/admin/') { chdir($root . '/admin'); require $root . '/admin/index.php'; return true; }
 return false;

@@ -20,6 +20,8 @@ function stableVh(win) {
 class Page extends DCLogic {
   constructor(props) {
     super(props);
+    /* контакты — из админки (/api/settings.php → contacts); до ответа сервера и в демо — эти */
+    this.contacts = { email: 'hello@axiagroup.ru', phone: '', telegram: 'https://t.me/axialogia', team: ['klopatkina@axiagroup.ru', 'akosko@axiagroup.ru', 'dstasova@axiagroup.ru'] };
     this.state = { open: false, glReady: false, navLabel: 'О нас', dir: 0, apprStep: 0, tm: 0, tmPage: 0, tmPageN: 2, light: false, top: true, solOpen: -1 };
     /* ОБСУДИТЬ ЗАДАЧУ: свободные слоты приходят с сервера (/api/slots.php — рабочие часы минус занятость
        Яндекс Календаря). Если сервера нет (превью на Vercel, открытие файла) — показываем данные-примеры,
@@ -1586,7 +1588,7 @@ void main(){
   api(path, body) {
     const opts = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {};
     return fetch(path, opts).then((r) => r.json().catch(() => ({ ok: false, error: 'Сервер недоступен', status: r.status })))
-      .catch(() => ({ ok: false, error: 'Нет связи с сервером. Проверьте интернет или напишите нам на hello@axiagroup.ru', offline: true }));
+      .catch(() => ({ ok: false, error: 'Нет связи с сервером. Проверьте интернет или напишите нам на ' + this.contacts.email, offline: true }));
   }
   loadBooking() {
     return this.api('/api/settings.php').then((st) => {
@@ -1600,6 +1602,7 @@ void main(){
         return;
       }
       this.captchaKey = st.captchaSiteKey || '';
+      if (st.contacts && st.contacts.email) { this.contacts = st.contacts; this.setState({ contactsV: (this.state.contactsV || 0) + 1 }); }
       this.durationMin = st.durationMin || 30;
       this.setState({ bookingOn: !!st.bookingEnabled });
       if (st.newsVisible) this.api('/api/articles.php?limit=3').then((d) => { if (d && d.ok) this.setState({ news: d.articles || [] }); });
@@ -2089,6 +2092,12 @@ void main(){
       setSol: this.setSol,
       setNews: this.setNews,
       newsOn: (this.state.news || []).length > 0,
+      cEmail: this.contacts.email, cEmailHref: 'mailto:' + this.contacts.email,
+      cTgOn: !!this.contacts.telegram, cTg: this.contacts.telegram || '#',
+      cPhoneOn: !!this.contacts.phone, cPhone: this.contacts.phone || '', cPhoneHref: 'tel:' + String(this.contacts.phone || '').replace(/[^0-9+]/g, '').replace(/^8(\d{10})$/, '+7$1'),
+      cTm0On: !!(this.contacts.team || [])[0], cTm0: (this.contacts.team || [])[0] || '', cTm0Href: 'mailto:' + ((this.contacts.team || [])[0] || ''),
+      cTm1On: !!(this.contacts.team || [])[1], cTm1: (this.contacts.team || [])[1] || '', cTm1Href: 'mailto:' + ((this.contacts.team || [])[1] || ''),
+      cTm2On: !!(this.contacts.team || [])[2], cTm2: (this.contacts.team || [])[2] || '', cTm2Href: 'mailto:' + ((this.contacts.team || [])[2] || ''),
       news: this.state.news || [],
       solI0: 'sol__item' + (this.state.solOpen === 0 ? ' is-open' : '') + (this.state.solLive === 0 ? ' is-live' : ''), solE0: this.state.solOpen === 0 ? 'true' : 'false',
       solT0: (e) => this.solToggle(0, e), solK0: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.solToggle(0, e); } },

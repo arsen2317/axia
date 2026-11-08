@@ -20,7 +20,8 @@ RewriteRule \.(md|log|bak|swp|orig|sql|sh|ini|dist|lock|tmp)$ - [F,L,NC]
 # красивые адреса
 RewriteRule ^news/?$ news.php [L]
 RewriteRule ^news/([a-z0-9-]+)/?$ article.php?slug=$1 [L,QSA]
-RewriteRule ^privacy/?$ privacy.html [L]
+RewriteRule ^privacy/?$ privacy.php [L]
+RewriteRule ^privacy\.html$ /privacy [R=301,L]   # старый адрес статичной страницы
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 RewriteRule ^consent/?$ /privacy [R=301,L]   # отдельной страницы согласия нет — всё в политике
 </IfModule>
