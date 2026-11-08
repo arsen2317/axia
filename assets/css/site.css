@@ -52,6 +52,9 @@ html, body { overflow-anchor: none; }
 }
 .axia *, .axia *::before, .axia *::after { box-sizing: border-box; }
 .axia a { color: inherit; text-decoration: none; }
+/* над текстом — обычная стрелка, без текстовой «палочки» (выделять и копировать текст можно); в полях ввода — как обычно */
+.axia { cursor: default; }
+.axia input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), .axia textarea, .axia [contenteditable="true"] { cursor: text; }
 /* без «висячих» слов в последней строке (плюс неразрывный пробел между двумя последними словами в тексте) */
 .axia p, .axia h1, .axia h2 { text-wrap: pretty; }
 
