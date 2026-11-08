@@ -104,3 +104,9 @@ h4 { margin: 24px 0 8px; font-size: 0.9375rem; }
 .ad-bk__preview { grid-column: 2; font-variant-numeric: tabular-nums; }
 @media (max-width: 600px) { .ad-bk__day { grid-template-columns: 1fr; } .ad-bk__name { padding-top: 0; } .ad-bk__preview { grid-column: 1; } }
 .ad-sched__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+/* счётчик длины заголовка и описания в редакторе статьи */
+.ad-count { font-size: 0.8125rem; color: var(--ad-muted); font-variant-numeric: tabular-nums; }
+.ad-count.is-ok { color: var(--ad-ok); }
+.ad-count.is-warn { color: #b26a00; }
+/* [hidden] сильнее стилей кнопок: иначе скрытая кнопка («Убрать» без обложки) оставалась видна */
+[hidden] { display: none !important; }

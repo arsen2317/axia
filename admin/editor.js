@@ -9,6 +9,21 @@
   var fields = { title: 'f-title', description: 'f-description', author: 'f-author', published_at: 'f-date', slug: 'f-slug', cover_alt: 'f-cover-alt' };
   Object.keys(fields).forEach(function (k) { $(fields[k]).value = a[k] || ''; $(fields[k]).addEventListener('input', markDirty); });
 
+  /* рекомендуемая длина заголовка и описания: в карточке новости — 2–3 строки заголовка и 3–4 строки описания,
+     в поисковой выдаче — без обрезки. Подсказка, сохранять не мешает */
+  [['f-title', 30, 60], ['f-description', 100, 160]].forEach(function (c) {
+    var inp = $(c[0]); if (!inp) return;
+    var out = document.createElement('small'); out.className = 'ad-count'; out.setAttribute('aria-live', 'polite');
+    inp.insertAdjacentElement('afterend', out);
+    var upd = function () {
+      var n = inp.value.trim().length, ok = n >= c[1] && n <= c[2];
+      out.textContent = n + ' ' + (n % 10 === 1 && n % 100 !== 11 ? 'символ' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'символа' : 'символов') + ' · рекомендуется ' + c[1] + '–' + c[2];
+      out.classList.toggle('is-ok', ok);
+      out.classList.toggle('is-warn', n > 0 && !ok);
+    };
+    inp.addEventListener('input', upd); upd();
+  });
+
   var LABELS = { text: 'Текст', heading: 'Подзаголовок', image: 'Картинка', quote: 'Цитата' };
 
   function upload(file) {
