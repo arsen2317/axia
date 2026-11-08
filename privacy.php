@@ -3,7 +3,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/views.php';
-require __DIR__ . '/lib/site_content.php';
+require_once __DIR__ . '/lib/site_content.php';
 
 $doc = privacy_doc();
 /* data-nav="pinned": меню на десктопе не сжимается при скролле (assets/js/inner.js) */

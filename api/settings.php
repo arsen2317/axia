@@ -4,7 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/../lib/bootstrap.php';
 require __DIR__ . '/../lib/articles.php';
 require __DIR__ . '/../lib/booking.php';
-require __DIR__ . '/../lib/site_content.php';
+require_once __DIR__ . '/../lib/site_content.php';
 
 json_out([
     'ok' => true,

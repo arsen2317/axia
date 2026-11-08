@@ -6,7 +6,7 @@ require __DIR__ . '/../lib/admin.php';
 require __DIR__ . '/../lib/booking.php';
 require __DIR__ . '/../lib/articles.php';
 require __DIR__ . '/../lib/consent.php';
-require __DIR__ . '/../lib/site_content.php';
+require_once __DIR__ . '/../lib/site_content.php';
 
 admin_session();
 $error = null;
