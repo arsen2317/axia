@@ -1441,7 +1441,7 @@ void main(){
   /* РЕШЕНИЯ: прогресс скролла по закреплённой секции → сдвиг ряда кругов */
   /* РЕШЕНИЯ, десктоп: ряд кругов листается вбок. solX — номер круга по центру (дробный во время жеста),
      от SOL_MIN до SOL_MAX: при первом показе по центру второй круг, первый виден слева от него.
-     Управление: горизонтальный свайп по тачпаду (и Shift+колесо), перетаскивание мышью, Tab по кругам.
+     Управление: горизонтальный свайп по тачпаду (и Shift+колесо), стрелки слева и справа, перетаскивание мышью, Tab по кругам.
      Вертикальная прокрутка страницы проходит мимо. После жеста ряд доезжает до ближайшего круга.
      На планшете и мобильном круги идут друг под другом — там всё это выключено. */
   initSol(sec) {
@@ -1477,7 +1477,7 @@ void main(){
     /* перетаскивание мышью */
     let drag = null;
     sec.addEventListener('pointerdown', (e) => {
-      if (!desk() || e.pointerType !== 'mouse' || e.button !== 0) return;
+      if (!desk() || e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('.sol__navbtn')) return;
       drag = { x: e.clientX, x0: this.solX, moved: false };
     });
     win.addEventListener('pointermove', (e) => {
@@ -1499,6 +1499,12 @@ void main(){
       }
     });
 
+    /* стрелки: на один круг */
+    sec.addEventListener('click', (e) => {
+      const btn = e.target.closest('.sol__navbtn'); if (!btn) return;
+      set(Math.round(this.solX) + (+btn.getAttribute('data-sol') || 0), true);
+    });
+
     /* Tab по кругам: круг с фокусом всегда в кадре */
     sec.addEventListener('focusin', (e) => {
       const li = e.target.closest('.sol__item'); if (!li || !desk()) return;
@@ -1511,6 +1517,10 @@ void main(){
     const sec = this.solSec; if (!sec) return;
     const x = this.solX == null ? 1 : this.solX;
     sec.style.setProperty('--sol-x', x.toFixed(4));
+    /* у края ряда стрелка в ту сторону скрывается */
+    const prev = sec.querySelector('.sol__navbtn--prev'), next = sec.querySelector('.sol__navbtn--next');
+    if (prev) { prev.classList.toggle('is-off', x <= 1.001); prev.setAttribute('aria-disabled', x <= 1.001 ? 'true' : 'false'); }
+    if (next) { next.classList.toggle('is-off', x >= 5.999); next.setAttribute('aria-disabled', x >= 5.999 ? 'true' : 'false'); }
   }
 
   /* ---------- календарь ---------- */
