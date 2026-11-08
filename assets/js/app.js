@@ -1001,6 +1001,18 @@ void main(){
             if (best !== null) cy = best;
           }
           sol.style.setProperty('--sol-cy', cy.toFixed(1) + 'px');
+          /* стрелки — посередине между низом заголовка и верхом номеров кругов */
+          {
+            const stg = sol.querySelector('.sol__stage'), num = sol.querySelector('.sol__num');
+            if (stg && ttl && num && W > 1056) {
+              const st = stg.getBoundingClientRect().top;
+              const ay = (ttl.getBoundingClientRect().bottom - st + num.getBoundingClientRect().top - st) / 2;
+              if (ay > 0) sol.style.setProperty('--sol-ay', ay.toFixed(1) + 'px');
+              /* на невысоких экранах зазор маленький — стрелки меньше (не больше 60% зазора, от 32 до 48 px) */
+              const gapY = num.getBoundingClientRect().top - ttl.getBoundingClientRect().bottom;
+              sol.style.setProperty('--sol-an', Math.max(32, Math.min(48, gapY * 0.6)).toFixed(1) + 'px');
+            }
+          }
           /* десктоп: после ряда кругов — отступ до «Команды»: её верх ложится на следующую горизонталь сетки под кругами */
           if (!portrait && d) {
             const below = vh - (cy + d / 2);
