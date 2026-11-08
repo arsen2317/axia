@@ -755,7 +755,7 @@ html, body { overflow-anchor: none; }
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 .btn--dark { background: var(--dark); border-color: rgba(255, 255, 255, 0.08); }
-.btn--light { background: var(--ink); color: var(--bg); }
+.btn--light, .axia a.btn--light { background: var(--ink); color: var(--bg); }   /* a.btn--light: иначе правило «ссылки — цветом текста» (.axia a) делало текст светлым на светлом */
 .btn--ghost { background: transparent; border-color: rgba(232, 230, 224, 0.35); }
 @media (hover: hover) {
   .btn--dark:hover { background: #333333; }

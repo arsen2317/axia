@@ -119,14 +119,15 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   background-position-y: calc(var(--pat-phase, 0px) - 300svh - var(--appr-gap, 0px) - var(--appr-extra, 0px) - var(--team-h, 0px));
 }
 /* ---------- РЕШЕНИЯ ----------
-   Закреплённый экран: вертикальный скролл двигает ряд кругов по горизонтали (--sol-p 0…1 ставит скрипт).
+   Один экран (десктоп): ряд кругов листается вбок — горизонтальным свайпом по тачпаду, Shift+колесо, перетаскиванием
+   мышью и кнопками-стрелками (--sol-x — номер круга по центру, ставит скрипт; сначала по центру второй круг).
    Десктоп: шаг ряда = шаг вертикальных линий сетки (283/1200 ширины), первый круг стартует на центральной линии,
    центр ряда — на горизонтальной линии сетки (--sol-cy ищет скрипт). Наведение / фокус — описание на светлом круге. */
 .axia .sol {
   position: relative;
   /* диаметр = шаг горизонтальных линий сетки (283/1200): круг от линии до линии; шаг ряда — вертикальные линии (283.5/1200) */
   --sol-step: 23.625cqw; --sol-d: 23.5833cqw;
-  height: calc(100vh + 7 * var(--sol-step)); height: calc(100svh + 7 * var(--sol-step));
+  height: calc(100vh + var(--sol-pb, 0px)); height: calc(100svh + var(--sol-pb, 0px));   /* экран с кругами + отступ до «Команды» */
 }
 .axia .sol__bg {
   position: sticky; top: 0; z-index: 0;
@@ -152,9 +153,27 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
   list-style: none; margin: 0; padding: 0;
   position: absolute; left: calc(50% - var(--sol-d) / 2); top: calc(var(--sol-cy, 60vh) - var(--sol-d) / 2);
   display: flex; gap: calc(var(--sol-step) - var(--sol-d));
-  transform: translateX(calc(var(--sol-p, 0) * -7 * var(--sol-step)));
+  transform: translateX(calc(var(--sol-x, 1) * -1 * var(--sol-step)));
   will-change: transform;
 }
+.axia .sol__track.is-snap { transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) { .axia .sol__track.is-snap { transition: none; } }
+.axia .sol.is-drag .sol__stage { cursor: grabbing; -webkit-user-select: none; user-select: none; }
+/* стрелки под рядом кругов (десктоп) */
+.axia .sol__nav {
+  position: absolute; left: 50%; z-index: 3; display: flex; gap: 0.5rem; transform: translateX(-50%);
+  top: min(calc(var(--sol-cy, 60vh) + var(--sol-d) / 2 + 2rem), calc(100% - 4.25rem));
+}
+.axia .sol__navbtn {
+  display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; padding: 0;
+  border: 1px solid rgba(232, 230, 224, 0.35); border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+}
+.axia .sol__navbtn svg { width: 1rem; height: 1rem; }
+@media (hover: hover) { .axia .sol__navbtn:hover { background: var(--ink); border-color: var(--ink); color: var(--bg); } }
+.axia .sol__navbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.axia .sol__navbtn.is-off { opacity: 0.3; pointer-events: none; }
+@container axia (max-width: 66rem) { .axia .sol__nav { display: none; } }
 .axia .sol__item { flex: none; width: var(--sol-d); height: var(--sol-d); border-radius: 50%; outline: none; cursor: default; }
 .axia .sol__card {
   position: relative; width: 100%; height: 100%; border-radius: 50%;
@@ -684,6 +703,10 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
 /* высоту блока описания задаёт только видимая страница (иначе длинный доп. текст выталкивал стрелки ниже края);
    если текст всё равно не помещается на низком экране — он прокручивается внутри, а стрелки всегда стоят внизу */
 .axia .tm__flow { position: relative; }
+/* смена страницы описания: текст выезжает справа (класс is-in ставит скрипт и снимает после анимации) */
+@keyframes tm-flow-in { from { opacity: 0; transform: translateX(0.75rem); } to { opacity: 1; transform: none; } }
+.axia .tm__flow.is-in { animation: tm-flow-in 0.38s ease; }
+@media (prefers-reduced-motion: reduce) { .axia .tm__flow.is-in { animation: none; } }
 @container axia (width > 66rem) {
   /* колонка описания занимает всё место между должностью и стрелками; лишние абзацы уходят на следующую страницу */
   .axia .tm__flow { flex: 1 1 0; min-height: 0; overflow: hidden; }

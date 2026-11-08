@@ -45,7 +45,7 @@ class Page extends DCLogic {
     this.apprSec = null;
     this.setApprSection = (el) => { this.apprSec = el; if (el) this.updateAppr(); };
     this.solSec = null;
-    this.setSol = (el) => { this.solSec = el; if (el) this.updateSol(); };
+    this.setSol = (el) => { if (el && el !== this.solSec) this.initSol(el); this.solSec = el; if (el) this.updateSol(); };
     /* НОВОСТИ: блок появляется после загрузки статей — пересчитываем сетку (высота блока сдвигает фон «Обсудить задачу»)
        и, если пришли по ссылке /#news с другой страницы, докручиваем к нему */
     this.setNews = (el) => {
@@ -793,11 +793,17 @@ void main(){
     /* анимация текста — только при листании страниц внутри карточки. При смене участника карточка и так проявляется
        сама (CSS), а анимация описания в тот же кадр, когда карточка становится видимой, в Safari иногда оставляла
        описание пустым до следующего клика */
+    /* CSS-анимация по классу is-in, а не Web Animations: в Safari отмена JS-анимации (animation.cancel) у блока
+       с overflow: hidden иногда оставляла описание непрорисованным — пустое место вместо текста */
     const cards2 = tm.querySelectorAll('.tm__card');
-    cards2.forEach((c) => { const f = c.querySelector('.tm__flow'); if (f && f.getAnimations) f.getAnimations().forEach((a) => a.cancel()); });
+    cards2.forEach((c) => { const f = c.querySelector('.tm__flow'); if (f) f.classList.remove('is-in'); });
     if (anim) {
       const card = cards2[cur], flow = card && card.querySelector('.tm__flow');
-      if (flow && flow.animate) flow.animate([{ opacity: 0, transform: 'translateX(0.75rem)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'ease', fill: 'none' });
+      if (flow) {
+        void flow.offsetWidth;   /* перезапуск анимации, если класс только что сняли */
+        flow.classList.add('is-in');
+        flow.addEventListener('animationend', () => flow.classList.remove('is-in'), { once: true });
+      }
     }
   }
   /* класс абзаца описания: на какой странице он (карта — из updateTmPages; до замера: основное / подробнее) */
@@ -1431,12 +1437,89 @@ void main(){
   }
 
   /* РЕШЕНИЯ: прогресс скролла по закреплённой секции → сдвиг ряда кругов */
+  /* РЕШЕНИЯ, десктоп: ряд кругов листается вбок. solX — номер круга по центру (дробный во время жеста),
+     от SOL_MIN до SOL_MAX: при первом показе по центру второй круг, первый виден слева от него.
+     Управление: горизонтальный свайп по тачпаду (и Shift+колесо), перетаскивание мышью, стрелки под рядом, Tab по кругам.
+     Вертикальная прокрутка страницы проходит мимо. После жеста ряд доезжает до ближайшего круга.
+     На планшете и мобильном круги идут друг под другом — там всё это выключено. */
+  initSol(sec) {
+    const SOL_MIN = 1, SOL_MAX = 6;
+    if (this.solX == null) this.solX = SOL_MIN;
+    const win = sec.ownerDocument.defaultView || window;
+    const desk = () => { const ax = sec.closest('.axia'); return !!ax && ax.clientWidth > 1056; };
+    const track = () => sec.querySelector('.sol__track');
+    const stepPx = () => { const it = sec.querySelectorAll('.sol__item'); return it.length > 1 ? (it[1].offsetLeft - it[0].offsetLeft) || 1 : 1; };
+    const clamp = (x) => Math.min(SOL_MAX, Math.max(SOL_MIN, x));
+    let snapT = 0;
+    const set = (x, snap) => {
+      const t = track(); if (!t) return;
+      this.solX = clamp(x);
+      t.classList.toggle('is-snap', !!snap);
+      this.updateSol();
+    };
+    const snapSoon = (ms) => { win.clearTimeout(snapT); snapT = win.setTimeout(() => set(Math.round(this.solX), true), ms); };
+
+    /* свайп по тачпаду: горизонтальная составляющая; обычное колесо мыши — только с Shift */
+    sec.addEventListener('wheel', (e) => {
+      if (!desk()) return;
+      let dx = 0;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) dx = e.deltaX;
+      else if (e.shiftKey) dx = e.deltaY;
+      else return;
+      e.preventDefault();   /* иначе браузер листает историю назад/вперёд */
+      if (e.deltaMode === 1) dx *= 40;
+      set(this.solX + dx / stepPx(), false);
+      snapSoon(140);
+    }, { passive: false });
+
+    /* перетаскивание мышью */
+    let drag = null;
+    sec.addEventListener('pointerdown', (e) => {
+      if (!desk() || e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('.sol__nav')) return;
+      drag = { x: e.clientX, x0: this.solX, moved: false };
+    });
+    win.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) < 6) return;
+      drag.moved = true; sec.classList.add('is-drag');
+      set(drag.x0 - dx / stepPx(), false);
+    });
+    win.addEventListener('pointerup', () => {
+      if (!drag) return;
+      const moved = drag.moved; drag = null; sec.classList.remove('is-drag');
+      if (moved) {
+        set(Math.round(this.solX), true);
+        /* отпустили после перетаскивания — это не клик по кругу */
+        const eat = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+        win.addEventListener('click', eat, { capture: true, once: true });
+        win.setTimeout(() => win.removeEventListener('click', eat, true), 50);
+      }
+    });
+
+    /* стрелки */
+    sec.addEventListener('click', (e) => {
+      const btn = e.target.closest('.sol__navbtn'); if (!btn) return;
+      set(Math.round(this.solX) + (+btn.getAttribute('data-sol') || 0), true);
+    });
+
+    /* Tab по кругам: круг с фокусом всегда в кадре */
+    sec.addEventListener('focusin', (e) => {
+      const li = e.target.closest('.sol__item'); if (!li || !desk()) return;
+      const stage = sec.querySelector('.sol__stage'); if (stage) stage.scrollLeft = 0;   /* браузер сам сдвигает обрезанный блок к фокусу */
+      const i = Array.prototype.indexOf.call(li.parentNode.children, li);
+      if (Math.abs(i - this.solX) > 1) set(i, true);
+    });
+  }
   updateSol() {
     const sec = this.solSec; if (!sec) return;
-    const win = sec.ownerDocument.defaultView || window;
-    const r = sec.getBoundingClientRect(), span = r.height - (parseFloat(getComputedStyle(sec).paddingBottom) || 0) - stableVh(win);   /* без отступа снизу */
-    const p = span > 0 ? Math.min(Math.max(-r.top / span, 0), 1) : 0;
-    sec.style.setProperty('--sol-p', p.toFixed(4));
+    const x = this.solX == null ? 1 : this.solX;
+    sec.style.setProperty('--sol-x', x.toFixed(4));
+    const btns = sec.querySelectorAll('.sol__navbtn');
+    if (btns.length === 2) {
+      btns[0].classList.toggle('is-off', x <= 1.001); btns[0].setAttribute('aria-disabled', x <= 1.001 ? 'true' : 'false');
+      btns[1].classList.toggle('is-off', x >= 5.999); btns[1].setAttribute('aria-disabled', x >= 5.999 ? 'true' : 'false');
+    }
   }
 
   /* ---------- календарь ---------- */
