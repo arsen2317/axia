@@ -986,6 +986,7 @@ void main(){
           const minY = (portrait ? 5.5 : 6.5) * px + tH + 3.5 * px + d / 2 + (W <= 1056 ? d * 0.1 : 0);   /* на планшете и мобильном — ещё высота выступающего номера */
           const maxY = vh - d / 2 - 1 * px;
           let cy = Math.max(minY, Math.min(vh * 0.6, maxY));
+          let loose = false;
           if (!portrait) {
             /* круг вписан между двумя соседними горизонтальными линиями: верх на линии, низ на следующей */
             const off = ph - 3 * vh - gap - apprExtra;
@@ -999,7 +1000,20 @@ void main(){
               if (pen < bestPen) { bestPen = pen; best = c; }
             }
             if (best !== null) cy = best;
+            /* десктоп: заголовок и ряд кругов не помещаются в экран (широкий и невысокий экран) — раздел не закрепляется
+               и не обрезается, а становится выше экрана (is-loose, высота --sol-h): ряд — между первой парой линий сетки
+               под заголовком, внизу отступ. Доводчик экранов внутри такого раздела не срабатывает (как в «Новостях») */
+            if (W > 1056 && d && (cy < minY - 0.5 || cy > maxY + 0.5)) {
+              loose = true;
+              let c = base + P / 2;
+              while (c - P >= minY - 0.5) c -= P;
+              while (c < minY - 0.5) c += P;
+              cy = c;
+            }
           }
+          const solH = loose ? Math.ceil(cy + d / 2 + 2 * px) : vh;
+          sol.classList.toggle('is-loose', loose);
+          if (loose) sol.style.setProperty('--sol-h', solH + 'px'); else sol.style.removeProperty('--sol-h');
           sol.style.setProperty('--sol-cy', cy.toFixed(1) + 'px');
           /* стрелки — посередине между низом заголовка и верхом номеров кругов */
           {
@@ -1015,7 +1029,7 @@ void main(){
           }
           /* десктоп: после ряда кругов — отступ до «Команды»: её верх ложится на следующую горизонталь сетки под кругами */
           if (!portrait && d) {
-            const below = vh - (cy + d / 2);
+            const below = solH - (cy + d / 2);
             let pb = P - below; while (pb < 2 * px) pb += P;
             sol.style.setProperty('--sol-pb', pb.toFixed(1) + 'px');
             /* сетка в отступе — продолжение закреплённого фона: его фаза плюс (высота секции без отступа − экран) */
@@ -1023,7 +1037,7 @@ void main(){
             if (sbg) {
               const content = sol.offsetHeight - (parseFloat(getComputedStyle(sol).paddingBottom) || 0);
               const bpy = parseFloat(getComputedStyle(sbg).backgroundPositionY) || 0;
-              sol.style.setProperty('--sol-bgy', (bpy + (content - vh)).toFixed(1) + 'px');
+              sol.style.setProperty('--sol-bgy', (bpy + (content - solH)).toFixed(1) + 'px');   /* фон «Решений» высотой solH */
             }
           } else sol.style.removeProperty('--sol-pb');
           /* описания вписаны в круг: блок текста центрируем по вертикали (пересчёт только при смене размера круга) */

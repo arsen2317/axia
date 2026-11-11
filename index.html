@@ -24,8 +24,8 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="assets/css/fonts.css?v=95c1c764a6">
 <link rel="preload" href="assets/fonts/SoyuzGrotesk-Bold.woff" as="font" type="font/woff" crossorigin="anonymous">
-<link rel="stylesheet" href="assets/css/site.css?v=63ca197585">
-<link rel="stylesheet" href="assets/css/page.css?v=370cbd2a1b">
+<link rel="stylesheet" href="assets/css/site.css?v=8fcea67cfa">
+<link rel="stylesheet" href="assets/css/page.css?v=f6016e35e1">
 </head>
 <body>
 <div id="root"><!--prerender: снимок для поисковиков, tools/prerender.js; React заменяет его при загрузке-->
@@ -1009,8 +1009,13 @@
 </ul>
 </footer>
 
-<!-- модальное окно «Просто напишите мне» -->
+</div>
+
+<!-- модальное окно «Просто напишите мне» — вне основного блока .axia: тот задаёт container-queries, и в части
+     браузеров position: fixed внутри него считается от всей страницы, а не от экрана — окно оказывалось внизу
+     страницы. Свой слой .axia закреплён на весь экран, поэтому стили и container-queries работают как раньше -->
 <sc-if value="{{modalOpen}}" hint-placeholder-val="{{ false }}">
+<div class="axia axia-layer" style="font-family: 'Golos Text', system-ui, sans-serif; color: #e8e6e0">
 <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick="{{modalBackdrop}}">
 <div class="modal__box">
 <button class="modal__close" type="button" aria-label="Закрыть" onClick="{{closeModal}}"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l11 11M15.5 4.5l-11 11"></path></svg></button>
@@ -1052,15 +1057,14 @@
 </sc-if>
 </div>
 </div>
-</sc-if>
-
 </div>
+</sc-if>
 </template>
 
 <script src="assets/js/vendor/react.production.min.js?v=e91b261662"></script>
 <script src="assets/js/vendor/react-dom.production.min.js?v=7d4842a904"></script>
 <script src="assets/js/dc-lite.js?v=d1e72f8119"></script>
-<script src="assets/js/app.js?v=1a6cd38c24"></script>
+<script src="assets/js/app.js?v=570e679dcc"></script>
 <script src="assets/js/typograph.js?v=9bb2994a39"></script>
 <script src="assets/js/cookies.js?v=3fdea71938"></script>
 <script src="assets/js/metrika.js?v=9e9bf6149d"></script>

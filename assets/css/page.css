@@ -981,6 +981,13 @@ html:root { font-size: clamp(16px, calc(100vw / 90), calc(2560px / 90)); }
     background-position-y: var(--sol-bgy, 0px);
   }
 }
+/* РЕШЕНИЯ, десктоп: заголовок и ряд кругов не помещаются в экран (широкий и невысокий экран) — раздел не закреплён,
+   высота по содержимому (--sol-h считает скрипт), сетка прокручивается вместе с ним */
+@container axia (width > 66rem) {
+  .axia .sol.is-loose { height: calc(var(--sol-h, 100vh) + var(--sol-pb, 0px)); }
+  .axia .sol.is-loose .sol__bg { position: relative; height: var(--sol-h, 100vh); }
+  .axia .sol.is-loose .sol__stage { position: absolute; top: 0; left: 0; right: 0; margin-top: 0; height: var(--sol-h, 100vh); }
+}
 /* ===== О НАС (по черновику, без «αξία» на фоне) =====
    Один экран без закрепления (высоту --who-h ставит скрипт: экран или сколько нужно тексту).
    Слева — заголовок, справа — три абзаца сразу, без смены по фейду. */
