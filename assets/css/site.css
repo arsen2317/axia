@@ -897,6 +897,8 @@ textarea.field__input { height: auto; min-height: 6.5rem; padding: 0.875rem 1rem
 .book-done__text b { color: var(--ink); font-weight: 600; }
 
 /* модальное окно «Просто напишите мне» */
+/* слой окна — отдельный .axia вне основного (см. index.html): закреплён на весь экран, поверх страницы */
+.axia.axia-layer { position: fixed; inset: 0; z-index: 100; min-height: 0; overflow: visible; }
 .modal {
   position: fixed; inset: 0; z-index: 100;
   display: grid; place-items: center;
